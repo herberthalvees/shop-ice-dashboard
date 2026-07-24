@@ -9,38 +9,211 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
+import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
+import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/shopee/webhook'
+import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
+import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
+import { Route as ApiPublicShopeeCallbackRouteImport } from './routes/api/public/shopee/callback'
 
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
+  id: '/produtos',
+  path: '/produtos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
+  id: '/pedidos',
+  path: '/pedidos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNotificacoesRoute =
+  AuthenticatedNotificacoesRouteImport.update({
+    id: '/notificacoes',
+    path: '/notificacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedConfiguracoesRoute =
+  AuthenticatedConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicShopeeWebhookRoute = ApiPublicShopeeWebhookRouteImport.update({
+  id: '/api/public/shopee/webhook',
+  path: '/api/public/shopee/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicShopeeSyncRoute = ApiPublicShopeeSyncRouteImport.update({
+  id: '/api/public/shopee/sync',
+  path: '/api/public/shopee/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicShopeeRefreshRoute = ApiPublicShopeeRefreshRouteImport.update({
+  id: '/api/public/shopee/refresh',
+  path: '/api/public/shopee/refresh',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicShopeeCallbackRoute = ApiPublicShopeeCallbackRouteImport.update({
+  id: '/api/public/shopee/callback',
+  path: '/api/public/shopee/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/pedidos': typeof AuthenticatedPedidosRoute
+  '/produtos': typeof AuthenticatedProdutosRoute
+  '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
+  '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
+  '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
+  '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/pedidos': typeof AuthenticatedPedidosRoute
+  '/produtos': typeof AuthenticatedProdutosRoute
+  '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
+  '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
+  '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
+  '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
+  '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
+  '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
+  '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
+  '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
+  '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
+  '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/configuracoes'
+    | '/dashboard'
+    | '/notificacoes'
+    | '/pedidos'
+    | '/produtos'
+    | '/api/public/shopee/callback'
+    | '/api/public/shopee/refresh'
+    | '/api/public/shopee/sync'
+    | '/api/public/shopee/webhook'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/reset-password'
+    | '/configuracoes'
+    | '/dashboard'
+    | '/notificacoes'
+    | '/pedidos'
+    | '/produtos'
+    | '/api/public/shopee/callback'
+    | '/api/public/shopee/refresh'
+    | '/api/public/shopee/sync'
+    | '/api/public/shopee/webhook'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/reset-password'
+    | '/_authenticated/configuracoes'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/notificacoes'
+    | '/_authenticated/pedidos'
+    | '/_authenticated/produtos'
+    | '/api/public/shopee/callback'
+    | '/api/public/shopee/refresh'
+    | '/api/public/shopee/sync'
+    | '/api/public/shopee/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicShopeeCallbackRoute: typeof ApiPublicShopeeCallbackRoute
+  ApiPublicShopeeRefreshRoute: typeof ApiPublicShopeeRefreshRoute
+  ApiPublicShopeeSyncRoute: typeof ApiPublicShopeeSyncRoute
+  ApiPublicShopeeWebhookRoute: typeof ApiPublicShopeeWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +221,100 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/produtos': {
+      id: '/_authenticated/produtos'
+      path: '/produtos'
+      fullPath: '/produtos'
+      preLoaderRoute: typeof AuthenticatedProdutosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pedidos': {
+      id: '/_authenticated/pedidos'
+      path: '/pedidos'
+      fullPath: '/pedidos'
+      preLoaderRoute: typeof AuthenticatedPedidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notificacoes': {
+      id: '/_authenticated/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof AuthenticatedNotificacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/configuracoes': {
+      id: '/_authenticated/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/shopee/webhook': {
+      id: '/api/public/shopee/webhook'
+      path: '/api/public/shopee/webhook'
+      fullPath: '/api/public/shopee/webhook'
+      preLoaderRoute: typeof ApiPublicShopeeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/sync': {
+      id: '/api/public/shopee/sync'
+      path: '/api/public/shopee/sync'
+      fullPath: '/api/public/shopee/sync'
+      preLoaderRoute: typeof ApiPublicShopeeSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/refresh': {
+      id: '/api/public/shopee/refresh'
+      path: '/api/public/shopee/refresh'
+      fullPath: '/api/public/shopee/refresh'
+      preLoaderRoute: typeof ApiPublicShopeeRefreshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/callback': {
+      id: '/api/public/shopee/callback'
+      path: '/api/public/shopee/callback'
+      fullPath: '/api/public/shopee/callback'
+      preLoaderRoute: typeof ApiPublicShopeeCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
+  AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
+  AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
+  AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
+  AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicShopeeCallbackRoute: ApiPublicShopeeCallbackRoute,
+  ApiPublicShopeeRefreshRoute: ApiPublicShopeeRefreshRoute,
+  ApiPublicShopeeSyncRoute: ApiPublicShopeeSyncRoute,
+  ApiPublicShopeeWebhookRoute: ApiPublicShopeeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
