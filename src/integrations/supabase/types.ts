@@ -14,7 +14,165 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      config: {
+        Row: {
+          eventos: Json
+          id: number
+          limite_estoque_baixo: number
+          notificacoes_ativas: boolean
+          updated_at: string
+          webhook_whatsapp_url: string | null
+        }
+        Insert: {
+          eventos?: Json
+          id?: number
+          limite_estoque_baixo?: number
+          notificacoes_ativas?: boolean
+          updated_at?: string
+          webhook_whatsapp_url?: string | null
+        }
+        Update: {
+          eventos?: Json
+          id?: number
+          limite_estoque_baixo?: number
+          notificacoes_ativas?: boolean
+          updated_at?: string
+          webhook_whatsapp_url?: string | null
+        }
+        Relationships: []
+      }
+      eventos_log: {
+        Row: {
+          created_at: string
+          erro: string | null
+          id: string
+          notificado: boolean
+          payload: Json | null
+          tipo_evento: string
+        }
+        Insert: {
+          created_at?: string
+          erro?: string | null
+          id?: string
+          notificado?: boolean
+          payload?: Json | null
+          tipo_evento: string
+        }
+        Update: {
+          created_at?: string
+          erro?: string | null
+          id?: string
+          notificado?: boolean
+          payload?: Json | null
+          tipo_evento?: string
+        }
+        Relationships: []
+      }
+      pedidos: {
+        Row: {
+          comprador_username: string | null
+          created_at: string
+          data_criacao_pedido: string | null
+          id: string
+          itens: Json | null
+          order_sn: string
+          payload_json: Json | null
+          status: string | null
+          updated_at: string
+          valor_total: number | null
+        }
+        Insert: {
+          comprador_username?: string | null
+          created_at?: string
+          data_criacao_pedido?: string | null
+          id?: string
+          itens?: Json | null
+          order_sn: string
+          payload_json?: Json | null
+          status?: string | null
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Update: {
+          comprador_username?: string | null
+          created_at?: string
+          data_criacao_pedido?: string | null
+          id?: string
+          itens?: Json | null
+          order_sn?: string
+          payload_json?: Json | null
+          status?: string | null
+          updated_at?: string
+          valor_total?: number | null
+        }
+        Relationships: []
+      }
+      produtos: {
+        Row: {
+          estoque: number | null
+          id: string
+          item_id: number
+          nome: string | null
+          preco: number | null
+          sku: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          estoque?: number | null
+          id?: string
+          item_id: number
+          nome?: string | null
+          preco?: number | null
+          sku?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          estoque?: number | null
+          id?: string
+          item_id?: number
+          nome?: string | null
+          preco?: number | null
+          sku?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shopee_connection: {
+        Row: {
+          access_token: string | null
+          id: number
+          refresh_token: string | null
+          shop_id: number | null
+          shop_name: string | null
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          id?: number
+          refresh_token?: string | null
+          shop_id?: number | null
+          shop_name?: string | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          id?: number
+          refresh_token?: string | null
+          shop_id?: number | null
+          shop_name?: string | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
