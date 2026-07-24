@@ -16,7 +16,7 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"login" | "recuperar">("login");
+  const [mode, setMode] = useState<"login" | "cadastro" | "recuperar">("login");
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,6 +38,32 @@ function AuthPage() {
     }
     toast.success("Bem-vindo(a) de volta");
     navigate({ to: "/dashboard", replace: true });
+  }
+
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
+    if (senha.length < 8) {
+      toast.error("Senha muito curta", { description: "Use pelo menos 8 caracteres." });
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: senha,
+      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+    });
+    setLoading(false);
+    if (error) {
+      toast.error("Não foi possível criar a conta", { description: error.message });
+      return;
+    }
+    if (data.session) {
+      toast.success("Conta criada");
+      navigate({ to: "/dashboard", replace: true });
+    } else {
+      toast.success("Conta criada", { description: "Verifique seu e-mail para confirmar." });
+      setMode("login");
+    }
   }
 
   async function handleRecover(e: React.FormEvent) {
@@ -64,36 +90,63 @@ function AuthPage() {
         </div>
         <Card>
           <CardHeader>
-            <CardTitle>{mode === "login" ? "Entrar no painel" : "Recuperar senha"}</CardTitle>
+            <CardTitle>
+              {mode === "login" ? "Entrar no painel" : mode === "cadastro" ? "Criar conta" : "Recuperar senha"}
+            </CardTitle>
             <CardDescription>
               {mode === "login"
-                ? "Acesso restrito ao proprietário da loja."
+                ? "Acesse seu painel Dream Ice."
+                : mode === "cadastro"
+                ? "Crie sua conta para acessar o painel."
                 : "Enviaremos um link para redefinir sua senha."}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={mode === "login" ? handleLogin : handleRecover} className="space-y-4">
+            <form
+              onSubmit={
+                mode === "login" ? handleLogin : mode === "cadastro" ? handleSignup : handleRecover
+              }
+              className="space-y-4"
+            >
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
                 <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
-              {mode === "login" && (
+              {mode !== "recuperar" && (
                 <div className="space-y-2">
                   <Label htmlFor="senha">Senha</Label>
-                  <Input id="senha" type="password" autoComplete="current-password" required value={senha} onChange={(e) => setSenha(e.target.value)} />
+                  <Input
+                    id="senha"
+                    type="password"
+                    autoComplete={mode === "cadastro" ? "new-password" : "current-password"}
+                    required
+                    minLength={mode === "cadastro" ? 8 : undefined}
+                    value={senha}
+                    onChange={(e) => setSenha(e.target.value)}
+                  />
                 </div>
               )}
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {mode === "login" ? "Entrar" : "Enviar link"}
+                {mode === "login" ? "Entrar" : mode === "cadastro" ? "Criar conta" : "Enviar link"}
               </Button>
-              <button
-                type="button"
-                onClick={() => setMode(mode === "login" ? "recuperar" : "login")}
-                className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {mode === "login" ? "Esqueci minha senha" : "Voltar para o login"}
-              </button>
+              <div className="flex flex-col gap-2 text-center text-sm text-muted-foreground">
+                {mode === "login" && (
+                  <>
+                    <button type="button" onClick={() => setMode("cadastro")} className="hover:text-foreground transition-colors">
+                      Não tem conta? Criar agora
+                    </button>
+                    <button type="button" onClick={() => setMode("recuperar")} className="hover:text-foreground transition-colors">
+                      Esqueci minha senha
+                    </button>
+                  </>
+                )}
+                {mode !== "login" && (
+                  <button type="button" onClick={() => setMode("login")} className="hover:text-foreground transition-colors">
+                    Voltar para o login
+                  </button>
+                )}
+              </div>
             </form>
           </CardContent>
         </Card>
