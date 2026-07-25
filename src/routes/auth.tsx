@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { Snowflake, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
   head: () => ({ meta: [{ title: "Entrar — Dream Ice" }, { name: "robots", content: "noindex" }] }),
   component: AuthPage,
 });
