@@ -9,8 +9,17 @@ import { toast } from "sonner";
 import { Snowflake, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/reset-password")({
-  ssr: false,
-  head: () => ({ meta: [{ title: "Nova senha — Dream Ice" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [
+      { title: "Nova senha — Dream Ice" },
+      { name: "description", content: "Defina uma nova senha para voltar ao painel Dream Ice." },
+      { property: "og:title", content: "Nova senha — Dream Ice" },
+      { property: "og:description", content: "Defina uma nova senha para voltar ao painel Dream Ice." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: ResetPage,
 });
 

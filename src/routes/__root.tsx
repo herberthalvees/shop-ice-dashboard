@@ -89,8 +89,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Dream Ice — Painel Shopee" },
       { name: "twitter:description", content: "Painel privado para acompanhar pedidos, produtos e notificações da loja Shopee." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/70dca524-defd-4144-b54a-a1e358fd283e/id-preview-fbeccbcf--73ef96e5-75af-4341-beba-ebd8e4a66fc1.lovable.app-1784931162363.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/70dca524-defd-4144-b54a-a1e358fd283e/id-preview-fbeccbcf--73ef96e5-75af-4341-beba-ebd8e4a66fc1.lovable.app-1784931162363.png" },
     ],
     links: [
       {
