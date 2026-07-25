@@ -13,9 +13,9 @@ function Index() {
   const [msg, setMsg] = useState("Carregando…");
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return;
-      if (data.user) navigate({ to: "/dashboard", replace: true });
+      if (data.session?.user) navigate({ to: "/dashboard", replace: true });
       else navigate({ to: "/auth", replace: true });
       setMsg("");
     });
