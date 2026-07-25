@@ -1,10 +1,12 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   LineChart,
@@ -18,7 +20,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { ShoppingBag, DollarSign, Calendar, Truck, AlertTriangle } from "lucide-react";
+import { ShoppingBag, DollarSign, Calendar, Truck, AlertTriangle, Snowflake, ArrowRight, Sparkles } from "lucide-react";
 
 export const Route = createLazyFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -30,6 +32,19 @@ const brl = (v: number) =>
 function DashboardPage() {
   const [periodo, setPeriodo] = useState<"7" | "30" | "90">("30");
   const dias = Number(periodo);
+
+  const { data: conn, isLoading: loadConn } = useQuery({
+    queryKey: ["shopee-connection"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("shopee_connection")
+        .select("shop_id, shop_name, status")
+        .eq("id", 1)
+        .maybeSingle();
+      return data;
+    },
+  });
+  const notConnected = !loadConn && (!conn || !conn.shop_id);
 
   const { data: kpis, isLoading: loadKpis } = useQuery({
     queryKey: ["kpis"],
@@ -151,6 +166,34 @@ function DashboardPage() {
           </SelectContent>
         </Select>
       </div>
+
+      {notConnected && (
+        <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background">
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" aria-hidden />
+          <CardContent className="relative flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <Snowflake className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-primary">
+                  <Sparkles className="h-3.5 w-3.5" /> Bem-vindo ao Dream Ice
+                </div>
+                <h2 className="text-lg font-semibold">Conecte sua loja Shopee para começar</h2>
+                <p className="text-sm text-muted-foreground max-w-xl">
+                  Assim que você autorizar o acesso, seus pedidos, produtos e faturamento aparecem
+                  automaticamente aqui — sincronizados de hora em hora.
+                </p>
+              </div>
+            </div>
+            <Button asChild size="lg" className="w-full md:w-auto">
+              <Link to="/configuracoes">
+                Conectar Shopee <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
         <KpiCard icon={ShoppingBag} label="Pedidos hoje" value={loadKpis ? null : String(kpis?.pedidosHoje ?? 0)} />
