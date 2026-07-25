@@ -4,6 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Dream Ice — Redirecionando" },
+      { name: "description", content: "Acesso ao painel privado Dream Ice para gestão da loja Shopee." },
+      { property: "og:title", content: "Dream Ice — Redirecionando" },
+      { property: "og:description", content: "Acesso ao painel privado Dream Ice para gestão da loja Shopee." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
   component: Index,
 });
 
