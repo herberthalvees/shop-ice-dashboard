@@ -46,29 +46,39 @@ const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
   id: '/produtos',
   path: '/produtos',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_authenticated/produtos.lazy').then((d) => d.Route),
+)
 const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_authenticated/pedidos.lazy').then((d) => d.Route),
+)
 const AuthenticatedNotificacoesRoute =
   AuthenticatedNotificacoesRouteImport.update({
     id: '/notificacoes',
     path: '/notificacoes',
     getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/_authenticated/notificacoes.lazy').then((d) => d.Route),
+  )
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_authenticated/dashboard.lazy').then((d) => d.Route),
+)
 const AuthenticatedConfiguracoesRoute =
   AuthenticatedConfiguracoesRouteImport.update({
     id: '/configuracoes',
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/_authenticated/configuracoes.lazy').then((d) => d.Route),
+  )
 const ApiPublicShopeeWebhookRoute = ApiPublicShopeeWebhookRouteImport.update({
   id: '/api/public/shopee/webhook',
   path: '/api/public/shopee/webhook',
@@ -319,3 +329,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
