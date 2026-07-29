@@ -111,7 +111,6 @@ export type Database = {
         Row: {
           atualizado_em: string
           categoria: string | null
-          custo_unitario: number | null
           item_id: number
           model_id: number
           produto: string | null
@@ -120,7 +119,6 @@ export type Database = {
         Insert: {
           atualizado_em?: string
           categoria?: string | null
-          custo_unitario?: number | null
           item_id: number
           model_id?: number
           produto?: string | null
@@ -129,7 +127,6 @@ export type Database = {
         Update: {
           atualizado_em?: string
           categoria?: string | null
-          custo_unitario?: number | null
           item_id?: number
           model_id?: number
           produto?: string | null
@@ -301,6 +298,39 @@ export type Database = {
         }
         Relationships: []
       }
+      produto_custos: {
+        Row: {
+          created_at: string
+          custo_unitario: number
+          id: number
+          item_id: number
+          model_id: number
+          observacao: string | null
+          vigencia_fim: string | null
+          vigencia_inicio: string
+        }
+        Insert: {
+          created_at?: string
+          custo_unitario: number
+          id?: number
+          item_id: number
+          model_id?: number
+          observacao?: string | null
+          vigencia_fim?: string | null
+          vigencia_inicio: string
+        }
+        Update: {
+          created_at?: string
+          custo_unitario?: number
+          id?: number
+          item_id?: number
+          model_id?: number
+          observacao?: string | null
+          vigencia_fim?: string | null
+          vigencia_inicio?: string
+        }
+        Relationships: []
+      }
       produtos: {
         Row: {
           atualizado_em: string
@@ -450,6 +480,33 @@ export type Database = {
       }
     }
     Views: {
+      pedido_itens_custeado: {
+        Row: {
+          created_at: string | null
+          custo_total: number | null
+          custo_vigente: number | null
+          data_criacao_pedido: string | null
+          id: number | null
+          item_id: number | null
+          model_id: number | null
+          order_sn: string | null
+          preco_unitario: number | null
+          produto: string | null
+          quantidade: number | null
+          receita: number | null
+          sku: string | null
+          status_pedido: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_itens_order_sn_fkey"
+            columns: ["order_sn"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["order_sn"]
+          },
+        ]
+      }
       shopee_connection_status: {
         Row: {
           app_tipo: string | null
@@ -488,7 +545,8 @@ export type Database = {
       analise_margem_sku: {
         Args: { p_ate: string; p_de: string }
         Returns: {
-          custo_unitario: number
+          custo_atual: number
+          custo_periodo: number
           item_id: number
           liquido_unitario: number
           lucro_unitario: number
@@ -646,6 +704,16 @@ export type Database = {
           variacao: string
           vendidos_periodo: number
         }[]
+      }
+      registrar_custo: {
+        Args: {
+          p_custo: number
+          p_inicio?: string
+          p_item_id: number
+          p_model_id: number
+          p_observacao?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
