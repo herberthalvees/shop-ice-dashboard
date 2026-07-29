@@ -84,11 +84,11 @@ async function handlePush(request: Request) {
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { error: erroBanco } = await supabaseAdmin.from("eventos_log").insert({
+    const { error: erroBanco } = await (supabaseAdmin.from("eventos_log") as any).insert({
       code,
       tipo_evento: TIPOS_EVENTO[code] ?? `desconhecido_${code}`,
       shop_id: shopId,
-      payload: payload as never,
+      payload,
       assinatura_valida: assinaturaValida,
     });
 
