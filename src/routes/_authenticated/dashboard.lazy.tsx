@@ -26,7 +26,7 @@ import {
   Legend,
   Cell,
 } from "recharts";
-import { ShoppingBag, DollarSign, Receipt, Package, Wallet, XCircle as XCircleIcon, Snowflake, ArrowRight, Sparkles, CalendarIcon } from "lucide-react";
+import { ShoppingBag, DollarSign, Receipt, Package, Wallet, XCircle as XCircleIcon, Snowflake, ArrowRight, Sparkles, CalendarIcon, Percent } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -140,6 +140,7 @@ function DashboardPage() {
         itens: Number(r.itens_vendidos ?? 0),
         cancelados: Number(r.pedidos_cancelados ?? 0),
         valorLiquido: Number(r.valor_liquido ?? 0),
+        totalTaxas: Number(r.total_taxas ?? 0),
         cobertura: Number(r.cobertura_liquido ?? 0),
       };
     },
@@ -332,7 +333,7 @@ function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
         <KpiCard icon={DollarSign} label="Faturamento" value={loadKpis ? null : brl(kpis?.faturamento ?? 0)} />
         <KpiCard
           icon={ShoppingBag}
@@ -361,6 +362,33 @@ function DashboardPage() {
                   ? `parcial: ${pct(kpis?.cobertura ?? 0)} dos pedidos`
                   : undefined
           }
+        />
+        <KpiCard
+          icon={Percent}
+          label="Taxas Shopee"
+          value={
+            loadKpis
+              ? null
+              : (kpis?.cobertura ?? 0) === 0
+                ? "—"
+                : brl(kpis?.totalTaxas ?? 0)
+          }
+          hint={
+            loadKpis
+              ? undefined
+              : (kpis?.cobertura ?? 0) === 0
+                ? "Aguardando sincronização de repasses"
+                : (kpis?.cobertura ?? 0) < 1
+                  ? `parcial: ${pct(kpis?.cobertura ?? 0)} · ${
+                      (kpis?.faturamento ?? 0) > 0
+                        ? pct((kpis?.totalTaxas ?? 0) / (kpis?.faturamento ?? 1))
+                        : "—"
+                    } do faturamento`
+                  : (kpis?.faturamento ?? 0) > 0
+                    ? `${pct((kpis?.totalTaxas ?? 0) / (kpis?.faturamento ?? 1))} do faturamento`
+                    : undefined
+          }
+          tone="warning"
         />
         <KpiCard icon={XCircleIcon} label="Cancelados" value={loadKpis ? null : String(kpis?.cancelados ?? 0)} tone="warning" />
       </div>
