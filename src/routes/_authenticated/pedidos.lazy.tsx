@@ -28,7 +28,6 @@ const toISO = (d: Date) => format(d, "yyyy-MM-dd");
 const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
 
 const PAGE_SIZE = 50;
-const STATUS = ["UNPAID", "TO_SHIP", "READY_TO_SHIP", "SHIPPED", "COMPLETED", "CANCELLED", "TO_RETURN"];
 const NAO_CONCRETIZADO = ["UNPAID", "CANCELLED"];
 
 type Linha = {
@@ -67,6 +66,16 @@ function PedidosPage() {
   const p_status = status === "todos" ? null : status;
 
   useEffect(() => { setPagina(0); }, [p_de, p_ate, busca, status]);
+
+  const { data: statusOpcoes } = useQuery({
+    queryKey: ["status-disponiveis"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("status_disponiveis" as any);
+      if (error) throw error;
+      return ((data as unknown) as { status: string; pedidos: number }[]) ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
 
   const { data, isLoading } = useQuery({
     queryKey: ["pedidos-detalhe", p_de, p_ate, p_busca, p_status, pagina],
@@ -203,7 +212,11 @@ function PedidosPage() {
                 <SelectTrigger className="w-48"><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos os status</SelectItem>
-                  {STATUS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {(statusOpcoes ?? []).map((s) => (
+                    <SelectItem key={s.status} value={s.status}>
+                      {s.status} ({Number(s.pedidos).toLocaleString("pt-BR")})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
