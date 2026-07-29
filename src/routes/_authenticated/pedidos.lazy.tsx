@@ -255,6 +255,7 @@ function PedidosPage() {
                       const naoConcretizado = NAO_CONCRETIZADO.includes(r.status ?? "");
                       const semCusto = r.custo == null;
                       const lucro = naoConcretizado ? 0 : r.lucro;
+                      const estimado = !naoConcretizado && r.tem_escrow === false;
                       return (
                         <TableRow key={`${r.order_sn}-${r.sku ?? i}-${i}`} className={naoConcretizado ? "opacity-50" : undefined}>
                           <TableCell>
@@ -301,6 +302,14 @@ function PedidosPage() {
                               >
                                 {brl(lucro)}
                               </span>
+                              {estimado ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="cursor-help text-xs text-muted-foreground">*</span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>estimado, repasse ainda não consultado</TooltipContent>
+                                </Tooltip>
+                              ) : null}
                               {naoConcretizado ? (
                                 <Badge variant="outline" className="text-[10px] text-muted-foreground">não concretizado</Badge>
                               ) : semCusto ? (
