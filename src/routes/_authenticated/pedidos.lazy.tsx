@@ -48,6 +48,7 @@ type Linha = {
   lucro: number | null;
   margem_pct: number | null;
   comprador: string | null;
+  tem_escrow: boolean | null;
 };
 
 function PedidosPage() {
@@ -92,6 +93,7 @@ function PedidosPage() {
         tarifa: Number(r?.tarifa ?? 0),
         custo: Number(r?.custo ?? 0),
         lucro: Number(r?.lucro ?? 0),
+        estimadas: Number(r?.linhas_estimadas ?? 0),
       };
     },
   });
@@ -168,13 +170,14 @@ function PedidosPage() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <CardTotal titulo="Valor" valor={loadTotais ? null : brl(totais?.valor)} />
-          <CardTotal titulo="Tarifas Shopee" valor={loadTotais ? null : brl(totais?.tarifa)} />
+          <CardTotal titulo="Tarifas Shopee" valor={loadTotais ? null : brl(totais?.tarifa)} nota={nota} />
           <CardTotal titulo="Custo dos produtos" valor={loadTotais ? null : brl(totais?.custo)} />
           <CardTotal
             titulo="Lucro"
             valor={loadTotais ? null : brl(totais?.lucro)}
             tom={(totais?.lucro ?? 0) < 0 ? "neg" : "pos"}
             destaque
+            nota={nota}
           />
         </div>
 
