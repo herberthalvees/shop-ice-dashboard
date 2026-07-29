@@ -141,20 +141,20 @@ function DashboardPage() {
   });
 
   const { data: serie, isLoading: loadSerie } = useQuery({
-    queryKey: ["serie", dias],
+    queryKey: ["serie", periodo, dataCustom?.toISOString()],
     queryFn: async () => {
-      const desde = new Date();
-      desde.setDate(desde.getDate() - dias);
-      desde.setHours(0, 0, 0, 0);
       const { data } = await supabase
         .from("pedidos")
         .select("data_criacao_pedido, valor_total")
-        .gte("data_criacao_pedido", desde.toISOString());
+        .gte("data_criacao_pedido", range.desde)
+        .lte("data_criacao_pedido", range.ate);
       const buckets = new Map<string, { pedidos: number; faturamento: number }>();
-      for (let i = dias - 1; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        d.setHours(0, 0, 0, 0);
+      const start = new Date(range.desde);
+      const end = new Date(range.ate);
+      const totalDias = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+      for (let i = 0; i < totalDias; i++) {
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
         buckets.set(d.toISOString().slice(0, 10), { pedidos: 0, faturamento: 0 });
       }
       for (const p of data ?? []) {
@@ -167,21 +167,20 @@ function DashboardPage() {
         }
       }
       return Array.from(buckets.entries()).map(([data, v]) => ({
-        data: data.slice(5),
+        data: totalDias === 1 ? data : data.slice(5),
         ...v,
       }));
     },
   });
 
   const { data: topProdutos, isLoading: loadTop } = useQuery({
-    queryKey: ["topProdutos", dias],
+    queryKey: ["topProdutos", periodo, dataCustom?.toISOString()],
     queryFn: async () => {
-      const desde = new Date();
-      desde.setDate(desde.getDate() - dias);
       const { data } = await supabase
         .from("pedidos")
         .select("itens")
-        .gte("data_criacao_pedido", desde.toISOString());
+        .gte("data_criacao_pedido", range.desde)
+        .lte("data_criacao_pedido", range.ate);
       const map = new Map<string, number>();
       for (const p of data ?? []) {
         const itens = (p.itens as any[]) ?? [];
