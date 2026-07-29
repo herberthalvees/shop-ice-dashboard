@@ -23,6 +23,7 @@ import { Route as ApiShopeeAuthUrlRouteImport } from './routes/api/shopee/auth-u
 import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/shopee/webhook'
 import { Route as ApiPublicShopeeSyncProdutosRouteImport } from './routes/api/public/shopee/sync-produtos'
 import { Route as ApiPublicShopeeSyncEscrowRouteImport } from './routes/api/public/shopee/sync-escrow'
+import { Route as ApiPublicShopeeSyncCarteiraRouteImport } from './routes/api/public/shopee/sync-carteira'
 import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
 import { Route as ApiPublicShopeeRefreshTokenRouteImport } from './routes/api/public/shopee/refresh-token'
 import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
@@ -114,6 +115,12 @@ const ApiPublicShopeeSyncEscrowRoute =
     path: '/api/public/shopee/sync-escrow',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicShopeeSyncCarteiraRoute =
+  ApiPublicShopeeSyncCarteiraRouteImport.update({
+    id: '/api/public/shopee/sync-carteira',
+    path: '/api/public/shopee/sync-carteira',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicShopeeSyncRoute = ApiPublicShopeeSyncRouteImport.update({
   id: '/api/public/shopee/sync',
   path: '/api/public/shopee/sync',
@@ -151,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
+  '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
+  '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
@@ -191,6 +200,7 @@ export interface FileRoutesById {
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
+  '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
@@ -212,6 +222,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
+    | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
     | '/api/public/shopee/webhook'
@@ -231,6 +242,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
+    | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
     | '/api/public/shopee/webhook'
@@ -251,6 +263,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
+    | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
     | '/api/public/shopee/webhook'
@@ -266,6 +279,7 @@ export interface RootRouteChildren {
   ApiPublicShopeeRefreshRoute: typeof ApiPublicShopeeRefreshRoute
   ApiPublicShopeeRefreshTokenRoute: typeof ApiPublicShopeeRefreshTokenRoute
   ApiPublicShopeeSyncRoute: typeof ApiPublicShopeeSyncRoute
+  ApiPublicShopeeSyncCarteiraRoute: typeof ApiPublicShopeeSyncCarteiraRoute
   ApiPublicShopeeSyncEscrowRoute: typeof ApiPublicShopeeSyncEscrowRoute
   ApiPublicShopeeSyncProdutosRoute: typeof ApiPublicShopeeSyncProdutosRoute
   ApiPublicShopeeWebhookRoute: typeof ApiPublicShopeeWebhookRoute
@@ -371,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeSyncEscrowRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/shopee/sync-carteira': {
+      id: '/api/public/shopee/sync-carteira'
+      path: '/api/public/shopee/sync-carteira'
+      fullPath: '/api/public/shopee/sync-carteira'
+      preLoaderRoute: typeof ApiPublicShopeeSyncCarteiraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shopee/sync': {
       id: '/api/public/shopee/sync'
       path: '/api/public/shopee/sync'
@@ -433,6 +454,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShopeeRefreshRoute: ApiPublicShopeeRefreshRoute,
   ApiPublicShopeeRefreshTokenRoute: ApiPublicShopeeRefreshTokenRoute,
   ApiPublicShopeeSyncRoute: ApiPublicShopeeSyncRoute,
+  ApiPublicShopeeSyncCarteiraRoute: ApiPublicShopeeSyncCarteiraRoute,
   ApiPublicShopeeSyncEscrowRoute: ApiPublicShopeeSyncEscrowRoute,
   ApiPublicShopeeSyncProdutosRoute: ApiPublicShopeeSyncProdutosRoute,
   ApiPublicShopeeWebhookRoute: ApiPublicShopeeWebhookRoute,
