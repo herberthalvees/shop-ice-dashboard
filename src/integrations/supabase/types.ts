@@ -41,6 +41,33 @@ export type Database = {
         }
         Relationships: []
       }
+      dim_produto: {
+        Row: {
+          atualizado_em: string
+          categoria: string | null
+          custo_unitario: number | null
+          item_id: number | null
+          produto: string | null
+          sku: string
+        }
+        Insert: {
+          atualizado_em?: string
+          categoria?: string | null
+          custo_unitario?: number | null
+          item_id?: number | null
+          produto?: string | null
+          sku: string
+        }
+        Update: {
+          atualizado_em?: string
+          categoria?: string | null
+          custo_unitario?: number | null
+          item_id?: number | null
+          produto?: string | null
+          sku?: string
+        }
+        Relationships: []
+      }
       eventos_log: {
         Row: {
           assinatura_valida: boolean
@@ -79,6 +106,59 @@ export type Database = {
           tipo_evento?: string | null
         }
         Relationships: []
+      }
+      pedido_itens: {
+        Row: {
+          created_at: string
+          data_criacao_pedido: string | null
+          id: number
+          item_id: number
+          model_id: number
+          order_sn: string
+          preco_unitario: number | null
+          produto: string | null
+          quantidade: number
+          receita: number | null
+          sku: string | null
+          status_pedido: string | null
+        }
+        Insert: {
+          created_at?: string
+          data_criacao_pedido?: string | null
+          id?: number
+          item_id?: number
+          model_id?: number
+          order_sn: string
+          preco_unitario?: number | null
+          produto?: string | null
+          quantidade?: number
+          receita?: number | null
+          sku?: string | null
+          status_pedido?: string | null
+        }
+        Update: {
+          created_at?: string
+          data_criacao_pedido?: string | null
+          id?: number
+          item_id?: number
+          model_id?: number
+          order_sn?: string
+          preco_unitario?: number | null
+          produto?: string | null
+          quantidade?: number
+          receita?: number | null
+          sku?: string | null
+          status_pedido?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedido_itens_order_sn_fkey"
+            columns: ["order_sn"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["order_sn"]
+          },
+        ]
       }
       pedidos: {
         Row: {
@@ -291,15 +371,18 @@ export type Database = {
       }
     }
     Functions: {
-      dashboard_kpi_periodo: {
-        Args: { p_ate: string; p_desde: string }
+      dashboard_kpis: {
+        Args: never
         Returns: {
-          faturamento: number
-          pedidos: number
+          aguardando_envio: number
+          faturamento_hoje: number
+          faturamento_mes: number
+          pedidos_hoje: number
+          pedidos_mes: number
         }[]
       }
       dashboard_serie_diaria: {
-        Args: { p_ate: string; p_desde: string }
+        Args: { p_dias?: number }
         Returns: {
           dia: string
           faturamento: number
@@ -307,10 +390,12 @@ export type Database = {
         }[]
       }
       dashboard_top_produtos: {
-        Args: { p_ate: string; p_desde: string; p_limite?: number }
+        Args: { p_dias?: number; p_limite?: number }
         Returns: {
-          nome: string
-          qtd: number
+          produto: string
+          quantidade: number
+          receita: number
+          sku: string
         }[]
       }
       has_role: {
