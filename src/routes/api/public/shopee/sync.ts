@@ -110,6 +110,7 @@ async function handler({ request }: { request: Request }) {
     const token = conexao.access_token as string;
 
     const todosSn: string[] = [];
+    const inicioOriginal = inicio;
 
     while (inicio < limite) {
       const fim = Math.min(inicio + JANELA, limite);
@@ -213,7 +214,7 @@ async function handler({ request }: { request: Request }) {
     return responder({
       ok: erros.length === 0,
       campo: campo,
-      de: new Date(inicio * 1000).toISOString(),
+      de: new Date(inicioOriginal * 1000).toISOString(),
       ate: new Date(limite * 1000).toISOString(),
       pedidos_encontrados: unicos.length,
       pedidos_gravados: gravados,
