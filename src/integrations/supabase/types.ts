@@ -107,6 +107,33 @@ export type Database = {
         }
         Relationships: []
       }
+      despesas_fixas: {
+        Row: {
+          ativa: boolean
+          categoria: string | null
+          created_at: string
+          descricao: string
+          id: number
+          valor: number
+        }
+        Insert: {
+          ativa?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao: string
+          id?: number
+          valor: number
+        }
+        Update: {
+          ativa?: boolean
+          categoria?: string | null
+          created_at?: string
+          descricao?: string
+          id?: number
+          valor?: number
+        }
+        Relationships: []
+      }
       dim_produto: {
         Row: {
           atualizado_em: string
@@ -656,6 +683,30 @@ export type Database = {
           quantidade: number
           receita: number
           sku: string
+        }[]
+      }
+      dre_mensal: {
+        Args: { p_ano: number; p_mes: number }
+        Returns: {
+          ads: number
+          ads_pct: number
+          cancelamentos: number
+          cmv: number
+          cmv_pct: number
+          despesas_fixas: number
+          despesas_fixas_pct: number
+          impostos: number
+          impostos_pct: number
+          lucro_bruto: number
+          lucro_bruto_pct: number
+          lucro_liquido: number
+          lucro_liquido_pct: number
+          receita_bruta: number
+          receita_liquida: number
+          resultado_operacional: number
+          resultado_operacional_pct: number
+          taxas_marketplace: number
+          taxas_pct: number
         }[]
       }
       has_role: {
