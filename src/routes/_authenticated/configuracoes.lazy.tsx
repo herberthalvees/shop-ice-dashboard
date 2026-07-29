@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Store, RefreshCw, Loader2, ExternalLink, Lock } from "lucide-react";
+import { Store, RefreshCw, Loader2, ExternalLink, Lock, AlertTriangle } from "lucide-react";
 import { getShopeeAuthUrl, runShopeeSync } from "@/lib/shopee.functions";
 
 export const Route = createLazyFileRoute("/_authenticated/configuracoes")({
@@ -76,6 +76,15 @@ function ConfigPage() {
     revogada: "bg-destructive/20 text-destructive border-destructive/30",
   };
 
+  const expiraMs = conn?.token_expires_at ? new Date(conn.token_expires_at).getTime() - Date.now() : null;
+  const tokenAlerta = expiraMs !== null && expiraMs < 60 * 60 * 1000;
+  const tokenExpirado = expiraMs !== null && expiraMs <= 0;
+  const tokenLabel = expiraMs === null
+    ? "—"
+    : tokenExpirado
+      ? "Expirado"
+      : `em ${Math.max(1, Math.floor(expiraMs / 60000))} min`;
+
   return (
     <div className="space-y-6">
       <div>
@@ -94,7 +103,17 @@ function ConfigPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <Info k="Loja" v={conn?.shop_name ?? "—"} />
                 <Info k="shop_id" v={conn?.shop_id ? String(conn.shop_id) : "—"} />
-                <Info k="Token expira em" v={conn?.token_expires_at ? new Date(conn.token_expires_at).toLocaleString("pt-BR") : "—"} />
+                <Info k="Token expira em" v={
+                  <span className={`inline-flex items-center gap-1.5 ${tokenAlerta ? (tokenExpirado ? "text-destructive" : "text-[color:var(--warning)]") : ""}`}>
+                    {tokenAlerta && <AlertTriangle className="h-3.5 w-3.5" />}
+                    {conn?.token_expires_at ? (
+                      <span>
+                        {new Date(conn.token_expires_at).toLocaleString("pt-BR")}
+                        <span className="ml-1 text-xs opacity-80">({tokenLabel})</span>
+                      </span>
+                    ) : "—"}
+                  </span>
+                } />
                 <Info k="Status" v={
                   <span className={`inline-flex px-2 py-0.5 rounded border text-xs ${statusColor[conn?.status ?? ""] ?? "bg-muted"}`}>
                     {conn?.status ?? "sem conexão"}

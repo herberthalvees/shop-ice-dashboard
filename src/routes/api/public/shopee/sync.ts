@@ -211,6 +211,21 @@ async function handler({ request }: { request: Request }) {
       erros: erros.length,
     });
 
+    try {
+      await supabaseAdmin.from('sync_log' as any).insert({
+        campo,
+        de: new Date(inicioOriginal * 1000).toISOString(),
+        ate: new Date(limite * 1000).toISOString(),
+        encontrados: unicos.length,
+        gravados,
+        duracao_ms: Date.now() - inicioExecucao,
+        ok: erros.length === 0,
+        erros: erros.length ? erros : null,
+      });
+    } catch (logErro) {
+      console.error('falha ao gravar sync_log', String(logErro));
+    }
+
     return responder({
       ok: erros.length === 0,
       campo: campo,
@@ -223,6 +238,19 @@ async function handler({ request }: { request: Request }) {
     });
   } catch (erro) {
     console.error('erro no sync', String(erro));
+    try {
+      const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
+      await supabaseAdmin.from('sync_log' as any).insert({
+        campo: null,
+        encontrados: 0,
+        gravados: 0,
+        duracao_ms: Date.now() - inicioExecucao,
+        ok: false,
+        erros: [String(erro), ...erros],
+      });
+    } catch (logErro) {
+      console.error('falha ao gravar sync_log (catch)', String(logErro));
+    }
     return responder({ ok: false, erro: 'erro interno', erros }, 500);
   }
 }
