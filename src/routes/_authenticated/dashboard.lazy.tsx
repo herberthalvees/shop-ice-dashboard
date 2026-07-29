@@ -350,157 +350,162 @@ function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-7">
-        <KpiCard icon={DollarSign} label="Faturamento" value={loadKpis ? null : brl(kpis?.faturamento ?? 0)} />
-        <KpiCard
-          icon={ShoppingBag}
-          label="Pedidos"
+      {/* BLOCO 1: Faixa de destaque */}
+      <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-background">
+        <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/20 blur-3xl" aria-hidden />
+        <CardContent className="relative flex flex-col gap-4 p-6 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-2">
+            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Faturamento</span>
+            <div className="text-4xl md:text-5xl font-semibold tabular-nums leading-none">
+              {loadKpis ? <Skeleton className="h-12 w-64" /> : brl(kpis?.faturamento ?? 0)}
+            </div>
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              {loadKpis ? <Skeleton className="h-6 w-40" /> : (kpis?.coberturaCusto ?? 0) === 0 ? (
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Lucro</span>
+                  <span className="font-semibold text-lg">—</span>
+                  <Link to="/produtos" search={{ q: "" }} className="text-xs text-primary underline underline-offset-2">
+                    informe os custos em Produtos
+                  </Link>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-sm text-muted-foreground">Lucro</span>
+                    <span className={`text-2xl font-semibold tabular-nums ${((kpis?.lucro ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                      {brl(kpis?.lucro ?? 0)}
+                    </span>
+                    <span className={`text-sm tabular-nums ${((kpis?.lucroPct ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                      ({(kpis?.lucroPct ?? 0).toFixed(1).replace(".", ",")}%)
+                    </span>
+                  </div>
+                  {(kpis?.coberturaCusto ?? 1) < 1 && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 px-2 py-0.5 text-[11px] text-[color:var(--warning)]">
+                      <AlertTriangle className="h-3 w-3" />
+                      custo informado em {((kpis?.coberturaCusto ?? 0) * 100).toFixed(0)}% das unidades
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Período</span>
+            <div className="text-sm tabular-nums">{rangeLabel}</div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* BLOCO 2: Cards de resultado */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <ResultCard
+          label="Vendas"
           value={loadKpis ? null : String(kpis?.pedidosValidos ?? 0)}
-          hint={loadKpis ? undefined : `de ${kpis?.pedidosTotal ?? 0} no total`}
+          hint={loadKpis ? undefined : `${kpis?.unidades ?? 0} unidades`}
         />
-        <KpiCard icon={Receipt} label="Ticket médio" value={loadKpis ? null : brl(kpis?.ticketMedio ?? 0)} />
-        <KpiCard icon={Package} label="Itens vendidos" value={loadKpis ? null : String(kpis?.itens ?? 0)} />
-        {(() => {
-          const cobertura = kpis?.cobertura ?? 0;
-          const estimando = cobertura > 0 && cobertura < 0.95;
-          const semDados = cobertura === 0;
-          const tooltip = "Valor estimado a partir dos pedidos que já tiveram o repasse consultado.";
-
-          const valorLiquidoValue = loadKpis
-            ? null
-            : semDados
-              ? "—"
-              : estimando
-                ? brl(kpis?.projecaoLiquido ?? 0)
-                : brl(kpis?.valorLiquido ?? 0);
-
-          const valorLiquidoHint = loadKpis
-            ? undefined
-            : semDados
-              ? "Aguardando sincronização de repasses"
-              : estimando
-                ? `margem de ${pct(kpis?.margemLiquida ?? 0)} medida em ${pct(cobertura)} dos pedidos`
-                : `margem de ${pct(kpis?.margemLiquida ?? 0)}`;
-
-          const taxasValue = loadKpis
-            ? null
-            : semDados
-              ? "—"
-              : brl(kpis?.totalTaxas ?? 0);
-
-          const taxasHint = loadKpis
-            ? undefined
-            : semDados
-              ? "Aguardando sincronização de repasses"
-              : `${pct(kpis?.percentualTaxas ?? 0)} do faturamento medido`;
-
-          return (
-            <>
-              <KpiCard
-                icon={Wallet}
-                label="Valor líquido"
-                value={valorLiquidoValue}
-                hint={valorLiquidoHint}
-                estimativa={!loadKpis && estimando}
-                tooltip={tooltip}
-              />
-              <KpiCard
-                icon={Percent}
-                label="Taxas Shopee"
-                value={taxasValue}
-                hint={taxasHint}
-                tone="warning"
-                tooltip={tooltip}
-              />
-            </>
-          );
-        })()}
-        <KpiCard icon={XCircleIcon} label="Cancelados" value={loadKpis ? null : String(kpis?.cancelados ?? 0)} tone="warning" />
-        <EstoqueBaixoKpi />
+        <ResultCard label="Ticket médio" value={loadKpis ? null : brl(kpis?.ticketMedio ?? 0)} />
+        <ResultCard
+          label="Lucro médio"
+          value={loadKpis ? null : ((kpis?.coberturaCusto ?? 0) === 0 ? "—" : brl(kpis?.lucroMedio ?? 0))}
+          hint={loadKpis ? undefined : "por pedido"}
+          tone={((kpis?.lucroMedio ?? 0) < 0) ? "danger" : "success"}
+        />
+        <ResultCard
+          label="Canceladas"
+          value={loadKpis ? null : String(kpis?.cancelados ?? 0)}
+          hint={loadKpis ? undefined : brl(kpis?.valorCancelado ?? 0)}
+          tone="warning"
+        />
       </div>
+
+      {/* BLOCO 3: Composição de custos */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <CompCard label="Custos" valor={loadKpis ? null : brl(kpis?.custoTotal ?? 0)} pct={loadKpis ? null : `${(kpis?.custoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="danger" />
+        <CompCard label="Tarifas" valor={loadKpis ? null : brl(kpis?.taxas ?? 0)} pct={loadKpis ? null : `${(kpis?.taxasPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="warning" />
+        <CompCard label="Impostos" valor={loadKpis ? null : brl(kpis?.imposto ?? 0)} pct={loadKpis ? null : ((kpis?.impostoPct ?? 0) === 0 ? "defina em Configurações" : `${(kpis?.impostoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`)} tone="muted" />
+        <CompCard label="Líquido Shopee" valor={loadKpis ? null : brl(kpis?.valorLiquido ?? 0)} pct={null} tone="primary" />
+      </div>
+
+      {/* BLOCO 4: Ads placeholder */}
+      <Card className="border-dashed opacity-70">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" /> Ads
+            <Badge variant="secondary" className="text-[10px]">em breve</Badge>
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">Aguardando liberação da API de Ads</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+            {["Investimento", "Receita", "ROAS", "ACOS", "TACOS"].map((r) => (
+              <div key={r} className="rounded-md border border-dashed p-3">
+                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{r}</div>
+                <div className="mt-1 text-lg font-semibold text-muted-foreground/60">—</div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              Faturamento e pedidos por {granLabel}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">{rangeLabel}</p>
-          </CardHeader>
-          <CardContent className="h-72">
-            {loadSerie ? (
-              <Skeleton className="h-full w-full" />
-            ) : (serie ?? []).length === 0 ? (
-              <EmptyMini msg="Sem dados no período." />
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={serie ?? []} margin={{ top: 12, right: 16, left: 4, bottom: 5 }}>
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
-                  <XAxis dataKey="rotulo" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                  <YAxis
-                    yAxisId="left"
-                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                    stroke="var(--border)"
-                    tickFormatter={(v) => brlAbrev(Number(v))}
-                  />
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                    stroke="var(--border)"
-                  />
-                  <Tooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null;
-                      const p = payload[0].payload as any;
-                      const d = new Date(p.periodo);
-                      const dataStr = format(d, "PPP", { locale: ptBR });
-                      return (
-                        <div className="rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
-                          <div className="font-medium">{dataStr}</div>
-                          <div className="mt-1 flex items-center gap-2">
-                            <span className="inline-block h-2 w-2 rounded-sm" style={{ background: "var(--color-chart-1)" }} />
-                            Faturamento: <span className="tabular-nums">{brl(p.faturamento)}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--color-chart-2)" }} />
-                            Pedidos: <span className="tabular-nums">{p.pedidos}</span>
-                          </div>
-                          {p.parcial && (
-                            <div className="mt-1 text-[10px] uppercase tracking-wide text-[color:var(--warning)]">
-                              dia em andamento
+            <Tabs defaultValue="fat">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="text-base">Detalhamento</CardTitle>
+                <TabsList>
+                  <TabsTrigger value="fat">Faturamento</TabsTrigger>
+                  <TabsTrigger value="abc">Curva ABC</TabsTrigger>
+                  <TabsTrigger value="canc">Cancelados</TabsTrigger>
+                </TabsList>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">{rangeLabel}</p>
+              <TabsContent value="fat" className="mt-4">
+                <div className="h-72">
+                  {loadSerie ? (
+                    <Skeleton className="h-full w-full" />
+                  ) : (serie ?? []).length === 0 ? (
+                    <EmptyMini msg="Sem dados no período." />
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={serie ?? []} margin={{ top: 12, right: 16, left: 4, bottom: 5 }}>
+                        <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
+                        <XAxis dataKey="rotulo" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                        <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
+                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                        <Tooltip content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const p = payload[0].payload as any;
+                          const d = new Date(p.periodo);
+                          return (
+                            <div className="rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
+                              <div className="font-medium">{format(d, "PPP", { locale: ptBR })}</div>
+                              <div className="mt-1">Faturamento: <span className="tabular-nums font-medium">{brl(p.faturamento)}</span></div>
+                              <div>Pedidos: <span className="tabular-nums font-medium">{p.pedidos}</span></div>
+                              {p.parcial && <div className="mt-1 text-[10px] uppercase text-[color:var(--warning)]">parcial</div>}
                             </div>
-                          )}
-                        </div>
-                      );
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar
-                    yAxisId="left"
-                    dataKey="faturamento"
-                    name="Faturamento"
-                    fill="var(--color-chart-1)"
-                    radius={[4, 4, 0, 0]}
-                  >
-                    {(serie ?? []).map((entry, i) => (
-                      <Cell key={i} fillOpacity={entry.parcial ? 0.4 : 1} />
-                    ))}
-                  </Bar>
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="pedidos"
-                    name="Pedidos"
-                    stroke="var(--color-chart-2)"
-                    strokeWidth={1.5}
-                    dot={{ r: 2.5, fill: "var(--color-chart-2)" }}
-                    activeDot={{ r: 4 }}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
+                          );
+                        }} />
+                        <Legend wrapperStyle={{ fontSize: 12 }} />
+                        <Bar yAxisId="left" dataKey="faturamento" name="Faturamento" fill="var(--color-chart-1)" radius={[4,4,0,0]}>
+                          {(serie ?? []).map((entry, i) => (
+                            <Cell key={i} fillOpacity={entry.parcial ? 0.4 : 1} />
+                          ))}
+                        </Bar>
+                        <Line yAxisId="right" type="monotone" dataKey="pedidos" name="Pedidos" stroke="var(--color-chart-2)" strokeWidth={1.5} dot={{ r: 2.5, fill: "var(--color-chart-2)" }} activeDot={{ r: 4 }} />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
+              </TabsContent>
+              <TabsContent value="abc" className="mt-4">
+                <CurvaAbcTable data={abc ?? []} loading={loadAbc} />
+              </TabsContent>
+              <TabsContent value="canc" className="mt-4">
+                <CanceladosList data={cancelados ?? []} loading={loadCanc} />
+              </TabsContent>
+            </Tabs>
+          </CardHeader>
         </Card>
 
         <Card>
@@ -583,73 +588,113 @@ function DashboardPage() {
   );
 }
 
-function KpiCard({
-  icon: Icon,
-  label,
-  value,
-  hint,
-  tone,
-  estimativa,
-  tooltip,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string | null;
-  hint?: string;
-  tone?: "warning";
-  estimativa?: boolean;
-  tooltip?: string;
+function ResultCard({ label, value, hint, tone }: {
+  label: string; value: string | null; hint?: string;
+  tone?: "warning" | "success" | "danger";
 }) {
-  const toneRing =
-    tone === "warning"
-      ? "bg-[color:var(--warning)]/12 text-[color:var(--warning)] ring-1 ring-inset ring-[color:var(--warning)]/25"
-      : "bg-primary/12 text-primary ring-1 ring-inset ring-primary/25";
+  const valColor =
+    tone === "danger" ? "text-destructive" :
+    tone === "success" ? "text-[color:var(--success)]" :
+    tone === "warning" ? "text-[color:var(--warning)]" : "";
   return (
-    <Card className="relative overflow-hidden transition-colors hover:border-primary/40">
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 space-y-2">
-            <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
-              {label}
-            </span>
-            {estimativa && (
-              <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-500 ring-1 ring-inset ring-amber-500/30">
-                estimativa
-              </span>
-            )}
-            <div className="text-2xl font-semibold tabular-nums leading-tight">
-              {value === null ? <Skeleton className="h-7 w-24" /> : value}
-            </div>
-            {hint && <div className="text-[11px] text-muted-foreground leading-tight">{hint}</div>}
-          </div>
-          {tooltip ? (
-            <TooltipProvider delayDuration={100}>
-              <UiTooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    type="button"
-                    aria-label="Mais informações"
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing} cursor-help`}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="left" className="max-w-[240px] text-xs leading-relaxed">
-                  <div className="flex items-start gap-1.5">
-                    <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                    <span>{tooltip}</span>
-                  </div>
-                </TooltipContent>
-              </UiTooltip>
-            </TooltipProvider>
-          ) : (
-            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing}`}>
-              <Icon className="h-4 w-4" />
-            </div>
-          )}
+    <Card>
+      <CardContent className="p-5 space-y-1.5">
+        <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
+        <div className={`text-2xl font-semibold tabular-nums leading-tight ${valColor}`}>
+          {value === null ? <Skeleton className="h-7 w-24" /> : value}
         </div>
+        {hint && <div className="text-[11px] text-muted-foreground tabular-nums">{hint}</div>}
       </CardContent>
     </Card>
+  );
+}
+
+function CompCard({ label, valor, pct: pctText, tone }: {
+  label: string; valor: string | null; pct: string | null;
+  tone: "danger" | "warning" | "muted" | "primary";
+}) {
+  const pctColor =
+    tone === "danger" ? "text-destructive" :
+    tone === "warning" ? "text-[color:var(--warning)]" :
+    tone === "primary" ? "text-primary" : "text-muted-foreground";
+  return (
+    <Card>
+      <CardContent className="p-5 space-y-1.5">
+        <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
+        <div className="text-2xl font-semibold tabular-nums leading-tight">
+          {valor === null ? <Skeleton className="h-7 w-24" /> : valor}
+        </div>
+        {pctText !== null && <div className={`text-[11px] tabular-nums ${pctColor}`}>{pctText}</div>}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CurvaAbcTable({ data, loading }: { data: Array<{ produto: string; sku: string; unidades: number; receita: number; participacao: number; acumulado: number; classe: string }>; loading: boolean }) {
+  if (loading) return <Skeleton className="h-72 w-full" />;
+  if (!data.length) return <div className="h-72"><EmptyMini msg="Sem vendas no período." /></div>;
+  const classA = data.filter((r) => r.classe === "A");
+  const somaA = classA.reduce((s, r) => s + r.participacao, 0);
+  const classeColor = (c: string) =>
+    c === "A" ? "bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30" :
+    c === "B" ? "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30" :
+    "bg-muted text-muted-foreground border-border";
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">{classA.length} produtos classe A</span> representam {somaA.toFixed(1).replace(".", ",")}% da receita
+      </p>
+      <div className="max-h-96 overflow-auto rounded-md border">
+        <table className="w-full text-sm">
+          <thead className="sticky top-0 bg-muted/50 text-xs uppercase text-muted-foreground">
+            <tr>
+              <th className="px-3 py-2 text-left">Produto</th>
+              <th className="px-3 py-2 text-left">SKU</th>
+              <th className="px-3 py-2 text-right">Un.</th>
+              <th className="px-3 py-2 text-right">Receita</th>
+              <th className="px-3 py-2 text-right">Part.</th>
+              <th className="px-3 py-2 text-right">Acum.</th>
+              <th className="px-3 py-2 text-center">Classe</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((r, i) => (
+              <tr key={r.sku + i} className="border-t hover:bg-muted/30">
+                <td className="px-3 py-2 max-w-[240px] truncate" title={r.produto}>{r.produto}</td>
+                <td className="px-3 py-2 text-muted-foreground">{r.sku}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{r.unidades}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{brl(r.receita)}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{r.participacao.toFixed(1).replace(".", ",")}%</td>
+                <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.acumulado.toFixed(1).replace(".", ",")}%</td>
+                <td className="px-3 py-2 text-center">
+                  <span className={`inline-flex h-5 w-5 items-center justify-center rounded border text-[11px] font-semibold ${classeColor(r.classe)}`}>{r.classe}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function CanceladosList({ data, loading }: { data: Array<{ order_sn: string; valor_total: number | null; comprador_username: string | null; data_criacao_pedido: string | null }>; loading: boolean }) {
+  if (loading) return <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>;
+  if (!data.length) return <div className="h-40"><EmptyMini msg="Nenhum cancelamento no período." /></div>;
+  return (
+    <div className="max-h-96 overflow-auto divide-y divide-border">
+      {data.map((p) => (
+        <div key={p.order_sn} className="flex items-center justify-between py-2.5 text-sm">
+          <div className="min-w-0">
+            <div className="font-medium truncate">#{p.order_sn}</div>
+            <div className="text-xs text-muted-foreground truncate">
+              {p.comprador_username ?? "—"} · {p.data_criacao_pedido ? new Date(p.data_criacao_pedido).toLocaleString("pt-BR") : "—"}
+            </div>
+          </div>
+          <span className="tabular-nums font-medium text-destructive">{brl(Number(p.valor_total ?? 0))}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -658,29 +703,5 @@ function EmptyMini({ msg }: { msg: string }) {
     <div className="flex h-full min-h-32 items-center justify-center text-sm text-muted-foreground">
       {msg}
     </div>
-  );
-}
-
-function EstoqueBaixoKpi() {
-  const { data, isLoading } = useQuery({
-    queryKey: ["estoque-baixo"],
-    queryFn: async () => {
-      const { data } = await supabase.rpc("produtos_com_giro" as any, { p_dias: 30 });
-      const linhas = (data as any[]) ?? [];
-      const emRisco = linhas.filter(
-        (l) => l.dias_de_estoque != null && Number(l.dias_de_estoque) < 7,
-      ).length;
-      return emRisco;
-    },
-    staleTime: 60_000,
-  });
-  return (
-    <KpiCard
-      icon={PackageX}
-      label="Estoque baixo"
-      value={isLoading ? null : String(data ?? 0)}
-      hint="menos de 7 dias"
-      tone="warning"
-    />
   );
 }
