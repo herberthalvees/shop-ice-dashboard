@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { checkCronSecret } from '@/lib/cron-auth.server';
+import { credenciais } from '@/lib/shopee-credenciais.server';
 
 function responder(corpo: unknown, status = 200) {
   return new Response(JSON.stringify(corpo, null, 2), {
@@ -28,10 +29,10 @@ async function chamarShopee(
   accessToken: string,
   shopId: number,
   parametros: Record<string, string> = {},
+  appTipo: string = 'principal',
 ) {
-  const partnerId = process.env.SHOPEE_PARTNER_ID!;
-  const partnerKey = process.env.SHOPEE_PARTNER_KEY!;
-  const apiBase = process.env.SHOPEE_API_BASE!;
+  const { partnerId, partnerKey, apiBase } = credenciais(appTipo);
+  if (!partnerId || !partnerKey || !apiBase) throw new Error('credenciais Shopee ausentes');
 
   const timestamp = Math.floor(Date.now() / 1000);
   const stringBase = `${partnerId}${path}${timestamp}${accessToken}${shopId}`;
@@ -97,7 +98,7 @@ async function handler({ request }: { request: Request }) {
     const { data: conexao, error: erroBanco } = await supabaseAdmin
       .from('shopee_connection')
       .select('shop_id, access_token, token_expires_at')
-      .eq('id', 1)
+      .eq('app_tipo', 'principal')
       .single();
 
     if (erroBanco || !conexao || !conexao.access_token) {

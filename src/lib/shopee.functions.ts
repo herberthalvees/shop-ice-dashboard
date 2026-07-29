@@ -14,9 +14,12 @@ function originFromRequest(): string {
 
 export const getShopeeAuthUrl = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .inputValidator((data: { app?: string } | undefined) => ({
+    app: data?.app === "ads" ? "ads" : "principal",
+  }))
+  .handler(async ({ data }) => {
     const { buildAuthUrl } = await import("./shopee.server");
-    return { url: buildAuthUrl(originFromRequest()) };
+    return { url: buildAuthUrl(originFromRequest(), data.app) };
   });
 
 export const runShopeeSync = createServerFn({ method: "POST" })

@@ -109,6 +109,8 @@ export const Route = createFileRoute("/api/public/shopee/callback")({
             .from("shopee_connection")
             .upsert({
               id: 1,
+              app_tipo: "principal",
+              partner_id: Number(partnerId),
               shop_id: Number(shopIdParam),
               access_token: dados.access_token,
               refresh_token: dados.refresh_token,
