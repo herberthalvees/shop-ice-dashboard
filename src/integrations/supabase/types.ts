@@ -352,7 +352,9 @@ export type Database = {
       shopee_connection: {
         Row: {
           access_token: string | null
+          app_tipo: string
           id: number
+          partner_id: number | null
           refresh_token: string | null
           shop_id: number | null
           shop_name: string | null
@@ -362,7 +364,9 @@ export type Database = {
         }
         Insert: {
           access_token?: string | null
-          id?: number
+          app_tipo?: string
+          id: number
+          partner_id?: number | null
           refresh_token?: string | null
           shop_id?: number | null
           shop_name?: string | null
@@ -372,7 +376,9 @@ export type Database = {
         }
         Update: {
           access_token?: string | null
+          app_tipo?: string
           id?: number
+          partner_id?: number | null
           refresh_token?: string | null
           shop_id?: number | null
           shop_name?: string | null
@@ -446,7 +452,9 @@ export type Database = {
     Views: {
       shopee_connection_status: {
         Row: {
+          app_tipo: string | null
           id: number | null
+          partner_id: number | null
           shop_id: number | null
           shop_name: string | null
           status: string | null
@@ -454,7 +462,9 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          app_tipo?: string | null
           id?: number | null
+          partner_id?: number | null
           shop_id?: number | null
           shop_name?: string | null
           status?: string | null
@@ -462,7 +472,9 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          app_tipo?: string | null
           id?: number | null
+          partner_id?: number | null
           shop_id?: number | null
           shop_name?: string | null
           status?: string | null
