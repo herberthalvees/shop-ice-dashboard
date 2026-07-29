@@ -388,6 +388,15 @@ function ProdutosPage() {
             </Table>
             </TooltipProvider>
           </div>
+          <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
+            <span>{totaisRodape.total} variações no total</span>
+            <span>
+              {totaisRodape.comCusto} com custo preenchido
+              {totaisRodape.total > 0 && (
+                <span className="ml-1">({Math.round((totaisRodape.comCusto / totaisRodape.total) * 100)}%)</span>
+              )}
+            </span>
+          </div>
         </CardContent>
       </Card>
     </div>
