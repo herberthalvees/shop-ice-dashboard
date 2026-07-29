@@ -1,5 +1,4 @@
-import { createLazyFileRoute } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { usePeriodo, computeRange } from "@/lib/periodo-store";
@@ -11,13 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import type { DateRange } from "react-day-picker";
 import {
   ComposedChart,
   Line,
-  BarChart,
   Bar,
   XAxis,
   YAxis,
@@ -27,11 +25,9 @@ import {
   Legend,
   Cell,
 } from "recharts";
-import { ShoppingBag, DollarSign, Receipt, Package, Wallet, XCircle as XCircleIcon, Snowflake, ArrowRight, Sparkles, CalendarIcon, Percent, PackageX } from "lucide-react";
+import { Snowflake, ArrowRight, Sparkles, CalendarIcon, TrendingUp, AlertTriangle } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Tooltip as UiTooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
 
 export const Route = createLazyFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -50,7 +46,7 @@ const pct = (v: number) => `${(v * 100).toFixed(0)}%`;
 const toISO = (d: Date) => format(d, "yyyy-MM-dd");
 const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
 
-type Preset = "hoje" | "ontem" | "7d" | "30d" | "custom";
+type Preset = "hoje" | "ontem" | "7d" | "30d" | "mes" | "ano" | "custom";
 
 function DashboardPage() {
   const { preset, custom, setPreset, setCustom } = usePeriodo();
@@ -111,19 +107,23 @@ function DashboardPage() {
       const { data } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de, p_ate });
       const r = ((data as any)?.[0] ?? {}) as any;
       return {
-        faturamento: Number(r.faturamento_total ?? 0),
         pedidosValidos: Number(r.pedidos_validos ?? 0),
-        pedidosTotal: Number(r.pedidos_total ?? 0),
+        unidades: Number(r.unidades ?? 0),
+        faturamento: Number(r.faturamento ?? 0),
         ticketMedio: Number(r.ticket_medio ?? 0),
-        itens: Number(r.itens_vendidos ?? 0),
         cancelados: Number(r.pedidos_cancelados ?? 0),
+        valorCancelado: Number(r.valor_cancelado ?? 0),
+        taxas: Number(r.taxas ?? 0),
+        taxasPct: Number(r.taxas_pct ?? 0),
+        custoTotal: Number(r.custo_total ?? 0),
+        custoPct: Number(r.custo_pct ?? 0),
+        coberturaCusto: Number(r.cobertura_custo ?? 0),
+        imposto: Number(r.imposto ?? 0),
+        impostoPct: Number(r.imposto_pct ?? 0),
         valorLiquido: Number(r.valor_liquido ?? 0),
-        totalTaxas: Number(r.total_taxas ?? 0),
-        cobertura: Number(r.cobertura_liquido ?? 0),
-        faturamentoComEscrow: Number(r.faturamento_com_escrow ?? 0),
-        percentualTaxas: Number(r.percentual_taxas ?? 0),
-        margemLiquida: Number(r.margem_liquida ?? 0),
-        projecaoLiquido: Number(r.projecao_liquido ?? 0),
+        lucro: Number(r.lucro ?? 0),
+        lucroPct: Number(r.lucro_pct ?? 0),
+        lucroMedio: Number(r.lucro_medio ?? 0),
       };
     },
   });
@@ -167,6 +167,39 @@ function DashboardPage() {
         .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
         .limit(10);
       return data ?? [];
+    },
+  });
+
+  const { data: cancelados, isLoading: loadCanc } = useQuery({
+    queryKey: ["cancelados", p_de, p_ate],
+    queryFn: async () => {
+      const desde = new Date(p_de + "T00:00:00-03:00").toISOString();
+      const ate2 = new Date(p_ate + "T23:59:59-03:00").toISOString();
+      const { data } = await supabase
+        .from("pedidos")
+        .select("order_sn, valor_total, comprador_username, data_criacao_pedido")
+        .eq("status", "CANCELLED")
+        .gte("data_criacao_pedido", desde)
+        .lte("data_criacao_pedido", ate2)
+        .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
+        .limit(50);
+      return data ?? [];
+    },
+  });
+
+  const { data: abc, isLoading: loadAbc } = useQuery({
+    queryKey: ["abc", p_de, p_ate],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("dashboard_curva_abc" as any, { p_de, p_ate, p_limite: 50 });
+      return ((data as any[]) ?? []).map((r) => ({
+        produto: String(r.produto ?? r.sku ?? ""),
+        sku: String(r.sku ?? ""),
+        unidades: Number(r.unidades ?? 0),
+        receita: Number(r.receita ?? 0),
+        participacao: Number(r.participacao ?? 0),
+        acumulado: Number(r.acumulado ?? 0),
+        classe: String(r.classe ?? ""),
+      }));
     },
   });
 
@@ -247,6 +280,8 @@ function DashboardPage() {
               <SelectItem value="ontem">Ontem</SelectItem>
               <SelectItem value="7d">Últimos 7 dias</SelectItem>
               <SelectItem value="30d">Últimos 30 dias</SelectItem>
+              <SelectItem value="mes">Mês atual</SelectItem>
+              <SelectItem value="ano">1 ano</SelectItem>
               <SelectItem value="custom">Personalizado</SelectItem>
             </SelectContent>
           </Select>
