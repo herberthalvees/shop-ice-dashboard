@@ -59,7 +59,9 @@ const AuthenticatedPrecificacaoRoute =
     id: '/precificacao',
     path: '/precificacao',
     getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/_authenticated/precificacao.lazy').then((d) => d.Route),
+  )
 const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
