@@ -3,6 +3,7 @@
 // Rota publica (sem JWT) - temporaria para testes via curl
 // ---------------------------------------------------------------
 import { createFileRoute } from "@tanstack/react-router";
+import { credenciaisObrigatorias } from "@/lib/shopee-credenciais.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,16 +37,16 @@ async function handler({ request }: { request: Request }) {
   }
 
   try {
-    const partnerId = process.env.SHOPEE_PARTNER_ID;
-    const partnerKey = process.env.SHOPEE_PARTNER_KEY;
-    const apiBase = process.env.SHOPEE_API_BASE;
-    const redirectUrl = process.env.SHOPEE_REDIRECT_URL;
+    const appTipo =
+      new URL(request.url).searchParams.get("app") === "ads" ? "ads" : "principal";
 
-    const faltando: string[] = [];
-    if (!partnerId) faltando.push("SHOPEE_PARTNER_ID");
-    if (!partnerKey) faltando.push("SHOPEE_PARTNER_KEY");
-    if (!apiBase) faltando.push("SHOPEE_API_BASE");
-    if (!redirectUrl) faltando.push("SHOPEE_REDIRECT_URL");
+    const { partnerId, partnerKey, apiBase, faltando } = credenciaisObrigatorias(appTipo);
+
+    const origem = new URL(request.url).origin;
+    const redirectUrl =
+      appTipo === "ads"
+        ? `${origem}/api/public/shopee/callback-ads`
+        : (process.env.SHOPEE_REDIRECT_URL ?? `${origem}/api/public/shopee/callback`);
 
     if (faltando.length > 0) {
       return new Response(
@@ -72,7 +73,7 @@ async function handler({ request }: { request: Request }) {
       `&redirect=${encodeURIComponent(redirectUrl!)}`;
 
     console.log("link de autorizacao gerado", {
-      partner_id: partnerId,
+      app_tipo: appTipo,
       timestamp,
       path,
       tamanho_sign: sign.length,
@@ -81,6 +82,7 @@ async function handler({ request }: { request: Request }) {
     return new Response(
       JSON.stringify({
         ok: true,
+        app: appTipo,
         auth_url: authUrl,
         timestamp,
         validade_segundos: 300,
