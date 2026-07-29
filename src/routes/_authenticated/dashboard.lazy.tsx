@@ -448,15 +448,25 @@ function KpiCard({
   value: string | null;
   tone?: "warning";
 }) {
+  const toneRing =
+    tone === "warning"
+      ? "bg-[color:var(--warning)]/12 text-[color:var(--warning)] ring-1 ring-inset ring-[color:var(--warning)]/25"
+      : "bg-primary/12 text-primary ring-1 ring-inset ring-primary/25";
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
-          <Icon className={`h-4 w-4 ${tone === "warning" ? "text-[color:var(--warning)]" : "text-muted-foreground"}`} />
-        </div>
-        <div className="mt-2 text-2xl font-semibold tabular-nums">
-          {value === null ? <Skeleton className="h-7 w-20" /> : value}
+    <Card className="relative overflow-hidden transition-colors hover:border-primary/40">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-2">
+            <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+              {label}
+            </span>
+            <div className="text-2xl font-semibold tabular-nums leading-tight">
+              {value === null ? <Skeleton className="h-7 w-24" /> : value}
+            </div>
+          </div>
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing}`}>
+            <Icon className="h-4 w-4" />
+          </div>
         </div>
       </CardContent>
     </Card>
