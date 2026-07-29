@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown, Check } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createLazyFileRoute("/_authenticated/produtos")({
   component: ProdutosPage,
@@ -22,6 +23,8 @@ const brl = (v: number | null | undefined) =>
   v == null ? "—" : Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 type Linha = {
+  item_id: number;
+  model_id: number;
   sku: string | null;
   produto: string | null;
   variacao: string | null;
@@ -51,6 +54,7 @@ type SortKey =
 type SortDir = "asc" | "desc";
 
 function ProdutosPage() {
+  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [somenteRisco, setSomenteRisco] = useState(false);
   const [dias, setDias] = useState<number>(30);
@@ -67,6 +71,8 @@ function ProdutosPage() {
       });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
+        item_id: Number(r.item_id ?? 0),
+        model_id: Number(r.model_id ?? 0),
         sku: r.sku ?? null,
         produto: r.produto ?? null,
         variacao: r.variacao ?? null,
