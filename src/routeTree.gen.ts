@@ -19,15 +19,14 @@ import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as ApiShopeeAuthUrlRouteImport } from './routes/api/shopee/auth-url'
 import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/shopee/webhook'
-import { Route as ApiPublicShopeeTesteApiRouteImport } from './routes/api/public/shopee/teste-api'
 import { Route as ApiPublicShopeeSyncProdutosRouteImport } from './routes/api/public/shopee/sync-produtos'
 import { Route as ApiPublicShopeeSyncEscrowRouteImport } from './routes/api/public/shopee/sync-escrow'
 import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
 import { Route as ApiPublicShopeeRefreshTokenRouteImport } from './routes/api/public/shopee/refresh-token'
 import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
 import { Route as ApiPublicShopeeCallbackRouteImport } from './routes/api/public/shopee/callback'
-import { Route as ApiPublicShopeeAuthUrlRouteImport } from './routes/api/public/shopee/auth-url'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -93,14 +92,14 @@ const AuthenticatedConfiguracoesRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/configuracoes.lazy').then((d) => d.Route),
   )
+const ApiShopeeAuthUrlRoute = ApiShopeeAuthUrlRouteImport.update({
+  id: '/api/shopee/auth-url',
+  path: '/api/shopee/auth-url',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicShopeeWebhookRoute = ApiPublicShopeeWebhookRouteImport.update({
   id: '/api/public/shopee/webhook',
   path: '/api/public/shopee/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicShopeeTesteApiRoute = ApiPublicShopeeTesteApiRouteImport.update({
-  id: '/api/public/shopee/teste-api',
-  path: '/api/public/shopee/teste-api',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicShopeeSyncProdutosRoute =
@@ -136,11 +135,6 @@ const ApiPublicShopeeCallbackRoute = ApiPublicShopeeCallbackRouteImport.update({
   path: '/api/public/shopee/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicShopeeAuthUrlRoute = ApiPublicShopeeAuthUrlRouteImport.update({
-  id: '/api/public/shopee/auth-url',
-  path: '/api/public/shopee/auth-url',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,14 +146,13 @@ export interface FileRoutesByFullPath {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
-  '/api/public/shopee/auth-url': typeof ApiPublicShopeeAuthUrlRoute
+  '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
-  '/api/public/shopee/teste-api': typeof ApiPublicShopeeTesteApiRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -172,14 +165,13 @@ export interface FileRoutesByTo {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
-  '/api/public/shopee/auth-url': typeof ApiPublicShopeeAuthUrlRoute
+  '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
-  '/api/public/shopee/teste-api': typeof ApiPublicShopeeTesteApiRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
 }
 export interface FileRoutesById {
@@ -194,14 +186,13 @@ export interface FileRoutesById {
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
-  '/api/public/shopee/auth-url': typeof ApiPublicShopeeAuthUrlRoute
+  '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
-  '/api/public/shopee/teste-api': typeof ApiPublicShopeeTesteApiRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
 }
 export interface FileRouteTypes {
@@ -216,14 +207,13 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/precificacao'
     | '/produtos'
-    | '/api/public/shopee/auth-url'
+    | '/api/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
-    | '/api/public/shopee/teste-api'
     | '/api/public/shopee/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -236,14 +226,13 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/precificacao'
     | '/produtos'
-    | '/api/public/shopee/auth-url'
+    | '/api/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
-    | '/api/public/shopee/teste-api'
     | '/api/public/shopee/webhook'
   id:
     | '__root__'
@@ -257,14 +246,13 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos'
     | '/_authenticated/precificacao'
     | '/_authenticated/produtos'
-    | '/api/public/shopee/auth-url'
+    | '/api/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
-    | '/api/public/shopee/teste-api'
     | '/api/public/shopee/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -273,14 +261,13 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  ApiPublicShopeeAuthUrlRoute: typeof ApiPublicShopeeAuthUrlRoute
+  ApiShopeeAuthUrlRoute: typeof ApiShopeeAuthUrlRoute
   ApiPublicShopeeCallbackRoute: typeof ApiPublicShopeeCallbackRoute
   ApiPublicShopeeRefreshRoute: typeof ApiPublicShopeeRefreshRoute
   ApiPublicShopeeRefreshTokenRoute: typeof ApiPublicShopeeRefreshTokenRoute
   ApiPublicShopeeSyncRoute: typeof ApiPublicShopeeSyncRoute
   ApiPublicShopeeSyncEscrowRoute: typeof ApiPublicShopeeSyncEscrowRoute
   ApiPublicShopeeSyncProdutosRoute: typeof ApiPublicShopeeSyncProdutosRoute
-  ApiPublicShopeeTesteApiRoute: typeof ApiPublicShopeeTesteApiRoute
   ApiPublicShopeeWebhookRoute: typeof ApiPublicShopeeWebhookRoute
 }
 
@@ -356,18 +343,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/shopee/auth-url': {
+      id: '/api/shopee/auth-url'
+      path: '/api/shopee/auth-url'
+      fullPath: '/api/shopee/auth-url'
+      preLoaderRoute: typeof ApiShopeeAuthUrlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shopee/webhook': {
       id: '/api/public/shopee/webhook'
       path: '/api/public/shopee/webhook'
       fullPath: '/api/public/shopee/webhook'
       preLoaderRoute: typeof ApiPublicShopeeWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/teste-api': {
-      id: '/api/public/shopee/teste-api'
-      path: '/api/public/shopee/teste-api'
-      fullPath: '/api/public/shopee/teste-api'
-      preLoaderRoute: typeof ApiPublicShopeeTesteApiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/shopee/sync-produtos': {
@@ -412,13 +399,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/shopee/auth-url': {
-      id: '/api/public/shopee/auth-url'
-      path: '/api/public/shopee/auth-url'
-      fullPath: '/api/public/shopee/auth-url'
-      preLoaderRoute: typeof ApiPublicShopeeAuthUrlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -448,14 +428,13 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  ApiPublicShopeeAuthUrlRoute: ApiPublicShopeeAuthUrlRoute,
+  ApiShopeeAuthUrlRoute: ApiShopeeAuthUrlRoute,
   ApiPublicShopeeCallbackRoute: ApiPublicShopeeCallbackRoute,
   ApiPublicShopeeRefreshRoute: ApiPublicShopeeRefreshRoute,
   ApiPublicShopeeRefreshTokenRoute: ApiPublicShopeeRefreshTokenRoute,
   ApiPublicShopeeSyncRoute: ApiPublicShopeeSyncRoute,
   ApiPublicShopeeSyncEscrowRoute: ApiPublicShopeeSyncEscrowRoute,
   ApiPublicShopeeSyncProdutosRoute: ApiPublicShopeeSyncProdutosRoute,
-  ApiPublicShopeeTesteApiRoute: ApiPublicShopeeTesteApiRoute,
   ApiPublicShopeeWebhookRoute: ApiPublicShopeeWebhookRoute,
 }
 export const routeTree = rootRouteImport

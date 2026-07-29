@@ -99,7 +99,7 @@ async function handler({ request }: { request: Request }) {
   }
 }
 
-export const Route = createFileRoute("/api/public/shopee/auth-url")({
+export const Route = createFileRoute("/api/shopee/auth-url")({
   server: {
     handlers: {
       GET: handler,
