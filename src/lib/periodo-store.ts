@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import type { DateRange } from "react-day-picker";
 
-export type Preset = "hoje" | "ontem" | "7d" | "30d" | "custom";
+export type Preset = "hoje" | "ontem" | "7d" | "30d" | "mes" | "ano" | "custom";
 
 export type PeriodoState = {
   preset: Preset;
@@ -79,6 +79,15 @@ export function computeRange(preset: Preset, custom?: DateRange): { de: Date; at
   if (preset === "30d") {
     const de = new Date(hoje);
     de.setDate(de.getDate() - 29);
+    return { de, ate: hoje };
+  }
+  if (preset === "mes") {
+    const de = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    return { de, ate: hoje };
+  }
+  if (preset === "ano") {
+    const de = new Date(hoje);
+    de.setDate(de.getDate() - 364);
     return { de, ate: hoje };
   }
   const de = custom?.from ?? hoje;

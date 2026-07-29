@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Store, RefreshCw, Loader2, ExternalLink, Lock, AlertTriangle } from "lucide-react";
+import { Store, RefreshCw, Loader2, ExternalLink, Lock, AlertTriangle, Percent } from "lucide-react";
 import { getShopeeAuthUrl, runShopeeSync } from "@/lib/shopee.functions";
 
 export const Route = createLazyFileRoute("/_authenticated/configuracoes")({
@@ -58,6 +58,45 @@ function ConfigPage() {
   const [senha, setSenha] = useState("");
   const [conf, setConf] = useState("");
   const [savingSenha, setSavingSenha] = useState(false);
+
+  const { data: cfg } = useQuery({
+    queryKey: ["config-fiscal"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("config")
+        .select("aliquota_imposto")
+        .eq("id", 1)
+        .maybeSingle();
+      return (data as { aliquota_imposto: number | null } | null);
+    },
+  });
+  const [aliquota, setAliquota] = useState<string>("");
+  const [savingAliq, setSavingAliq] = useState(false);
+  useEffect(() => {
+    if (cfg && aliquota === "") {
+      setAliquota(String(cfg.aliquota_imposto ?? 0).replace(".", ","));
+    }
+  }, [cfg]);
+
+  async function salvarAliquota(e: React.FormEvent) {
+    e.preventDefault();
+    const num = Number(aliquota.replace(",", "."));
+    if (!Number.isFinite(num) || num < 0 || num > 100) {
+      return toast.error("Alíquota inválida", { description: "Informe um valor entre 0 e 100." });
+    }
+    setSavingAliq(true);
+    const { error } = await supabase
+      .from("config")
+      .update({ aliquota_imposto: num })
+      .eq("id", 1);
+    setSavingAliq(false);
+    if (error) toast.error("Erro", { description: error.message });
+    else {
+      toast.success("Alíquota atualizada");
+      qc.invalidateQueries({ queryKey: ["config-fiscal"] });
+      qc.invalidateQueries({ queryKey: ["kpis"] });
+    }
+  }
 
   async function trocarSenha(e: React.FormEvent) {
     e.preventDefault();
@@ -154,6 +193,34 @@ function ConfigPage() {
               <Button type="submit" disabled={savingSenha || !senha}>
                 {savingSenha && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Atualizar senha
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Percent className="h-4 w-4" /> Fiscal</CardTitle>
+          <CardDescription>Percentual efetivo sobre faturamento, informado pelo seu contador.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={salvarAliquota} className="grid gap-4 sm:grid-cols-2 max-w-lg">
+            <div className="space-y-2">
+              <Label htmlFor="aliq">Alíquota de imposto (%)</Label>
+              <Input
+                id="aliq"
+                inputMode="decimal"
+                placeholder="0,00"
+                value={aliquota}
+                onChange={(e) => setAliquota(e.target.value.replace(/[^0-9,\.]/g, ""))}
+              />
+              <p className="text-xs text-muted-foreground">Aceita decimal com vírgula (ex.: 6,5).</p>
+            </div>
+            <div className="sm:col-span-2">
+              <Button type="submit" disabled={savingAliq}>
+                {savingAliq && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar alíquota
               </Button>
             </div>
           </form>
