@@ -55,6 +55,8 @@ function computeRange(preset: Preset, custom?: DateRange): { de: Date; ate: Date
 }
 
 type LinhaMargem = {
+  item_id: number;
+  model_id: number;
   sku: string;
   produto: string | null;
   unidades: number;
@@ -86,6 +88,8 @@ function PrecificacaoPage() {
       const { data, error } = await supabase.rpc("analise_margem_sku" as any, { p_de, p_ate });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
+        item_id: Number(r.item_id ?? 0),
+        model_id: Number(r.model_id ?? 0),
         sku: String(r.sku ?? ""),
         produto: r.produto ?? null,
         unidades: Number(r.unidades ?? 0),
@@ -125,7 +129,7 @@ function PrecificacaoPage() {
     return { skusPrejuizo, perdaTotal, skusSemCusto, comCusto, total: linhas.length };
   }, [linhas]);
 
-  async function salvarCusto(sku: string, valorStr: string) {
+  async function salvarCusto(item_id: number, model_id: number, valorStr: string) {
     const parsed = valorStr.trim() === "" ? null : Number(valorStr.replace(",", "."));
     if (parsed != null && (Number.isNaN(parsed) || parsed < 0)) {
       toast.error("Custo inválido");
@@ -134,8 +138,8 @@ function PrecificacaoPage() {
     const { error } = await supabase
       .from("dim_produto")
       .upsert(
-        { sku, custo_unitario: parsed, atualizado_em: new Date().toISOString() } as any,
-        { onConflict: "sku" },
+        { item_id, model_id, custo_unitario: parsed, atualizado_em: new Date().toISOString() } as any,
+        { onConflict: "item_id,model_id" },
       );
     if (error) {
       toast.error("Erro ao salvar custo", { description: error.message });
@@ -278,7 +282,7 @@ function PrecificacaoPage() {
                 <TableBody>
                   {filtradas.map((l, i) => (
                     <LinhaSKU
-                      key={l.sku}
+                      key={`${l.item_id}-${l.model_id}`}
                       linha={l}
                       onSalvar={salvarCusto}
                       inputRef={(el) => { inputRefs.current[i] = el; }}
@@ -302,7 +306,7 @@ function LinhaSKU({
   onEnter,
 }: {
   linha: LinhaMargem;
-  onSalvar: (sku: string, v: string) => void | Promise<void>;
+  onSalvar: (item_id: number, model_id: number, v: string) => void | Promise<void>;
   inputRef: (el: HTMLInputElement | null) => void;
   onEnter: () => void;
 }) {
@@ -320,7 +324,7 @@ function LinhaSKU({
     : "";
   const taxaEstimada = linha.preco_medio * linha.taxa_percentual + linha.taxa_fixa;
   const salvar = () => {
-    if (valor !== initial) onSalvar(linha.sku, valor);
+    if (valor !== initial) onSalvar(linha.item_id, linha.model_id, valor);
   };
   return (
     <TableRow className={rowClass}>
