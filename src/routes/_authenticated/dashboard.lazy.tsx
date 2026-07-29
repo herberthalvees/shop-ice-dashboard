@@ -2,6 +2,7 @@ import { createLazyFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
+import { usePeriodo, computeRange } from "@/lib/periodo-store";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -51,33 +52,8 @@ const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
 
 type Preset = "hoje" | "ontem" | "7d" | "30d" | "custom";
 
-function computeRange(preset: Preset, custom?: DateRange): { de: Date; ate: Date } {
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  if (preset === "hoje") return { de: hoje, ate: hoje };
-  if (preset === "ontem") {
-    const o = new Date(hoje);
-    o.setDate(o.getDate() - 1);
-    return { de: o, ate: o };
-  }
-  if (preset === "7d") {
-    const de = new Date(hoje);
-    de.setDate(de.getDate() - 6);
-    return { de, ate: hoje };
-  }
-  if (preset === "30d") {
-    const de = new Date(hoje);
-    de.setDate(de.getDate() - 29);
-    return { de, ate: hoje };
-  }
-  const de = custom?.from ?? hoje;
-  const ate = custom?.to ?? custom?.from ?? hoje;
-  return { de, ate };
-}
-
 function DashboardPage() {
-  const [preset, setPreset] = useState<Preset>("30d");
-  const [custom, setCustom] = useState<DateRange | undefined>();
+  const { preset, custom, setPreset, setCustom } = usePeriodo();
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
   const p_de = toISO(de);

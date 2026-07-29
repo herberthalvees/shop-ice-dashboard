@@ -419,10 +419,9 @@ export type Database = {
           preco_medio: number
           preco_minimo: number
           produto: string
+          roas_minimo: number
           situacao: string
           sku: string
-          taxa_fixa: number
-          taxa_percentual: number
           unidades: number
         }[]
       }
@@ -506,12 +505,14 @@ export type Database = {
         }[]
       }
       produtos_com_giro: {
-        Args: { p_dias?: number }
+        Args: { p_ate: string; p_de: string }
         Returns: {
           dias_de_estoque: number
           estoque_disponivel: number
           imagem_url: string
+          item_id: number
           media_diaria: number
+          model_id: number
           preco_atual: number
           produto: string
           sku: string
