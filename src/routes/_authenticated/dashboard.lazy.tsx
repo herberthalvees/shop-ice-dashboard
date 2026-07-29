@@ -604,3 +604,28 @@ function EmptyMini({ msg }: { msg: string }) {
     </div>
   );
 }
+
+function EstoqueBaixoKpi() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["estoque-baixo"],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("produtos_com_giro" as any, { p_dias: 30 });
+      const linhas = (data as any[]) ?? [];
+      const emRisco = linhas.filter(
+        (l) => l.dias_de_estoque != null && Number(l.dias_de_estoque) < 7,
+      ).length;
+      return emRisco;
+    },
+    staleTime: 60_000,
+  });
+  return (
+    <KpiCard
+      icon={PackageX}
+      label="Estoque baixo"
+      value={isLoading ? null : String(data ?? 0)}
+      hint="menos de 7 dias"
+      tone="warning"
+    />
+  );
+}
+}
