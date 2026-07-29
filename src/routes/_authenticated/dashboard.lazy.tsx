@@ -1,15 +1,20 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import {
-  LineChart,
+  ComposedChart,
   Line,
   BarChart,
   Bar,
@@ -19,9 +24,9 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Legend,
-  LabelList,
+  Cell,
 } from "recharts";
-import { ShoppingBag, DollarSign, CalendarDays, Truck, AlertTriangle, Snowflake, ArrowRight, Sparkles } from "lucide-react";
+import { ShoppingBag, DollarSign, Receipt, Package, Wallet, XCircle as XCircleIcon, Snowflake, ArrowRight, Sparkles, CalendarIcon } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -32,10 +37,51 @@ export const Route = createLazyFileRoute("/_authenticated/dashboard")({
 const brl = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-type PeriodoDias = 7 | 30 | 90;
+const brlAbrev = (v: number) => {
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `R$ ${(v / 1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `R$ ${(v / 1_000).toFixed(1)}k`;
+  return `R$ ${v.toFixed(0)}`;
+};
+const pct = (v: number) => `${(v * 100).toFixed(0)}%`;
+const toISO = (d: Date) => format(d, "yyyy-MM-dd");
+const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
+
+type Preset = "hoje" | "ontem" | "7d" | "30d" | "custom";
+
+function computeRange(preset: Preset, custom?: DateRange): { de: Date; ate: Date } {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  if (preset === "hoje") return { de: hoje, ate: hoje };
+  if (preset === "ontem") {
+    const o = new Date(hoje);
+    o.setDate(o.getDate() - 1);
+    return { de: o, ate: o };
+  }
+  if (preset === "7d") {
+    const de = new Date(hoje);
+    de.setDate(de.getDate() - 6);
+    return { de, ate: hoje };
+  }
+  if (preset === "30d") {
+    const de = new Date(hoje);
+    de.setDate(de.getDate() - 29);
+    return { de, ate: hoje };
+  }
+  const de = custom?.from ?? hoje;
+  const ate = custom?.to ?? custom?.from ?? hoje;
+  return { de, ate };
+}
 
 function DashboardPage() {
-  const [dias, setDias] = useState<PeriodoDias>(30);
+  const [preset, setPreset] = useState<Preset>("30d");
+  const [custom, setCustom] = useState<DateRange | undefined>();
+  const [customOpen, setCustomOpen] = useState(false);
+  const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
+  const p_de = toISO(de);
+  const p_ate = toISO(ate);
+  const diasDiff = Math.round((ate.getTime() - de.getTime()) / 86_400_000);
+  const granLabel = diasDiff > 90 ? "mês" : diasDiff > 31 ? "semana" : "dia";
 
   const { data: syncRecent } = useQuery({
     queryKey: ["sync-log-recent"],
@@ -82,51 +128,47 @@ function DashboardPage() {
   const notConnected = !loadConn && (!conn || !conn.shop_id);
 
   const { data: kpis, isLoading: loadKpis } = useQuery({
-    queryKey: ["kpis"],
+    queryKey: ["kpis", p_de, p_ate],
     queryFn: async () => {
-      const [kpisRpc, cfg] = await Promise.all([
-        supabase.rpc("dashboard_kpis" as any),
-        supabase.from("config").select("limite_estoque_baixo").eq("id", 1).maybeSingle(),
-      ]);
-      const limiteReal = cfg.data?.limite_estoque_baixo ?? 5;
-      const { count: baixoCount } = await supabase
-        .from("produtos")
-        .select("id", { count: "exact", head: true })
-        .lte("estoque", limiteReal);
-      const r = ((kpisRpc.data as any)?.[0] ?? {}) as {
-        pedidos_hoje?: number; faturamento_hoje?: number;
-        pedidos_mes?: number; faturamento_mes?: number;
-        aguardando_envio?: number;
-      };
+      const { data } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de, p_ate });
+      const r = ((data as any)?.[0] ?? {}) as any;
       return {
-        pedidosHoje: Number(r.pedidos_hoje ?? 0),
-        fatHoje: Number(r.faturamento_hoje ?? 0),
-        pedidosMes: Number(r.pedidos_mes ?? 0),
-        fatMes: Number(r.faturamento_mes ?? 0),
-        aguardando: Number(r.aguardando_envio ?? 0),
-        estoqueBaixo: baixoCount ?? 0,
+        faturamento: Number(r.faturamento_total ?? 0),
+        pedidosValidos: Number(r.pedidos_validos ?? 0),
+        pedidosTotal: Number(r.pedidos_total ?? 0),
+        ticketMedio: Number(r.ticket_medio ?? 0),
+        itens: Number(r.itens_vendidos ?? 0),
+        cancelados: Number(r.pedidos_cancelados ?? 0),
+        valorLiquido: Number(r.valor_liquido ?? 0),
+        cobertura: Number(r.cobertura_liquido ?? 0),
       };
     },
   });
 
   const { data: serie, isLoading: loadSerie } = useQuery({
-    queryKey: ["serie", dias],
+    queryKey: ["serie", p_de, p_ate],
     queryFn: async () => {
-      const { data } = await supabase.rpc("dashboard_serie_diaria" as any, { p_dias: dias });
+      const { data } = await supabase.rpc("dashboard_serie_periodo" as any, { p_de, p_ate });
       return ((data as any[]) ?? []).map((r) => ({
-        data: String(r.dia).slice(5),
+        periodo: String(r.periodo),
+        rotulo: String(r.rotulo),
         pedidos: Number(r.pedidos ?? 0),
         faturamento: Number(r.faturamento ?? 0),
+        parcial: Boolean(r.parcial),
       }));
     },
   });
 
   const { data: topProdutos, isLoading: loadTop } = useQuery({
-    queryKey: ["topProdutos", dias],
+    queryKey: ["topProdutos", p_de, p_ate],
     queryFn: async () => {
-      const { data } = await supabase.rpc("dashboard_top_produtos" as any, { p_dias: dias, p_limite: 10 });
+      const { data } = await supabase.rpc("dashboard_top_produtos_periodo" as any, { p_de, p_ate, p_limite: 10 });
       return ((data as any[]) ?? []).map((r) => ({
-        nome: String(r.produto ?? r.sku ?? "").length > 30 ? String(r.produto ?? r.sku ?? "").slice(0, 30) + "…" : String(r.produto ?? r.sku ?? ""),
+        nomeCompleto: String(r.produto ?? r.sku ?? ""),
+        nome: String(r.produto ?? r.sku ?? "").length > 40
+          ? String(r.produto ?? r.sku ?? "").slice(0, 40) + "…"
+          : String(r.produto ?? r.sku ?? ""),
+        sku: String(r.sku ?? ""),
         qtd: Number(r.quantidade ?? 0),
         receita: Number(r.receita ?? 0),
       }));
@@ -144,6 +186,10 @@ function DashboardPage() {
       return data ?? [];
     },
   });
+
+  const rangeLabel = de.getTime() === ate.getTime()
+    ? fmtBR(de)
+    : `${fmtBR(de)} a ${fmtBR(ate)}`;
 
   return (
     <div className="space-y-6">
@@ -199,16 +245,62 @@ function DashboardPage() {
               </div>
             </SheetContent>
           </Sheet>
-          <Select value={String(dias)} onValueChange={(v) => setDias(Number(v) as PeriodoDias)}>
-            <SelectTrigger className="w-36">
+          <span className="hidden text-xs text-muted-foreground md:inline tabular-nums">
+            {rangeLabel}
+          </span>
+          <Select
+            value={preset}
+            onValueChange={(v) => {
+              const p = v as Preset;
+              setPreset(p);
+              if (p === "custom") setCustomOpen(true);
+            }}
+          >
+            <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">Últimos 7d</SelectItem>
-              <SelectItem value="30">Últimos 30d</SelectItem>
-              <SelectItem value="90">Últimos 90d</SelectItem>
+              <SelectItem value="hoje">Hoje</SelectItem>
+              <SelectItem value="ontem">Ontem</SelectItem>
+              <SelectItem value="7d">Últimos 7 dias</SelectItem>
+              <SelectItem value="30d">Últimos 30 dias</SelectItem>
+              <SelectItem value="custom">Personalizado</SelectItem>
             </SelectContent>
           </Select>
+          <Popover open={customOpen} onOpenChange={setCustomOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={preset === "custom" ? "" : "hidden"}
+              >
+                <CalendarIcon className="h-4 w-4 mr-1.5" />
+                {custom?.from ? rangeLabel : "Escolher datas"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0 pointer-events-auto" align="end">
+              <Calendar
+                mode="range"
+                numberOfMonths={2}
+                selected={custom}
+                onSelect={setCustom}
+                locale={ptBR}
+                className="p-3 pointer-events-auto"
+              />
+              <div className="flex justify-end gap-2 border-t p-2">
+                <Button size="sm" variant="ghost" onClick={() => setCustom(undefined)}>
+                  Limpar
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => setCustomOpen(false)}
+                  disabled={!custom?.from || !custom?.to}
+                >
+                  Aplicar
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
@@ -240,44 +332,118 @@ function DashboardPage() {
         </Card>
       )}
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
-        <KpiCard icon={ShoppingBag} label="Pedidos hoje" value={loadKpis ? null : String(kpis?.pedidosHoje ?? 0)} />
-        <KpiCard icon={DollarSign} label="Faturamento hoje" value={loadKpis ? null : brl(kpis?.fatHoje ?? 0)} />
-        <KpiCard icon={CalendarDays} label="Faturamento mês" value={loadKpis ? null : brl(kpis?.fatMes ?? 0)} />
-        <KpiCard icon={Truck} label="Aguardando envio" value={loadKpis ? null : String(kpis?.aguardando ?? 0)} />
-        <KpiCard icon={AlertTriangle} label="Estoque baixo" value={loadKpis ? null : String(kpis?.estoqueBaixo ?? 0)} tone="warning" />
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <KpiCard icon={DollarSign} label="Faturamento" value={loadKpis ? null : brl(kpis?.faturamento ?? 0)} />
+        <KpiCard
+          icon={ShoppingBag}
+          label="Pedidos"
+          value={loadKpis ? null : String(kpis?.pedidosValidos ?? 0)}
+          hint={loadKpis ? undefined : `de ${kpis?.pedidosTotal ?? 0} no total`}
+        />
+        <KpiCard icon={Receipt} label="Ticket médio" value={loadKpis ? null : brl(kpis?.ticketMedio ?? 0)} />
+        <KpiCard icon={Package} label="Itens vendidos" value={loadKpis ? null : String(kpis?.itens ?? 0)} />
+        <KpiCard
+          icon={Wallet}
+          label="Valor líquido"
+          value={
+            loadKpis
+              ? null
+              : (kpis?.cobertura ?? 0) === 0
+                ? "—"
+                : brl(kpis?.valorLiquido ?? 0)
+          }
+          hint={
+            loadKpis
+              ? undefined
+              : (kpis?.cobertura ?? 0) === 0
+                ? "Aguardando sincronização de repasses"
+                : (kpis?.cobertura ?? 0) < 1
+                  ? `parcial: ${pct(kpis?.cobertura ?? 0)} dos pedidos`
+                  : undefined
+          }
+        />
+        <KpiCard icon={XCircleIcon} label="Cancelados" value={loadKpis ? null : String(kpis?.cancelados ?? 0)} tone="warning" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              Pedidos e faturamento — últimos {dias}d
+              Faturamento e pedidos por {granLabel}
             </CardTitle>
+            <p className="text-xs text-muted-foreground">{rangeLabel}</p>
           </CardHeader>
           <CardContent className="h-72">
             {loadSerie ? (
               <Skeleton className="h-full w-full" />
+            ) : (serie ?? []).length === 0 ? (
+              <EmptyMini msg="Sem dados no período." />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={serie ?? []} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
+                <ComposedChart data={serie ?? []} margin={{ top: 12, right: 16, left: 4, bottom: 5 }}>
                   <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
-                  <XAxis dataKey="data" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                  <Tooltip
-                    contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }}
-                    labelStyle={{ color: "var(--muted-foreground)" }}
-                    formatter={(v: any, name: string) => name === "Faturamento (R$)" ? [brl(Number(v)), name] : [v, name]}
+                  <XAxis dataKey="rotulo" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <YAxis
+                    yAxisId="left"
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    stroke="var(--border)"
+                    tickFormatter={(v) => brlAbrev(Number(v))}
                   />
-                  <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="pedidos" name="Pedidos" stroke="var(--color-chart-1)" strokeWidth={2} dot={{ r: 3, fill: "var(--color-chart-1)" }} activeDot={{ r: 5 }}>
-                    <LabelList dataKey="pedidos" position="top" fontSize={11} fill="var(--color-chart-1)" />
-                  </Line>
-                  <Line yAxisId="right" type="monotone" dataKey="faturamento" name="Faturamento (R$)" stroke="var(--color-chart-2)" strokeWidth={2} dot={{ r: 3, fill: "var(--color-chart-2)" }} activeDot={{ r: 5 }}>
-                    <LabelList dataKey="faturamento" position="bottom" fontSize={11} fill="var(--color-chart-2)" formatter={(v: any) => Number(v) > 0 ? brl(Number(v)) : ""} />
-                  </Line>
-                </LineChart>
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                    stroke="var(--border)"
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const p = payload[0].payload as any;
+                      const d = new Date(p.periodo);
+                      const dataStr = format(d, "PPP", { locale: ptBR });
+                      return (
+                        <div className="rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
+                          <div className="font-medium">{dataStr}</div>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="inline-block h-2 w-2 rounded-sm" style={{ background: "var(--color-chart-1)" }} />
+                            Faturamento: <span className="tabular-nums">{brl(p.faturamento)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-block h-2 w-2 rounded-full" style={{ background: "var(--color-chart-2)" }} />
+                            Pedidos: <span className="tabular-nums">{p.pedidos}</span>
+                          </div>
+                          {p.parcial && (
+                            <div className="mt-1 text-[10px] uppercase tracking-wide text-[color:var(--warning)]">
+                              dia em andamento
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar
+                    yAxisId="left"
+                    dataKey="faturamento"
+                    name="Faturamento"
+                    fill="var(--color-chart-1)"
+                    radius={[4, 4, 0, 0]}
+                  >
+                    {(serie ?? []).map((entry, i) => (
+                      <Cell key={i} fillOpacity={entry.parcial ? 0.4 : 1} />
+                    ))}
+                  </Bar>
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="pedidos"
+                    name="Pedidos"
+                    stroke="var(--color-chart-2)"
+                    strokeWidth={1.5}
+                    dot={{ r: 2.5, fill: "var(--color-chart-2)" }}
+                    activeDot={{ r: 4 }}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
             )}
           </CardContent>
@@ -286,27 +452,42 @@ function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Top 10 produtos vendidos</CardTitle>
+            <p className="text-xs text-muted-foreground">{rangeLabel}</p>
           </CardHeader>
-          <CardContent className="h-72">
+          <CardContent>
             {loadTop ? (
-              <Skeleton className="h-full w-full" />
+              <Skeleton className="h-72 w-full" />
             ) : (topProdutos ?? []).length === 0 ? (
-              <EmptyMini msg="Sem vendas no período." />
+              <div className="h-72"><EmptyMini msg="Sem vendas no período." /></div>
             ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topProdutos ?? []} layout="vertical" margin={{ left: 20, right: 12 }}>
-                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                  <YAxis type="category" dataKey="nome" width={150} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                  <Tooltip
-                    cursor={{ fill: "var(--accent)", opacity: 0.3 }}
-                    contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }}
-                  />
-                  <Bar dataKey="qtd" fill="var(--color-chart-1)" radius={[0, 6, 6, 0]}>
-                    <LabelList dataKey="qtd" position="right" fontSize={11} fill="var(--foreground)" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <ul className="divide-y divide-border">
+                {(topProdutos ?? []).map((p, i) => {
+                  const max = Math.max(...(topProdutos ?? []).map((x) => x.qtd));
+                  const pctBar = max > 0 ? (p.qtd / max) * 100 : 0;
+                  return (
+                    <li key={p.sku + i} className="py-2.5">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-medium" title={p.nomeCompleto}>
+                            {p.nome}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{p.sku}</div>
+                        </div>
+                        <div className="shrink-0 text-right text-sm">
+                          <div className="font-semibold tabular-nums">{p.qtd}</div>
+                          <div className="text-xs text-muted-foreground tabular-nums">{brl(p.receita)}</div>
+                        </div>
+                      </div>
+                      <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full rounded-full bg-primary"
+                          style={{ width: `${pctBar}%` }}
+                        />
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </CardContent>
         </Card>
@@ -352,11 +533,13 @@ function KpiCard({
   icon: Icon,
   label,
   value,
+  hint,
   tone,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string | null;
+  hint?: string;
   tone?: "warning";
 }) {
   const toneRing =
@@ -374,6 +557,7 @@ function KpiCard({
             <div className="text-2xl font-semibold tabular-nums leading-tight">
               {value === null ? <Skeleton className="h-7 w-24" /> : value}
             </div>
+            {hint && <div className="text-[11px] text-muted-foreground leading-tight">{hint}</div>}
           </div>
           <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing}`}>
             <Icon className="h-4 w-4" />

@@ -166,6 +166,7 @@ export type Database = {
           created_at: string
           data_criacao_pedido: string | null
           data_pagamento: string | null
+          escrow_atualizado_em: string | null
           frete_real: number | null
           id: string
           itens: Json | null
@@ -176,6 +177,7 @@ export type Database = {
           qtd_itens: number | null
           status: string | null
           updated_at: string
+          valor_liquido: number | null
           valor_total: number | null
         }
         Insert: {
@@ -183,6 +185,7 @@ export type Database = {
           created_at?: string
           data_criacao_pedido?: string | null
           data_pagamento?: string | null
+          escrow_atualizado_em?: string | null
           frete_real?: number | null
           id?: string
           itens?: Json | null
@@ -193,6 +196,7 @@ export type Database = {
           qtd_itens?: number | null
           status?: string | null
           updated_at?: string
+          valor_liquido?: number | null
           valor_total?: number | null
         }
         Update: {
@@ -200,6 +204,7 @@ export type Database = {
           created_at?: string
           data_criacao_pedido?: string | null
           data_pagamento?: string | null
+          escrow_atualizado_em?: string | null
           frete_real?: number | null
           id?: string
           itens?: Json | null
@@ -210,6 +215,7 @@ export type Database = {
           qtd_itens?: number | null
           status?: string | null
           updated_at?: string
+          valor_liquido?: number | null
           valor_total?: number | null
         }
         Relationships: []
@@ -381,6 +387,19 @@ export type Database = {
           pedidos_mes: number
         }[]
       }
+      dashboard_kpis_periodo: {
+        Args: { p_ate: string; p_de: string }
+        Returns: {
+          cobertura_liquido: number
+          faturamento_total: number
+          itens_vendidos: number
+          pedidos_cancelados: number
+          pedidos_total: number
+          pedidos_validos: number
+          ticket_medio: number
+          valor_liquido: number
+        }[]
+      }
       dashboard_serie_diaria: {
         Args: { p_dias?: number }
         Returns: {
@@ -389,8 +408,27 @@ export type Database = {
           pedidos: number
         }[]
       }
+      dashboard_serie_periodo: {
+        Args: { p_ate: string; p_de: string }
+        Returns: {
+          faturamento: number
+          parcial: boolean
+          pedidos: number
+          periodo: string
+          rotulo: string
+        }[]
+      }
       dashboard_top_produtos: {
         Args: { p_dias?: number; p_limite?: number }
+        Returns: {
+          produto: string
+          quantidade: number
+          receita: number
+          sku: string
+        }[]
+      }
+      dashboard_top_produtos_periodo: {
+        Args: { p_ate: string; p_de: string; p_limite?: number }
         Returns: {
           produto: string
           quantidade: number
