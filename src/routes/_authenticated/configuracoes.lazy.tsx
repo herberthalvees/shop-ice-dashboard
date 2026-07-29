@@ -31,11 +31,11 @@ function ConfigPage() {
     queryKey: ["shopee-connection"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("shopee_connection")
+        .from("shopee_connection_status" as any)
         .select("shop_id, shop_name, token_expires_at, status")
         .eq("id", 1)
         .maybeSingle();
-      return data;
+      return data as { shop_id: number | null; shop_name: string | null; token_expires_at: string | null; status: string } | null;
     },
   });
 
