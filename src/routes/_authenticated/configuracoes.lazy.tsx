@@ -198,6 +198,34 @@ function ConfigPage() {
           </form>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Percent className="h-4 w-4" /> Fiscal</CardTitle>
+          <CardDescription>Percentual efetivo sobre faturamento, informado pelo seu contador.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={salvarAliquota} className="grid gap-4 sm:grid-cols-2 max-w-lg">
+            <div className="space-y-2">
+              <Label htmlFor="aliq">Alíquota de imposto (%)</Label>
+              <Input
+                id="aliq"
+                inputMode="decimal"
+                placeholder="0,00"
+                value={aliquota}
+                onChange={(e) => setAliquota(e.target.value.replace(/[^0-9,\.]/g, ""))}
+              />
+              <p className="text-xs text-muted-foreground">Aceita decimal com vírgula (ex.: 6,5).</p>
+            </div>
+            <div className="sm:col-span-2">
+              <Button type="submit" disabled={savingAliq}>
+                {savingAliq && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar alíquota
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
