@@ -48,6 +48,7 @@ type Linha = {
   lucro: number | null;
   margem_pct: number | null;
   comprador: string | null;
+  tem_escrow: boolean | null;
 };
 
 function PedidosPage() {
@@ -92,6 +93,7 @@ function PedidosPage() {
         tarifa: Number(r?.tarifa ?? 0),
         custo: Number(r?.custo ?? 0),
         lucro: Number(r?.lucro ?? 0),
+        estimadas: Number(r?.linhas_estimadas ?? 0),
       };
     },
   });
@@ -99,6 +101,8 @@ function PedidosPage() {
   const linhas = data?.linhas ?? [];
   const total = data?.total ?? 0;
   const totalPaginas = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const estimadas = totais?.estimadas ?? 0;
+  const nota = estimadas > 0 ? `inclui ${estimadas} linha${estimadas === 1 ? "" : "s"} estimada${estimadas === 1 ? "" : "s"}` : undefined;
 
   async function exportarCSV() {
     const { data: full } = await supabase.rpc("pedidos_detalhe" as any, {
@@ -168,13 +172,14 @@ function PedidosPage() {
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <CardTotal titulo="Valor" valor={loadTotais ? null : brl(totais?.valor)} />
-          <CardTotal titulo="Tarifas Shopee" valor={loadTotais ? null : brl(totais?.tarifa)} />
+          <CardTotal titulo="Tarifas Shopee" valor={loadTotais ? null : brl(totais?.tarifa)} nota={nota} />
           <CardTotal titulo="Custo dos produtos" valor={loadTotais ? null : brl(totais?.custo)} />
           <CardTotal
             titulo="Lucro"
             valor={loadTotais ? null : brl(totais?.lucro)}
             tom={(totais?.lucro ?? 0) < 0 ? "neg" : "pos"}
             destaque
+            nota={nota}
           />
         </div>
 
@@ -250,6 +255,7 @@ function PedidosPage() {
                       const naoConcretizado = NAO_CONCRETIZADO.includes(r.status ?? "");
                       const semCusto = r.custo == null;
                       const lucro = naoConcretizado ? 0 : r.lucro;
+                      const estimado = !naoConcretizado && r.tem_escrow === false;
                       return (
                         <TableRow key={`${r.order_sn}-${r.sku ?? i}-${i}`} className={naoConcretizado ? "opacity-50" : undefined}>
                           <TableCell>
@@ -296,6 +302,14 @@ function PedidosPage() {
                               >
                                 {brl(lucro)}
                               </span>
+                              {estimado ? (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="cursor-help text-xs text-muted-foreground">*</span>
+                                  </TooltipTrigger>
+                                  <TooltipContent>estimado, repasse ainda não consultado</TooltipContent>
+                                </Tooltip>
+                              ) : null}
                               {naoConcretizado ? (
                                 <Badge variant="outline" className="text-[10px] text-muted-foreground">não concretizado</Badge>
                               ) : semCusto ? (
@@ -342,8 +356,8 @@ function PedidosPage() {
 }
 
 function CardTotal({
-  titulo, valor, tom, destaque,
-}: { titulo: string; valor: string | null; tom?: "pos" | "neg"; destaque?: boolean }) {
+  titulo, valor, tom, destaque, nota,
+}: { titulo: string; valor: string | null; tom?: "pos" | "neg"; destaque?: boolean; nota?: string }) {
   return (
     <Card className={destaque ? "border-primary/40" : undefined}>
       <CardHeader className="pb-2">
@@ -357,6 +371,9 @@ function CardTotal({
             {valor}
           </div>
         )}
+        {valor != null && nota ? (
+          <p className="mt-1 text-[11px] text-muted-foreground">{nota}</p>
+        ) : null}
       </CardContent>
     </Card>
   );
