@@ -291,6 +291,28 @@ export type Database = {
       }
     }
     Functions: {
+      dashboard_kpi_periodo: {
+        Args: { p_ate: string; p_desde: string }
+        Returns: {
+          faturamento: number
+          pedidos: number
+        }[]
+      }
+      dashboard_serie_diaria: {
+        Args: { p_ate: string; p_desde: string }
+        Returns: {
+          dia: string
+          faturamento: number
+          pedidos: number
+        }[]
+      }
+      dashboard_top_produtos: {
+        Args: { p_ate: string; p_desde: string; p_limite?: number }
+        Returns: {
+          nome: string
+          qtd: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
