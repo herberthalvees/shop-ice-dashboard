@@ -349,53 +349,61 @@ function DashboardPage() {
         />
         <KpiCard icon={Receipt} label="Ticket médio" value={loadKpis ? null : brl(kpis?.ticketMedio ?? 0)} />
         <KpiCard icon={Package} label="Itens vendidos" value={loadKpis ? null : String(kpis?.itens ?? 0)} />
-        <KpiCard
-          icon={Wallet}
-          label="Valor líquido"
-          value={
-            loadKpis
-              ? null
-              : (kpis?.cobertura ?? 0) === 0
-                ? "—"
-                : brl(kpis?.valorLiquido ?? 0)
-          }
-          hint={
-            loadKpis
-              ? undefined
-              : (kpis?.cobertura ?? 0) === 0
-                ? "Aguardando sincronização de repasses"
-                : (kpis?.cobertura ?? 0) < 1
-                  ? `parcial: ${pct(kpis?.cobertura ?? 0)} dos pedidos`
-                  : undefined
-          }
-        />
-        <KpiCard
-          icon={Percent}
-          label="Taxas Shopee"
-          value={
-            loadKpis
-              ? null
-              : (kpis?.cobertura ?? 0) === 0
-                ? "—"
-                : brl(kpis?.totalTaxas ?? 0)
-          }
-          hint={
-            loadKpis
-              ? undefined
-              : (kpis?.cobertura ?? 0) === 0
-                ? "Aguardando sincronização de repasses"
-                : (kpis?.cobertura ?? 0) < 1
-                  ? `parcial: ${pct(kpis?.cobertura ?? 0)} · ${
-                      (kpis?.faturamento ?? 0) > 0
-                        ? pct((kpis?.totalTaxas ?? 0) / (kpis?.faturamento ?? 1))
-                        : "—"
-                    } do faturamento`
-                  : (kpis?.faturamento ?? 0) > 0
-                    ? `${pct((kpis?.totalTaxas ?? 0) / (kpis?.faturamento ?? 1))} do faturamento`
-                    : undefined
-          }
-          tone="warning"
-        />
+        {(() => {
+          const cobertura = kpis?.cobertura ?? 0;
+          const estimando = cobertura > 0 && cobertura < 0.95;
+          const semDados = cobertura === 0;
+          const tooltip = "Valor estimado a partir dos pedidos que já tiveram o repasse consultado.";
+
+          const valorLiquidoValue = loadKpis
+            ? null
+            : semDados
+              ? "—"
+              : estimando
+                ? brl(kpis?.projecaoLiquido ?? 0)
+                : brl(kpis?.valorLiquido ?? 0);
+
+          const valorLiquidoHint = loadKpis
+            ? undefined
+            : semDados
+              ? "Aguardando sincronização de repasses"
+              : estimando
+                ? `margem de ${pct(kpis?.margemLiquida ?? 0)} medida em ${pct(cobertura)} dos pedidos`
+                : `margem de ${pct(kpis?.margemLiquida ?? 0)}`;
+
+          const taxasValue = loadKpis
+            ? null
+            : semDados
+              ? "—"
+              : brl(kpis?.totalTaxas ?? 0);
+
+          const taxasHint = loadKpis
+            ? undefined
+            : semDados
+              ? "Aguardando sincronização de repasses"
+              : `${pct(kpis?.percentualTaxas ?? 0)} do faturamento medido`;
+
+          return (
+            <>
+              <KpiCard
+                icon={Wallet}
+                label="Valor líquido"
+                value={valorLiquidoValue}
+                hint={valorLiquidoHint}
+                estimativa={!loadKpis && estimando}
+                tooltip={tooltip}
+              />
+              <KpiCard
+                icon={Percent}
+                label="Taxas Shopee"
+                value={taxasValue}
+                hint={taxasHint}
+                tone="warning"
+                tooltip={tooltip}
+              />
+            </>
+          );
+        })()}
         <KpiCard icon={XCircleIcon} label="Cancelados" value={loadKpis ? null : String(kpis?.cancelados ?? 0)} tone="warning" />
         <EstoqueBaixoKpi />
       </div>
