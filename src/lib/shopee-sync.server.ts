@@ -6,7 +6,7 @@ import {
 } from "./shopee.server";
 
 async function getConnection() {
-  const { data } = await supabaseAdmin.from("shopee_connection").select("*").eq("id", 1).maybeSingle();
+  const { data } = await supabaseAdmin.from("shopee_connection").select("*").eq("app_tipo", "principal").maybeSingle();
   return data;
 }
 
@@ -15,7 +15,7 @@ export async function refreshTokenIfNeeded() {
   if (!conn?.refresh_token || !conn.shop_id) return { ok: false, error: "sem conexão" };
   const r = await refreshAccessToken(conn.refresh_token, Number(conn.shop_id));
   if (!r.access_token) {
-    await supabaseAdmin.from("shopee_connection").update({ status: "expirada" }).eq("id", 1);
+    await supabaseAdmin.from("shopee_connection").update({ status: "expirada" }).eq("app_tipo", "principal");
     return { ok: false, error: r.message ?? r.error ?? "falha ao renovar" };
   }
   const expiresAt = new Date(Date.now() + (r.expire_in ?? 3600) * 1000).toISOString();
@@ -24,7 +24,7 @@ export async function refreshTokenIfNeeded() {
     refresh_token: r.refresh_token ?? conn.refresh_token,
     token_expires_at: expiresAt,
     status: "ativa",
-  }).eq("id", 1);
+  }).eq("app_tipo", "principal");
   return { ok: true };
 }
 
