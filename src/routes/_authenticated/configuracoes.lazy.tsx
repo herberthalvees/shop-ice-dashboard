@@ -48,7 +48,7 @@ function ConfigPage() {
       const { data } = await supabase
         .from("shopee_connection_status" as any)
         .select("id, app_tipo, partner_id, shop_id, shop_name, token_expires_at, status");
-      return (data ?? []) as Conexao[];
+      return ((data ?? []) as unknown) as Conexao[];
     },
   });
 
@@ -128,64 +128,49 @@ function ConfigPage() {
     revogada: "bg-destructive/20 text-destructive border-destructive/30",
   };
 
-  const expiraMs = conn?.token_expires_at ? new Date(conn.token_expires_at).getTime() - Date.now() : null;
-  const tokenAlerta = expiraMs !== null && expiraMs < 60 * 60 * 1000;
-  const tokenExpirado = expiraMs !== null && expiraMs <= 0;
-  const tokenLabel = expiraMs === null
-    ? "—"
-    : tokenExpirado
-      ? "Expirado"
-      : `em ${Math.max(1, Math.floor(expiraMs / 60000))} min`;
+  const principal = conns?.find((c) => c.app_tipo === "principal") ?? null;
+  const ads = conns?.find((c) => c.app_tipo === "ads") ?? null;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Configurações</h1>
-        <p className="text-sm text-muted-foreground">Gerencie a conexão com a Shopee e sua conta.</p>
+        <p className="text-sm text-muted-foreground">Gerencie as conexões com a Shopee e sua conta.</p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2"><Store className="h-4 w-4" /> Conexão Shopee</CardTitle>
-          <CardDescription>Autorize o app na sua loja para sincronizar pedidos e produtos.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isLoading ? <Skeleton className="h-24 w-full" /> : (
-            <>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Info k="Loja" v={conn?.shop_name ?? "—"} />
-                <Info k="shop_id" v={conn?.shop_id ? String(conn.shop_id) : "—"} />
-                <Info k="Token expira em" v={
-                  <span className={`inline-flex items-center gap-1.5 ${tokenAlerta ? (tokenExpirado ? "text-destructive" : "text-[color:var(--warning)]") : ""}`}>
-                    {tokenAlerta && <AlertTriangle className="h-3.5 w-3.5" />}
-                    {conn?.token_expires_at ? (
-                      <span>
-                        {new Date(conn.token_expires_at).toLocaleString("pt-BR")}
-                        <span className="ml-1 text-xs opacity-80">({tokenLabel})</span>
-                      </span>
-                    ) : "—"}
-                  </span>
-                } />
-                <Info k="Status" v={
-                  <span className={`inline-flex px-2 py-0.5 rounded border text-xs ${statusColor[conn?.status ?? ""] ?? "bg-muted"}`}>
-                    {conn?.status ?? "sem conexão"}
-                  </span>
-                } />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => authMut.mutate()} disabled={authMut.isPending}>
-                  {authMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ExternalLink className="mr-2 h-4 w-4" />}
-                  {conn?.status === "ativa" ? "Reconectar loja" : "Conectar loja"}
-                </Button>
-                <Button variant="outline" onClick={() => syncMut.mutate()} disabled={syncMut.isPending || conn?.status !== "ativa"}>
-                  {syncMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                  Sincronizar agora
-                </Button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+      {isLoading ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Skeleton className="h-72 w-full" />
+          <Skeleton className="h-72 w-full" />
+        </div>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-2 items-start">
+          <CardConexao
+            appTipo="principal"
+            conexao={principal}
+            statusColor={statusColor}
+            conectando={authMut.isPending}
+            onConectar={() => authMut.mutate("principal")}
+            acaoExtra={
+              <Button
+                variant="outline"
+                onClick={() => syncMut.mutate()}
+                disabled={syncMut.isPending || principal?.status !== "ativa"}
+              >
+                {syncMut.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                Sincronizar agora
+              </Button>
+            }
+          />
+          <CardConexao
+            appTipo="ads"
+            conexao={ads}
+            statusColor={statusColor}
+            conectando={authMut.isPending}
+            onConectar={() => authMut.mutate("ads")}
+          />
+        </div>
+      )}
 
       <Card>
         <CardHeader>
