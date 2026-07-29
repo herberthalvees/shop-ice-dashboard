@@ -663,6 +663,51 @@ export type Database = {
         }
         Returns: boolean
       }
+      pedidos_detalhe: {
+        Args: {
+          p_ate: string
+          p_busca?: string
+          p_de: string
+          p_limite?: number
+          p_offset?: number
+          p_status?: string
+        }
+        Returns: {
+          comprador: string
+          custo: number
+          data_pedido: string
+          frete_vendedor: number
+          imagem_url: string
+          imposto: number
+          lucro: number
+          margem_pct: number
+          order_sn: string
+          produto: string
+          quantidade: number
+          sku: string
+          status: string
+          tarifa: number
+          total_linhas: number
+          valor: number
+        }[]
+      }
+      pedidos_detalhe_totais: {
+        Args: {
+          p_ate: string
+          p_busca?: string
+          p_de: string
+          p_status?: string
+        }
+        Returns: {
+          custo: number
+          frete_vendedor: number
+          imposto: number
+          linhas: number
+          lucro: number
+          tarifa: number
+          valor: number
+        }[]
+      }
       pedidos_escrow_pendentes: {
         Args: { p_limite?: number }
         Returns: {
