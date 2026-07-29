@@ -1,4 +1,4 @@
-import { createLazyFileRoute } from "@tanstack/react-router";
+import { createLazyFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,8 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
+import { usePeriodo, computeRange } from "@/lib/periodo-store";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown, Check } from "lucide-react";
+import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown, Check, CalendarIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -21,6 +27,8 @@ export const Route = createLazyFileRoute("/_authenticated/produtos")({
 
 const brl = (v: number | null | undefined) =>
   v == null ? "—" : Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const toISO = (d: Date) => format(d, "yyyy-MM-dd");
+const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
 
 type Linha = {
   item_id: number;
@@ -55,37 +63,58 @@ type SortDir = "asc" | "desc";
 
 function ProdutosPage() {
   const qc = useQueryClient();
-  const [busca, setBusca] = useState("");
+  const search = (useSearch({ strict: false }) as { q?: string }) ?? {};
+  const navigate = useNavigate();
+  const [busca, setBusca] = useState(search.q ?? "");
+  useEffect(() => { if (search.q) setBusca(search.q); }, [search.q]);
   const [somenteRisco, setSomenteRisco] = useState(false);
-  const [dias, setDias] = useState<number>(30);
+  const { preset, custom, setPreset, setCustom } = usePeriodo();
+  const [customOpen, setCustomOpen] = useState(false);
+  const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
+  const p_de = toISO(de);
+  const p_ate = toISO(ate);
+  const rangeLabel = de.getTime() === ate.getTime() ? fmtBR(de) : `${fmtBR(de)} a ${fmtBR(ate)}`;
   const [sortKey, setSortKey] = useState<SortKey>("grupo");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["produtos-giro", dias, sortKey, sortDir],
+    queryKey: ["produtos-giro", p_de, p_ate],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("produtos_giro_ordenado" as any, {
-        p_dias: dias,
-        p_sort: sortKey,
-        p_dir: sortDir,
-      });
-      if (error) throw error;
-      return ((data as any[]) ?? []).map((r) => ({
+      const [{ data: giro, error: e1 }, { data: dim, error: e2 }] = await Promise.all([
+        supabase.rpc("produtos_com_giro" as any, { p_de, p_ate }),
+        supabase.from("dim_produto").select("item_id, model_id, custo_unitario"),
+      ]);
+      if (e1) throw e1;
+      if (e2) throw e2;
+      const custoMap = new Map<string, number | null>();
+      for (const d of (dim ?? []) as any[]) {
+        custoMap.set(`${d.item_id}:${d.model_id}`, d.custo_unitario == null ? null : Number(d.custo_unitario));
+      }
+      return ((giro as any[]) ?? []).map((r) => {
+        const item_id = Number(r.item_id ?? 0);
+        const model_id = Number(r.model_id ?? 0);
+        const custo_unitario = custoMap.get(`${item_id}:${model_id}`) ?? null;
+        const preco = r.preco_atual == null ? null : Number(r.preco_atual);
+        let margem_pct: number | null = null;
+        if (custo_unitario != null && preco != null && preco > 0) {
+          margem_pct = Math.round(1000 * (preco * 0.8 - 4 - custo_unitario) / preco) / 10;
+        }
+        return {
         item_id: Number(r.item_id ?? 0),
         model_id: Number(r.model_id ?? 0),
         sku: r.sku ?? null,
         produto: r.produto ?? null,
         variacao: r.variacao ?? null,
-        preco_atual: r.preco_atual == null ? null : Number(r.preco_atual),
+        preco_atual: preco,
         estoque_disponivel: r.estoque_disponivel == null ? null : Number(r.estoque_disponivel),
         vendidos_periodo: Number(r.vendidos_periodo ?? 0),
         media_diaria: Number(r.media_diaria ?? 0),
         dias_de_estoque: r.dias_de_estoque == null ? null : Number(r.dias_de_estoque),
         status_item: r.status_item ?? null,
         imagem_url: r.imagem_url ?? null,
-        custo_unitario: r.custo_unitario == null ? null : Number(r.custo_unitario),
-        margem_pct: r.margem_pct == null ? null : Number(r.margem_pct),
-      })) as Linha[];
+        custo_unitario,
+        margem_pct,
+      }; }) as Linha[];
     },
   });
 
@@ -102,8 +131,51 @@ function ProdutosPage() {
     if (somenteRisco) {
       base = base.filter((l) => l.dias_de_estoque != null && l.dias_de_estoque < 15);
     }
-    return base;
-  }, [data, busca, somenteRisco]);
+    const dir = sortDir === "asc" ? 1 : -1;
+    const cmpStr = (a: string | null, b: string | null) => {
+      if (a == null && b == null) return 0;
+      if (a == null) return 1;
+      if (b == null) return -1;
+      return a.localeCompare(b, "pt-BR");
+    };
+    const cmpNum = (a: number | null, b: number | null) => {
+      if (a == null && b == null) return 0;
+      if (a == null) return 1;
+      if (b == null) return -1;
+      return a - b;
+    };
+    const sorted = [...base];
+    if (sortKey === "grupo") {
+      sorted.sort((a, b) => cmpStr(a.produto, b.produto) || cmpStr(a.variacao, b.variacao));
+    } else if (sortKey === "produto") {
+      sorted.sort((a, b) => dir * cmpStr(a.produto, b.produto) || cmpStr(a.variacao, b.variacao));
+    } else if (sortKey === "variacao") {
+      sorted.sort((a, b) => dir * cmpStr(a.variacao, b.variacao) || cmpStr(a.produto, b.produto));
+    } else if (sortKey === "sku") {
+      sorted.sort((a, b) => dir * cmpStr(a.sku, b.sku));
+    } else if (sortKey === "preco") {
+      sorted.sort((a, b) => dir * cmpNum(a.preco_atual, b.preco_atual));
+    } else if (sortKey === "estoque") {
+      sorted.sort((a, b) => dir * cmpNum(a.estoque_disponivel, b.estoque_disponivel));
+    } else if (sortKey === "vendidos") {
+      sorted.sort((a, b) => dir * cmpNum(a.vendidos_periodo, b.vendidos_periodo));
+    } else if (sortKey === "media") {
+      sorted.sort((a, b) => dir * cmpNum(a.media_diaria, b.media_diaria));
+    } else if (sortKey === "dias") {
+      sorted.sort((a, b) => dir * cmpNum(a.dias_de_estoque, b.dias_de_estoque));
+    } else if (sortKey === "custo") {
+      sorted.sort((a, b) => dir * cmpNum(a.custo_unitario, b.custo_unitario));
+    } else if (sortKey === "margem") {
+      sorted.sort((a, b) => dir * cmpNum(a.margem_pct, b.margem_pct));
+    }
+    return sorted;
+  }, [data, busca, somenteRisco, sortKey, sortDir]);
+
+  const totaisRodape = useMemo(() => {
+    const total = data?.length ?? 0;
+    const comCusto = (data ?? []).filter((l) => l.custo_unitario != null).length;
+    return { total, comCusto };
+  }, [data]);
 
   const agrupar = sortKey === "grupo";
 
@@ -153,19 +225,34 @@ function ProdutosPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Produtos</h1>
           <p className="text-sm text-muted-foreground">
-            Catálogo, estoque e giro dos últimos {dias} dias. Sincroniza de hora em hora.
+            Catálogo, estoque e giro · {rangeLabel}. Sincroniza de hora em hora.
           </p>
         </div>
-        <Select value={String(dias)} onValueChange={(v) => setDias(Number(v))}>
-          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Últimos 7 dias</SelectItem>
-            <SelectItem value="15">Últimos 15 dias</SelectItem>
-            <SelectItem value="30">Últimos 30 dias</SelectItem>
-            <SelectItem value="60">Últimos 60 dias</SelectItem>
-            <SelectItem value="90">Últimos 90 dias</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Select value={preset} onValueChange={(v) => { setPreset(v as any); if (v === "custom") setCustomOpen(true); }}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="hoje">Hoje</SelectItem>
+              <SelectItem value="ontem">Ontem</SelectItem>
+              <SelectItem value="7d">Últimos 7 dias</SelectItem>
+              <SelectItem value="30d">Últimos 30 dias</SelectItem>
+              <SelectItem value="custom">Personalizado</SelectItem>
+            </SelectContent>
+          </Select>
+          {preset === "custom" && (
+            <Popover open={customOpen} onOpenChange={setCustomOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <CalendarIcon className="h-4 w-4" />
+                  {custom?.from ? rangeLabel : "Escolher datas"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-auto p-0 bg-popover">
+                <Calendar mode="range" numberOfMonths={2} selected={custom} onSelect={(r: DateRange | undefined) => setCustom(r)} locale={ptBR} />
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
       </div>
 
       <Card>
@@ -173,7 +260,7 @@ function ProdutosPage() {
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-52">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar por nome ou SKU…" value={busca} onChange={(e) => setBusca(e.target.value)} className="pl-9" />
+              <Input placeholder="Buscar por nome ou SKU…" value={busca} onChange={(e) => { setBusca(e.target.value); navigate({ to: "/produtos", search: e.target.value ? { q: e.target.value } as any : {} as any, replace: true }); }} className="pl-9" />
             </div>
             <div className="flex items-center gap-2">
               <Switch id="risco" checked={somenteRisco} onCheckedChange={setSomenteRisco} />
