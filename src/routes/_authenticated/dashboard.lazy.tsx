@@ -8,6 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, subDays, startOfDay, endOfDay, startOfYesterday, endOfYesterday } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   LineChart,
   Line,
@@ -20,9 +24,10 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { ShoppingBag, DollarSign, Calendar, Truck, AlertTriangle, Snowflake, ArrowRight, Sparkles } from "lucide-react";
+import { ShoppingBag, DollarSign, Calendar as CalendarIcon, Truck, AlertTriangle, Snowflake, ArrowRight, Sparkles } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 export const Route = createLazyFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -31,9 +36,33 @@ export const Route = createLazyFileRoute("/_authenticated/dashboard")({
 const brl = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+type PeriodoPreset = "hoje" | "ontem" | "7d" | "30d" | "custom";
+
 function DashboardPage() {
-  const [periodo, setPeriodo] = useState<"7" | "30" | "90">("30");
-  const dias = Number(periodo);
+  const [periodo, setPeriodo] = useState<PeriodoPreset>("30d");
+  const [dataCustom, setDataCustom] = useState<Date | undefined>(new Date());
+
+  const range = computeRange(periodo, dataCustom);
+  const dias = range.dias;
+
+  function computeRange(p: PeriodoPreset, custom?: Date) {
+    const agora = new Date();
+    switch (p) {
+      case "hoje":
+        return { desde: startOfDay(agora).toISOString(), ate: endOfDay(agora).toISOString(), dias: 1, label: "hoje" };
+      case "ontem":
+        return { desde: startOfYesterday().toISOString(), ate: endOfYesterday().toISOString(), dias: 1, label: "ontem" };
+      case "7d":
+        return { desde: startOfDay(subDays(agora, 6)).toISOString(), ate: endOfDay(agora).toISOString(), dias: 7, label: "7d" };
+      case "30d":
+        return { desde: startOfDay(subDays(agora, 29)).toISOString(), ate: endOfDay(agora).toISOString(), dias: 30, label: "30d" };
+      case "custom":
+      default: {
+        const d = custom ?? agora;
+        return { desde: startOfDay(d).toISOString(), ate: endOfDay(d).toISOString(), dias: 1, label: format(d, "dd/MM/yyyy") };
+      }
+    }
+  }
 
   const { data: syncRecent } = useQuery({
     queryKey: ["sync-log-recent"],
@@ -112,20 +141,20 @@ function DashboardPage() {
   });
 
   const { data: serie, isLoading: loadSerie } = useQuery({
-    queryKey: ["serie", dias],
+    queryKey: ["serie", periodo, dataCustom?.toISOString()],
     queryFn: async () => {
-      const desde = new Date();
-      desde.setDate(desde.getDate() - dias);
-      desde.setHours(0, 0, 0, 0);
       const { data } = await supabase
         .from("pedidos")
         .select("data_criacao_pedido, valor_total")
-        .gte("data_criacao_pedido", desde.toISOString());
+        .gte("data_criacao_pedido", range.desde)
+        .lte("data_criacao_pedido", range.ate);
       const buckets = new Map<string, { pedidos: number; faturamento: number }>();
-      for (let i = dias - 1; i >= 0; i--) {
-        const d = new Date();
-        d.setDate(d.getDate() - i);
-        d.setHours(0, 0, 0, 0);
+      const start = new Date(range.desde);
+      const end = new Date(range.ate);
+      const totalDias = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+      for (let i = 0; i < totalDias; i++) {
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
         buckets.set(d.toISOString().slice(0, 10), { pedidos: 0, faturamento: 0 });
       }
       for (const p of data ?? []) {
@@ -138,21 +167,20 @@ function DashboardPage() {
         }
       }
       return Array.from(buckets.entries()).map(([data, v]) => ({
-        data: data.slice(5),
+        data: totalDias === 1 ? data : data.slice(5),
         ...v,
       }));
     },
   });
 
   const { data: topProdutos, isLoading: loadTop } = useQuery({
-    queryKey: ["topProdutos", dias],
+    queryKey: ["topProdutos", periodo, dataCustom?.toISOString()],
     queryFn: async () => {
-      const desde = new Date();
-      desde.setDate(desde.getDate() - dias);
       const { data } = await supabase
         .from("pedidos")
         .select("itens")
-        .gte("data_criacao_pedido", desde.toISOString());
+        .gte("data_criacao_pedido", range.desde)
+        .lte("data_criacao_pedido", range.ate);
       const map = new Map<string, number>();
       for (const p of data ?? []) {
         const itens = (p.itens as any[]) ?? [];
@@ -235,16 +263,44 @@ function DashboardPage() {
               </div>
             </SheetContent>
           </Sheet>
-          <Select value={periodo} onValueChange={(v) => setPeriodo(v as "7" | "30" | "90")}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Últimos 7d</SelectItem>
-            <SelectItem value="30">Últimos 30d</SelectItem>
-            <SelectItem value="90">Últimos 90d</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoPreset)}>
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="hoje">Hoje</SelectItem>
+              <SelectItem value="ontem">Ontem</SelectItem>
+              <SelectItem value="7d">Últimos 7d</SelectItem>
+              <SelectItem value="30d">Últimos 30d</SelectItem>
+              <SelectItem value="custom">Data personalizada</SelectItem>
+            </SelectContent>
+          </Select>
+          {periodo === "custom" && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[180px] justify-start text-left font-normal",
+                    !dataCustom && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dataCustom ? format(dataCustom, "dd/MM/yyyy", { locale: ptBR }) : <span>Escolha a data</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dataCustom}
+                  onSelect={setDataCustom}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
 
@@ -287,7 +343,12 @@ function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Pedidos e faturamento — últimos {dias}d</CardTitle>
+            <CardTitle className="text-base">
+              {periodo === "hoje" && "Pedidos e faturamento — hoje"}
+              {periodo === "ontem" && "Pedidos e faturamento — ontem"}
+              {periodo === "custom" && `Pedidos e faturamento — ${range.label}`}
+              {(periodo === "7d" || periodo === "30d") && `Pedidos e faturamento — últimos ${dias}d`}
+            </CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             {loadSerie ? (
