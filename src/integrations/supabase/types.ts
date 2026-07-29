@@ -200,6 +200,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_log: {
+        Row: {
+          ate: string | null
+          campo: string | null
+          created_at: string
+          de: string | null
+          duracao_ms: number | null
+          encontrados: number | null
+          erros: Json | null
+          gravados: number | null
+          id: string
+          ok: boolean
+        }
+        Insert: {
+          ate?: string | null
+          campo?: string | null
+          created_at?: string
+          de?: string | null
+          duracao_ms?: number | null
+          encontrados?: number | null
+          erros?: Json | null
+          gravados?: number | null
+          id?: string
+          ok?: boolean
+        }
+        Update: {
+          ate?: string | null
+          campo?: string | null
+          created_at?: string
+          de?: string | null
+          duracao_ms?: number | null
+          encontrados?: number | null
+          erros?: Json | null
+          gravados?: number | null
+          id?: string
+          ok?: boolean
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
