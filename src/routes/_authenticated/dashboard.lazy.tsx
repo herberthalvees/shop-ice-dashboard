@@ -343,7 +343,12 @@ function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Pedidos e faturamento — últimos {dias}d</CardTitle>
+            <CardTitle className="text-base">
+              {periodo === "hoje" && "Pedidos e faturamento — hoje"}
+              {periodo === "ontem" && "Pedidos e faturamento — ontem"}
+              {periodo === "custom" && `Pedidos e faturamento — ${range.label}`}
+              {(periodo === "7d" || periodo === "30d") && `Pedidos e faturamento — últimos ${dias}d`}
+            </CardTitle>
           </CardHeader>
           <CardContent className="h-72">
             {loadSerie ? (
