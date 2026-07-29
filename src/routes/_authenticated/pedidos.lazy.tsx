@@ -30,7 +30,7 @@ function PedidosPage() {
   const [sort, setSort] = useState<SortKey>("data");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [aberto, setAberto] = useState<any | null>(null);
-  const pageSize = 20;
+  const pageSize = 50;
 
   const dateFrom = useMemo(() => {
     if (periodo === "all") return null;
@@ -42,7 +42,12 @@ function PedidosPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["pedidos", busca, status, periodo, page, sort, sortDir],
     queryFn: async () => {
-      let q = supabase.from("pedidos").select("*", { count: "exact" });
+      let q = supabase
+        .from("pedidos")
+        .select(
+          "order_sn, status, comprador_username, valor_total, data_criacao_pedido",
+          { count: "exact" },
+        );
       if (busca.trim()) {
         const b = busca.trim();
         q = q.or(`order_sn.ilike.%${b}%,comprador_username.ilike.%${b}%`);
@@ -152,7 +157,14 @@ function PedidosPage() {
                   <TableRow><TableCell colSpan={5} className="text-center py-10 text-sm text-muted-foreground">Nenhum pedido encontrado.</TableCell></TableRow>
                 ) : (
                   (data?.rows ?? []).map((p) => (
-                    <TableRow key={p.order_sn} className="cursor-pointer" onClick={() => setAberto(p)}>
+                    <TableRow key={p.order_sn} className="cursor-pointer" onClick={async () => {
+                      const { data: full } = await supabase
+                        .from("pedidos")
+                        .select("order_sn, status, comprador_username, valor_total, data_criacao_pedido, itens")
+                        .eq("order_sn", p.order_sn)
+                        .maybeSingle();
+                      setAberto(full ?? p);
+                    }}>
                       <TableCell className="font-medium">#{p.order_sn}</TableCell>
                       <TableCell><Badge variant="secondary">{p.status ?? "—"}</Badge></TableCell>
                       <TableCell>{p.comprador_username ?? "—"}</TableCell>
