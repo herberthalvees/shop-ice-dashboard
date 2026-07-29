@@ -8,6 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format, subDays, startOfDay, endOfDay, startOfYesterday, endOfYesterday } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   LineChart,
   Line,
@@ -20,9 +24,10 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { ShoppingBag, DollarSign, Calendar, Truck, AlertTriangle, Snowflake, ArrowRight, Sparkles } from "lucide-react";
+import { ShoppingBag, DollarSign, Calendar as CalendarIcon, Truck, AlertTriangle, Snowflake, ArrowRight, Sparkles } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 export const Route = createLazyFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
