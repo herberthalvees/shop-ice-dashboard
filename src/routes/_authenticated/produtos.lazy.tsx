@@ -16,10 +16,11 @@ import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { usePeriodo, computeRange } from "@/lib/periodo-store";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown, Check, CalendarIcon } from "lucide-react";
+import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown, Check, CalendarIcon, History } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { HistoricoCustoSheet } from "@/components/historico-custo";
 
 export const Route = createLazyFileRoute("/_authenticated/produtos")({
   component: ProdutosPage,
@@ -82,7 +83,10 @@ function ProdutosPage() {
     queryFn: async () => {
       const [{ data: giro, error: e1 }, { data: dim, error: e2 }] = await Promise.all([
         supabase.rpc("produtos_com_giro" as any, { p_de, p_ate }),
-        supabase.from("dim_produto").select("item_id, model_id, custo_unitario"),
+        supabase
+          .from("produto_custos" as any)
+          .select("item_id, model_id, custo_unitario")
+          .is("vigencia_fim", null),
       ]);
       if (e1) throw e1;
       if (e2) throw e2;
