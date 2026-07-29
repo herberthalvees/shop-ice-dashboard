@@ -1,16 +1,17 @@
 // Server-only helpers para a API Shopee Open Platform.
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { credenciais } from "./shopee-credenciais.server";
 
 export const SHOPEE_BASE = "https://partner.shopeemobile.com";
 
-function partnerId(): string {
-  const v = process.env.SHOPEE_PARTNER_ID;
-  if (!v) throw new Error("SHOPEE_PARTNER_ID não configurado");
+function partnerId(appTipo: string = "principal"): string {
+  const v = credenciais(appTipo).partnerId;
+  if (!v) throw new Error("partner id da Shopee não configurado");
   return v;
 }
-function partnerKey(): string {
-  const v = process.env.SHOPEE_PARTNER_KEY;
-  if (!v) throw new Error("SHOPEE_PARTNER_KEY não configurado");
+function partnerKey(appTipo: string = "principal"): string {
+  const v = credenciais(appTipo).partnerKey;
+  if (!v) throw new Error("partner key da Shopee não configurada");
   return v;
 }
 
@@ -18,24 +19,26 @@ function hmacHex(key: string, message: string): string {
   return createHmac("sha256", key).update(message).digest("hex");
 }
 
-export function signPublic(path: string, timestamp: number): string {
-  return hmacHex(partnerKey(), `${partnerId()}${path}${timestamp}`);
+export function signPublic(path: string, timestamp: number, appTipo: string = "principal"): string {
+  return hmacHex(partnerKey(appTipo), `${partnerId(appTipo)}${path}${timestamp}`);
 }
 
 export function signShop(path: string, timestamp: number, accessToken: string, shopId: number | string): string {
   return hmacHex(partnerKey(), `${partnerId()}${path}${timestamp}${accessToken}${shopId}`);
 }
 
-export function getRedirectUri(origin: string): string {
-  return `${origin}/api/public/shopee/callback`;
+export function getRedirectUri(origin: string, appTipo: string = "principal"): string {
+  return appTipo === "ads"
+    ? `${origin}/api/public/shopee/callback-ads`
+    : `${origin}/api/public/shopee/callback`;
 }
 
-export function buildAuthUrl(origin: string): string {
+export function buildAuthUrl(origin: string, appTipo: string = "principal"): string {
   const path = "/api/v2/shop/auth_partner";
   const timestamp = Math.floor(Date.now() / 1000);
-  const sign = signPublic(path, timestamp);
-  const redirect = encodeURIComponent(getRedirectUri(origin));
-  return `${SHOPEE_BASE}${path}?partner_id=${partnerId()}&timestamp=${timestamp}&sign=${sign}&redirect=${redirect}`;
+  const sign = signPublic(path, timestamp, appTipo);
+  const redirect = encodeURIComponent(getRedirectUri(origin, appTipo));
+  return `${SHOPEE_BASE}${path}?partner_id=${partnerId(appTipo)}&timestamp=${timestamp}&sign=${sign}&redirect=${redirect}`;
 }
 
 export function verifyWebhookSignature(url: string, body: string, header: string | null): boolean {
