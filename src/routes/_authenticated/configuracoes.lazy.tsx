@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Store, RefreshCw, Loader2, ExternalLink, Lock, AlertTriangle } from "lucide-react";
+import { Store, RefreshCw, Loader2, ExternalLink, Lock, AlertTriangle, Percent } from "lucide-react";
 import { getShopeeAuthUrl, runShopeeSync } from "@/lib/shopee.functions";
 
 export const Route = createLazyFileRoute("/_authenticated/configuracoes")({
@@ -58,6 +58,45 @@ function ConfigPage() {
   const [senha, setSenha] = useState("");
   const [conf, setConf] = useState("");
   const [savingSenha, setSavingSenha] = useState(false);
+
+  const { data: cfg } = useQuery({
+    queryKey: ["config-fiscal"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("config")
+        .select("aliquota_imposto")
+        .eq("id", 1)
+        .maybeSingle();
+      return (data as { aliquota_imposto: number | null } | null);
+    },
+  });
+  const [aliquota, setAliquota] = useState<string>("");
+  const [savingAliq, setSavingAliq] = useState(false);
+  useEffect(() => {
+    if (cfg && aliquota === "") {
+      setAliquota(String(cfg.aliquota_imposto ?? 0).replace(".", ","));
+    }
+  }, [cfg]);
+
+  async function salvarAliquota(e: React.FormEvent) {
+    e.preventDefault();
+    const num = Number(aliquota.replace(",", "."));
+    if (!Number.isFinite(num) || num < 0 || num > 100) {
+      return toast.error("Alíquota inválida", { description: "Informe um valor entre 0 e 100." });
+    }
+    setSavingAliq(true);
+    const { error } = await supabase
+      .from("config")
+      .update({ aliquota_imposto: num })
+      .eq("id", 1);
+    setSavingAliq(false);
+    if (error) toast.error("Erro", { description: error.message });
+    else {
+      toast.success("Alíquota atualizada");
+      qc.invalidateQueries({ queryKey: ["config-fiscal"] });
+      qc.invalidateQueries({ queryKey: ["kpis"] });
+    }
+  }
 
   async function trocarSenha(e: React.FormEvent) {
     e.preventDefault();
