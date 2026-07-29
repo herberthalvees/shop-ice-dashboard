@@ -437,11 +437,15 @@ export type Database = {
         Args: { p_ate: string; p_de: string }
         Returns: {
           cobertura_liquido: number
+          faturamento_com_escrow: number
           faturamento_total: number
           itens_vendidos: number
+          margem_liquida: number
           pedidos_cancelados: number
           pedidos_total: number
           pedidos_validos: number
+          percentual_taxas: number
+          projecao_liquido: number
           ticket_medio: number
           total_taxas: number
           valor_liquido: number
