@@ -22,6 +22,7 @@ import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/
 import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
 import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
 import { Route as ApiPublicShopeeCallbackRouteImport } from './routes/api/public/shopee/callback'
+import { Route as ApiPublicShopeeAuthUrlRouteImport } from './routes/api/public/shopee/auth-url'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
@@ -99,6 +100,11 @@ const ApiPublicShopeeCallbackRoute = ApiPublicShopeeCallbackRouteImport.update({
   path: '/api/public/shopee/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicShopeeAuthUrlRoute = ApiPublicShopeeAuthUrlRouteImport.update({
+  id: '/api/public/shopee/auth-url',
+  path: '/api/public/shopee/auth-url',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -109,6 +115,7 @@ export interface FileRoutesByFullPath {
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/produtos': typeof AuthenticatedProdutosRoute
+  '/api/public/shopee/auth-url': typeof ApiPublicShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/produtos': typeof AuthenticatedProdutosRoute
+  '/api/public/shopee/auth-url': typeof ApiPublicShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
+  '/api/public/shopee/auth-url': typeof ApiPublicShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/notificacoes'
     | '/pedidos'
     | '/produtos'
+    | '/api/public/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/sync'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/notificacoes'
     | '/pedidos'
     | '/produtos'
+    | '/api/public/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/sync'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notificacoes'
     | '/_authenticated/pedidos'
     | '/_authenticated/produtos'
+    | '/api/public/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/sync'
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiPublicShopeeAuthUrlRoute: typeof ApiPublicShopeeAuthUrlRoute
   ApiPublicShopeeCallbackRoute: typeof ApiPublicShopeeCallbackRoute
   ApiPublicShopeeRefreshRoute: typeof ApiPublicShopeeRefreshRoute
   ApiPublicShopeeSyncRoute: typeof ApiPublicShopeeSyncRoute
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/shopee/auth-url': {
+      id: '/api/public/shopee/auth-url'
+      path: '/api/public/shopee/auth-url'
+      fullPath: '/api/public/shopee/auth-url'
+      preLoaderRoute: typeof ApiPublicShopeeAuthUrlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -321,6 +341,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiPublicShopeeAuthUrlRoute: ApiPublicShopeeAuthUrlRoute,
   ApiPublicShopeeCallbackRoute: ApiPublicShopeeCallbackRoute,
   ApiPublicShopeeRefreshRoute: ApiPublicShopeeRefreshRoute,
   ApiPublicShopeeSyncRoute: ApiPublicShopeeSyncRoute,
@@ -329,13 +350,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
