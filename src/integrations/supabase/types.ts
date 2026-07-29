@@ -687,6 +687,7 @@ export type Database = {
           sku: string
           status: string
           tarifa: number
+          tem_escrow: boolean
           total_linhas: number
           valor: number
         }[]
@@ -703,6 +704,7 @@ export type Database = {
           frete_vendedor: number
           imposto: number
           linhas: number
+          linhas_estimadas: number
           lucro: number
           tarifa: number
           valor: number
