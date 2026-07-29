@@ -36,7 +36,8 @@ type LinhaMargem = {
   produto: string | null;
   unidades: number;
   preco_medio: number;
-  custo_unitario: number | null;
+  custo_periodo: number | null;
+  custo_atual: number | null;
   liquido_unitario: number;
   lucro_unitario: number | null;
   margem_pct: number | null;
@@ -66,7 +67,8 @@ function PrecificacaoPage() {
         produto: r.produto ?? null,
         unidades: Number(r.unidades ?? 0),
         preco_medio: Number(r.preco_medio ?? 0),
-        custo_unitario: r.custo_unitario == null ? null : Number(r.custo_unitario),
+        custo_periodo: r.custo_periodo == null ? null : Number(r.custo_periodo),
+        custo_atual: r.custo_atual == null ? null : Number(r.custo_atual),
         liquido_unitario: Number(r.liquido_unitario ?? 0),
         lucro_unitario: r.lucro_unitario == null ? null : Number(r.lucro_unitario),
         margem_pct: r.margem_pct == null ? null : Number(r.margem_pct),
@@ -95,7 +97,7 @@ function PrecificacaoPage() {
         perdaTotal += l.lucro_unitario * l.unidades;
       }
       if (l.situacao === "sem custo") skusSemCusto += 1;
-      if (l.custo_unitario != null) comCusto += 1;
+      if (l.custo_periodo != null || l.custo_atual != null) comCusto += 1;
     }
     return { skusPrejuizo, perdaTotal, skusSemCusto, comCusto, total: linhas.length };
   }, [linhas]);
@@ -217,7 +219,8 @@ function PrecificacaoPage() {
                     <TableHead className="w-[120px]">SKU</TableHead>
                     <TableHead className="text-right">Unid.</TableHead>
                     <TableHead className="text-right">Preço médio</TableHead>
-                    <TableHead className="text-right w-[160px]">Custo</TableHead>
+                    <TableHead className="text-right w-[160px]">Custo no período</TableHead>
+                    <TableHead className="text-right w-[150px]">Custo atual</TableHead>
                     <TableHead className="text-right">Líquido/u</TableHead>
                     <TableHead className="text-right">Lucro/u</TableHead>
                     <TableHead className="text-right">Margem</TableHead>
@@ -275,7 +278,7 @@ function LinhaSKU({ linha }: { linha: LinhaMargem }) {
       <TableCell className="text-right">{linha.unidades.toLocaleString("pt-BR")}</TableCell>
       <TableCell className="text-right">{brl(linha.preco_medio)}</TableCell>
       <TableCell className="text-right">
-        {linha.custo_unitario == null ? (
+        {linha.custo_periodo == null ? (
           <Link
             to="/produtos"
             search={{ q: linha.sku } as any}
@@ -284,7 +287,25 @@ function LinhaSKU({ linha }: { linha: LinhaMargem }) {
             informar em Produtos <ExternalLink className="h-3 w-3" />
           </Link>
         ) : (
-          <span className="tabular-nums">{brl(linha.custo_unitario)}</span>
+          <span className="tabular-nums">{brl(linha.custo_periodo)}</span>
+        )}
+      </TableCell>
+      <TableCell className="text-right">
+        {linha.custo_atual == null ? (
+          <span className="text-muted-foreground">—</span>
+        ) : mudou ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex items-center gap-1 rounded border border-primary/40 bg-primary/10 px-2 py-0.5 tabular-nums font-medium text-primary">
+                {brl(linha.custo_atual)}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              O custo do fornecedor mudou dentro do intervalo analisado. Margem e lucro usam o custo do período; preço mínimo e ROAS usam o custo atual.
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <span className="tabular-nums">{brl(linha.custo_atual)}</span>
         )}
       </TableCell>
       <TableCell className="text-right">{brl(linha.liquido_unitario)}</TableCell>
