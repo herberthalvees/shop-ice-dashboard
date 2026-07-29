@@ -762,6 +762,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      status_disponiveis: {
+        Args: never
+        Returns: {
+          pedidos: number
+          status: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
