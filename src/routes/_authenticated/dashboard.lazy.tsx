@@ -43,7 +43,7 @@ function DashboardPage() {
         .select("id, campo, de, ate, encontrados, gravados, duracao_ms, ok, erros, created_at")
         .order("created_at", { ascending: false })
         .limit(20);
-      return (data ?? []) as Array<{
+      return ((data ?? []) as unknown) as Array<{
         id: string; campo: string | null; de: string | null; ate: string | null;
         encontrados: number | null; gravados: number | null; duracao_ms: number | null;
         ok: boolean; erros: any; created_at: string;
