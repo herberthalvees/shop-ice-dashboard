@@ -28,7 +28,7 @@ const toISO = (d: Date) => format(d, "yyyy-MM-dd");
 const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
 
 const PAGE_SIZE = 50;
-const NAO_CONCRETIZADO = ["UNPAID", "CANCELLED"];
+const NAO_CONCRETIZADO = ["UNPAID", "CANCELLED", "TO_RETURN"];
 
 type Linha = {
   total_linhas: number;
