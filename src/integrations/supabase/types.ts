@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      carteira_transacoes: {
+        Row: {
+          comprador: string | null
+          created_at: string
+          data_transacao: string | null
+          descricao: string | null
+          fluxo: string | null
+          order_sn: string | null
+          payload: Json | null
+          refund_sn: string | null
+          saldo_apos: number | null
+          status: string | null
+          tab_type: string | null
+          taxa: number | null
+          tipo: string | null
+          transaction_id: number
+          valor: number | null
+          wallet_type: string | null
+          withdrawal_id: number | null
+          withdrawal_type: string | null
+        }
+        Insert: {
+          comprador?: string | null
+          created_at?: string
+          data_transacao?: string | null
+          descricao?: string | null
+          fluxo?: string | null
+          order_sn?: string | null
+          payload?: Json | null
+          refund_sn?: string | null
+          saldo_apos?: number | null
+          status?: string | null
+          tab_type?: string | null
+          taxa?: number | null
+          tipo?: string | null
+          transaction_id: number
+          valor?: number | null
+          wallet_type?: string | null
+          withdrawal_id?: number | null
+          withdrawal_type?: string | null
+        }
+        Update: {
+          comprador?: string | null
+          created_at?: string
+          data_transacao?: string | null
+          descricao?: string | null
+          fluxo?: string | null
+          order_sn?: string | null
+          payload?: Json | null
+          refund_sn?: string | null
+          saldo_apos?: number | null
+          status?: string | null
+          tab_type?: string | null
+          taxa?: number | null
+          tipo?: string | null
+          transaction_id?: number
+          valor?: number | null
+          wallet_type?: string | null
+          withdrawal_id?: number | null
+          withdrawal_type?: string | null
+        }
+        Relationships: []
+      }
       config: {
         Row: {
           aliquota_imposto: number
@@ -428,8 +491,21 @@ export type Database = {
           unidades: number
         }[]
       }
+      aplicar_carteira: { Args: { p_dados: Json }; Returns: number }
       aplicar_escrow: { Args: { p_dados: Json }; Returns: number }
       aplicar_produtos: { Args: { p_dados: Json }; Returns: number }
+      carteira_resumo: {
+        Args: { p_ate: string; p_de: string }
+        Returns: {
+          em_transito: number
+          entradas: number
+          pedidos_em_transito: number
+          saidas: number
+          saldo_atual: number
+          saldo_em: string
+          saques: number
+        }[]
+      }
       dashboard_curva_abc: {
         Args: { p_ate: string; p_de: string; p_limite?: number }
         Returns: {

@@ -17,16 +17,17 @@ import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedPrecificacaoRouteImport } from './routes/_authenticated/precificacao'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
+import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as ApiShopeeAuthUrlRouteImport } from './routes/api/shopee/auth-url'
 import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/shopee/webhook'
 import { Route as ApiPublicShopeeSyncProdutosRouteImport } from './routes/api/public/shopee/sync-produtos'
 import { Route as ApiPublicShopeeSyncEscrowRouteImport } from './routes/api/public/shopee/sync-escrow'
+import { Route as ApiPublicShopeeSyncCarteiraRouteImport } from './routes/api/public/shopee/sync-carteira'
 import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
 import { Route as ApiPublicShopeeRefreshTokenRouteImport } from './routes/api/public/shopee/refresh-token'
 import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
-import { Route as ApiPublicShopeeDiagCarteiraRouteImport } from './routes/api/public/shopee/diag-carteira'
 import { Route as ApiPublicShopeeCallbackRouteImport } from './routes/api/public/shopee/callback'
 
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -78,6 +79,13 @@ const AuthenticatedNotificacoesRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/notificacoes.lazy').then((d) => d.Route),
   )
+const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/financeiro.lazy').then((d) => d.Route),
+)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -115,6 +123,12 @@ const ApiPublicShopeeSyncEscrowRoute =
     path: '/api/public/shopee/sync-escrow',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicShopeeSyncCarteiraRoute =
+  ApiPublicShopeeSyncCarteiraRouteImport.update({
+    id: '/api/public/shopee/sync-carteira',
+    path: '/api/public/shopee/sync-carteira',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicShopeeSyncRoute = ApiPublicShopeeSyncRouteImport.update({
   id: '/api/public/shopee/sync',
   path: '/api/public/shopee/sync',
@@ -131,12 +145,6 @@ const ApiPublicShopeeRefreshRoute = ApiPublicShopeeRefreshRouteImport.update({
   path: '/api/public/shopee/refresh',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicShopeeDiagCarteiraRoute =
-  ApiPublicShopeeDiagCarteiraRouteImport.update({
-    id: '/api/public/shopee/diag-carteira',
-    path: '/api/public/shopee/diag-carteira',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicShopeeCallbackRoute = ApiPublicShopeeCallbackRouteImport.update({
   id: '/api/public/shopee/callback',
   path: '/api/public/shopee/callback',
@@ -149,16 +157,17 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
-  '/api/public/shopee/diag-carteira': typeof ApiPublicShopeeDiagCarteiraRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
+  '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
@@ -169,16 +178,17 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
-  '/api/public/shopee/diag-carteira': typeof ApiPublicShopeeDiagCarteiraRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
+  '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
@@ -191,16 +201,17 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
-  '/api/public/shopee/diag-carteira': typeof ApiPublicShopeeDiagCarteiraRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
+  '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
@@ -213,16 +224,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/configuracoes'
     | '/dashboard'
+    | '/financeiro'
     | '/notificacoes'
     | '/pedidos'
     | '/precificacao'
     | '/produtos'
     | '/api/shopee/auth-url'
     | '/api/public/shopee/callback'
-    | '/api/public/shopee/diag-carteira'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
+    | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
     | '/api/public/shopee/webhook'
@@ -233,16 +245,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/configuracoes'
     | '/dashboard'
+    | '/financeiro'
     | '/notificacoes'
     | '/pedidos'
     | '/precificacao'
     | '/produtos'
     | '/api/shopee/auth-url'
     | '/api/public/shopee/callback'
-    | '/api/public/shopee/diag-carteira'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
+    | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
     | '/api/public/shopee/webhook'
@@ -254,16 +267,17 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/_authenticated/configuracoes'
     | '/_authenticated/dashboard'
+    | '/_authenticated/financeiro'
     | '/_authenticated/notificacoes'
     | '/_authenticated/pedidos'
     | '/_authenticated/precificacao'
     | '/_authenticated/produtos'
     | '/api/shopee/auth-url'
     | '/api/public/shopee/callback'
-    | '/api/public/shopee/diag-carteira'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
+    | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
     | '/api/public/shopee/webhook'
@@ -276,10 +290,10 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   ApiShopeeAuthUrlRoute: typeof ApiShopeeAuthUrlRoute
   ApiPublicShopeeCallbackRoute: typeof ApiPublicShopeeCallbackRoute
-  ApiPublicShopeeDiagCarteiraRoute: typeof ApiPublicShopeeDiagCarteiraRoute
   ApiPublicShopeeRefreshRoute: typeof ApiPublicShopeeRefreshRoute
   ApiPublicShopeeRefreshTokenRoute: typeof ApiPublicShopeeRefreshTokenRoute
   ApiPublicShopeeSyncRoute: typeof ApiPublicShopeeSyncRoute
+  ApiPublicShopeeSyncCarteiraRoute: typeof ApiPublicShopeeSyncCarteiraRoute
   ApiPublicShopeeSyncEscrowRoute: typeof ApiPublicShopeeSyncEscrowRoute
   ApiPublicShopeeSyncProdutosRoute: typeof ApiPublicShopeeSyncProdutosRoute
   ApiPublicShopeeWebhookRoute: typeof ApiPublicShopeeWebhookRoute
@@ -343,6 +357,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -385,6 +406,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeSyncEscrowRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/shopee/sync-carteira': {
+      id: '/api/public/shopee/sync-carteira'
+      path: '/api/public/shopee/sync-carteira'
+      fullPath: '/api/public/shopee/sync-carteira'
+      preLoaderRoute: typeof ApiPublicShopeeSyncCarteiraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shopee/sync': {
       id: '/api/public/shopee/sync'
       path: '/api/public/shopee/sync'
@@ -406,13 +434,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeRefreshRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/shopee/diag-carteira': {
-      id: '/api/public/shopee/diag-carteira'
-      path: '/api/public/shopee/diag-carteira'
-      fullPath: '/api/public/shopee/diag-carteira'
-      preLoaderRoute: typeof ApiPublicShopeeDiagCarteiraRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/shopee/callback': {
       id: '/api/public/shopee/callback'
       path: '/api/public/shopee/callback'
@@ -426,6 +447,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedPrecificacaoRoute: typeof AuthenticatedPrecificacaoRoute
@@ -435,6 +457,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedPrecificacaoRoute: AuthenticatedPrecificacaoRoute,
@@ -451,10 +474,10 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   ApiShopeeAuthUrlRoute: ApiShopeeAuthUrlRoute,
   ApiPublicShopeeCallbackRoute: ApiPublicShopeeCallbackRoute,
-  ApiPublicShopeeDiagCarteiraRoute: ApiPublicShopeeDiagCarteiraRoute,
   ApiPublicShopeeRefreshRoute: ApiPublicShopeeRefreshRoute,
   ApiPublicShopeeRefreshTokenRoute: ApiPublicShopeeRefreshTokenRoute,
   ApiPublicShopeeSyncRoute: ApiPublicShopeeSyncRoute,
+  ApiPublicShopeeSyncCarteiraRoute: ApiPublicShopeeSyncCarteiraRoute,
   ApiPublicShopeeSyncEscrowRoute: ApiPublicShopeeSyncEscrowRoute,
   ApiPublicShopeeSyncProdutosRoute: ApiPublicShopeeSyncProdutosRoute,
   ApiPublicShopeeWebhookRoute: ApiPublicShopeeWebhookRoute,
