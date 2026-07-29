@@ -234,34 +234,49 @@ export type Database = {
       }
       produtos: {
         Row: {
-          estoque: number | null
-          id: string
+          atualizado_em: string
+          estoque_disponivel: number | null
+          estoque_reservado: number | null
+          id: number
+          imagem_url: string | null
           item_id: number
-          nome: string | null
-          preco: number | null
+          model_id: number
+          preco_atual: number | null
+          preco_original: number | null
+          produto: string | null
           sku: string | null
-          status: string | null
-          updated_at: string
+          status_item: string | null
+          variacao: string | null
         }
         Insert: {
-          estoque?: number | null
-          id?: string
+          atualizado_em?: string
+          estoque_disponivel?: number | null
+          estoque_reservado?: number | null
+          id?: number
+          imagem_url?: string | null
           item_id: number
-          nome?: string | null
-          preco?: number | null
+          model_id?: number
+          preco_atual?: number | null
+          preco_original?: number | null
+          produto?: string | null
           sku?: string | null
-          status?: string | null
-          updated_at?: string
+          status_item?: string | null
+          variacao?: string | null
         }
         Update: {
-          estoque?: number | null
-          id?: string
+          atualizado_em?: string
+          estoque_disponivel?: number | null
+          estoque_reservado?: number | null
+          id?: number
+          imagem_url?: string | null
           item_id?: number
-          nome?: string | null
-          preco?: number | null
+          model_id?: number
+          preco_atual?: number | null
+          preco_original?: number | null
+          produto?: string | null
           sku?: string | null
-          status?: string | null
-          updated_at?: string
+          status_item?: string | null
+          variacao?: string | null
         }
         Relationships: []
       }
@@ -407,6 +422,7 @@ export type Database = {
         }[]
       }
       aplicar_escrow: { Args: { p_dados: Json }; Returns: number }
+      aplicar_produtos: { Args: { p_dados: Json }; Returns: number }
       dashboard_kpis: {
         Args: never
         Returns: {
@@ -478,6 +494,21 @@ export type Database = {
         Args: { p_limite?: number }
         Returns: {
           order_sn: string
+        }[]
+      }
+      produtos_com_giro: {
+        Args: { p_dias?: number }
+        Returns: {
+          dias_de_estoque: number
+          estoque_disponivel: number
+          imagem_url: string
+          media_diaria: number
+          preco_atual: number
+          produto: string
+          sku: string
+          status_item: string
+          variacao: string
+          vendidos_periodo: number
         }[]
       }
     }
