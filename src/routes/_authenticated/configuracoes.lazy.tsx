@@ -236,3 +236,80 @@ function Info({ k, v }: { k: string; v: React.ReactNode }) {
     </div>
   );
 }
+
+function CardConexao({
+  appTipo,
+  conexao,
+  statusColor,
+  conectando,
+  onConectar,
+  acaoExtra,
+}: {
+  appTipo: "principal" | "ads";
+  conexao: Conexao | null;
+  statusColor: Record<string, string>;
+  conectando: boolean;
+  onConectar: () => void;
+  acaoExtra?: React.ReactNode;
+}) {
+  const expiraMs = conexao?.token_expires_at
+    ? new Date(conexao.token_expires_at).getTime() - Date.now()
+    : null;
+  const alerta = expiraMs !== null && expiraMs < 60 * 60 * 1000;
+  const expirado = expiraMs !== null && expiraMs <= 0;
+  const label = expiraMs === null
+    ? "—"
+    : expirado
+      ? "Expirado"
+      : `em ${Math.max(1, Math.floor(expiraMs / 60000))} min`;
+
+  const rotuloBotao = conexao
+    ? appTipo === "ads" ? "Reconectar app de Ads" : "Reconectar loja"
+    : appTipo === "ads" ? "Conectar app de Ads" : "Conectar loja";
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Store className="h-4 w-4" /> {NOMES_APP[appTipo]}
+        </CardTitle>
+        <CardDescription>
+          {appTipo === "ads"
+            ? "Autorize o app de Ads para acompanhar campanhas e investimento."
+            : "Autorize o app principal para sincronizar pedidos, produtos e financeiro."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Info k="app_tipo" v={appTipo} />
+          <Info k="partner_id" v={conexao?.partner_id ? String(conexao.partner_id) : "—"} />
+          <Info k="Loja" v={conexao?.shop_name ?? "—"} />
+          <Info k="shop_id" v={conexao?.shop_id ? String(conexao.shop_id) : "—"} />
+          <Info k="Token expira em" v={
+            <span className={`inline-flex items-center gap-1.5 ${alerta ? (expirado ? "text-destructive" : "text-[color:var(--warning)]") : ""}`}>
+              {alerta && <AlertTriangle className="h-3.5 w-3.5" />}
+              {conexao?.token_expires_at ? (
+                <span>
+                  {new Date(conexao.token_expires_at).toLocaleString("pt-BR")}
+                  <span className="ml-1 text-xs opacity-80">({label})</span>
+                </span>
+              ) : "—"}
+            </span>
+          } />
+          <Info k="Status" v={
+            <span className={`inline-flex px-2 py-0.5 rounded border text-xs ${statusColor[conexao?.status ?? ""] ?? "bg-muted"}`}>
+              {conexao?.status ?? "sem conexão"}
+            </span>
+          } />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={onConectar} disabled={conectando}>
+            {conectando ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ExternalLink className="mr-2 h-4 w-4" />}
+            {rotuloBotao}
+          </Button>
+          {acaoExtra}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
