@@ -21,6 +21,8 @@ import {
   Legend,
 } from "recharts";
 import { ShoppingBag, DollarSign, Calendar, Truck, AlertTriangle, Snowflake, ArrowRight, Sparkles } from "lucide-react";
+import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export const Route = createLazyFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -32,6 +34,37 @@ const brl = (v: number) =>
 function DashboardPage() {
   const [periodo, setPeriodo] = useState<"7" | "30" | "90">("30");
   const dias = Number(periodo);
+
+  const { data: syncRecent } = useQuery({
+    queryKey: ["sync-log-recent"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("sync_log" as any)
+        .select("id, campo, de, ate, encontrados, gravados, duracao_ms, ok, erros, created_at")
+        .order("created_at", { ascending: false })
+        .limit(20);
+      return (data ?? []) as Array<{
+        id: string; campo: string | null; de: string | null; ate: string | null;
+        encontrados: number | null; gravados: number | null; duracao_ms: number | null;
+        ok: boolean; erros: any; created_at: string;
+      }>;
+    },
+    refetchInterval: 60_000,
+  });
+  const ultimoOk = syncRecent?.find((s) => s.ok);
+  const minutosDesde = ultimoOk ? Math.floor((Date.now() - new Date(ultimoOk.created_at).getTime()) / 60000) : null;
+  let syncTone: "ok" | "warn" | "err" = "ok";
+  let syncLabel = "Sem sincronizações";
+  if (minutosDesde !== null) {
+    if (minutosDesde >= 120) { syncTone = "err"; syncLabel = "Sincronização parada, verifique o cron"; }
+    else if (minutosDesde >= 30) { syncTone = "warn"; syncLabel = `Atualizado há ${minutosDesde} min`; }
+    else { syncTone = "ok"; syncLabel = `Atualizado há ${minutosDesde} min`; }
+  }
+  const toneClass =
+    syncTone === "err" ? "text-destructive border-destructive/40 bg-destructive/10"
+    : syncTone === "warn" ? "text-[color:var(--warning)] border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10"
+    : "text-muted-foreground border-border bg-muted/30";
+  const ToneIcon = syncTone === "err" ? XCircle : syncTone === "warn" ? AlertCircle : CheckCircle2;
 
   const { data: conn, isLoading: loadConn } = useQuery({
     queryKey: ["shopee-connection"],
@@ -155,7 +188,54 @@ function DashboardPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Visão geral da sua loja Shopee</p>
         </div>
-        <Select value={periodo} onValueChange={(v) => setPeriodo(v as "7" | "30" | "90")}>
+        <div className="flex items-center gap-2">
+          <Sheet>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition hover:opacity-80 ${toneClass}`}
+                title="Ver histórico de sincronizações"
+              >
+                <ToneIcon className="h-3.5 w-3.5" />
+                {syncLabel}
+              </button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Últimas sincronizações</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4 space-y-2">
+                {(syncRecent ?? []).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhuma execução registrada.</p>
+                ) : (
+                  (syncRecent ?? []).map((s) => (
+                    <div key={s.id} className="rounded-md border p-3 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium tabular-nums">
+                          {new Date(s.created_at).toLocaleString("pt-BR")}
+                        </span>
+                        <Badge variant={s.ok ? "secondary" : "destructive"}>
+                          {s.ok ? "ok" : "erro"}
+                        </Badge>
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {s.campo ?? "—"} · encontrados {s.encontrados ?? 0} · gravados {s.gravados ?? 0}
+                        {s.duracao_ms != null && <> · {s.duracao_ms} ms</>}
+                      </div>
+                      {s.erros && Array.isArray(s.erros) && s.erros.length > 0 && (
+                        <ul className="mt-2 list-disc pl-4 text-xs text-destructive space-y-0.5">
+                          {s.erros.slice(0, 5).map((e: any, i: number) => (
+                            <li key={i} className="break-words">{String(e)}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+          <Select value={periodo} onValueChange={(v) => setPeriodo(v as "7" | "30" | "90")}>
           <SelectTrigger className="w-32">
             <SelectValue />
           </SelectTrigger>
@@ -165,6 +245,7 @@ function DashboardPage() {
             <SelectItem value="90">Últimos 90d</SelectItem>
           </SelectContent>
         </Select>
+        </div>
       </div>
 
       {notConnected && (
