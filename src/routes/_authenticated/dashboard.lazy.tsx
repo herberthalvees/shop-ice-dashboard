@@ -45,6 +45,25 @@ function DashboardPage() {
   const range = computeRange(periodo, dataCustom);
   const dias = range.dias;
 
+  function computeRange(p: PeriodoPreset, custom?: Date) {
+    const agora = new Date();
+    switch (p) {
+      case "hoje":
+        return { desde: startOfDay(agora).toISOString(), ate: endOfDay(agora).toISOString(), dias: 1, label: "hoje" };
+      case "ontem":
+        return { desde: startOfYesterday().toISOString(), ate: endOfYesterday().toISOString(), dias: 1, label: "ontem" };
+      case "7d":
+        return { desde: startOfDay(subDays(agora, 6)).toISOString(), ate: endOfDay(agora).toISOString(), dias: 7, label: "7d" };
+      case "30d":
+        return { desde: startOfDay(subDays(agora, 29)).toISOString(), ate: endOfDay(agora).toISOString(), dias: 30, label: "30d" };
+      case "custom":
+      default: {
+        const d = custom ?? agora;
+        return { desde: startOfDay(d).toISOString(), ate: endOfDay(d).toISOString(), dias: 1, label: format(d, "dd/MM/yyyy") };
+      }
+    }
+  }
+
   const { data: syncRecent } = useQuery({
     queryKey: ["sync-log-recent"],
     queryFn: async () => {
