@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       config: {
         Row: {
+          aliquota_imposto: number
           eventos: Json
           id: number
           limite_estoque_baixo: number
@@ -24,6 +25,7 @@ export type Database = {
           webhook_whatsapp_url: string | null
         }
         Insert: {
+          aliquota_imposto?: number
           eventos?: Json
           id?: number
           limite_estoque_baixo?: number
@@ -32,6 +34,7 @@ export type Database = {
           webhook_whatsapp_url?: string | null
         }
         Update: {
+          aliquota_imposto?: number
           eventos?: Json
           id?: number
           limite_estoque_baixo?: number
@@ -427,6 +430,18 @@ export type Database = {
       }
       aplicar_escrow: { Args: { p_dados: Json }; Returns: number }
       aplicar_produtos: { Args: { p_dados: Json }; Returns: number }
+      dashboard_curva_abc: {
+        Args: { p_ate: string; p_de: string; p_limite?: number }
+        Returns: {
+          acumulado: number
+          classe: string
+          participacao: number
+          produto: string
+          receita: number
+          sku: string
+          unidades: number
+        }[]
+      }
       dashboard_kpis: {
         Args: never
         Returns: {
@@ -440,18 +455,22 @@ export type Database = {
       dashboard_kpis_periodo: {
         Args: { p_ate: string; p_de: string }
         Returns: {
-          cobertura_liquido: number
-          faturamento_com_escrow: number
-          faturamento_total: number
-          itens_vendidos: number
-          margem_liquida: number
+          cobertura_custo: number
+          custo_pct: number
+          custo_total: number
+          faturamento: number
+          imposto: number
+          imposto_pct: number
+          lucro: number
+          lucro_medio: number
+          lucro_pct: number
           pedidos_cancelados: number
-          pedidos_total: number
           pedidos_validos: number
-          percentual_taxas: number
-          projecao_liquido: number
+          taxas: number
+          taxas_pct: number
           ticket_medio: number
-          total_taxas: number
+          unidades: number
+          valor_cancelado: number
           valor_liquido: number
         }[]
       }
