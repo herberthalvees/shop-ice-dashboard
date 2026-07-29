@@ -85,10 +85,15 @@ export type Database = {
           comprador_username: string | null
           created_at: string
           data_criacao_pedido: string | null
+          data_pagamento: string | null
+          frete_real: number | null
           id: string
           itens: Json | null
+          moeda: string | null
           order_sn: string
+          payload: Json | null
           payload_json: Json | null
+          qtd_itens: number | null
           status: string | null
           updated_at: string
           valor_total: number | null
@@ -97,10 +102,15 @@ export type Database = {
           comprador_username?: string | null
           created_at?: string
           data_criacao_pedido?: string | null
+          data_pagamento?: string | null
+          frete_real?: number | null
           id?: string
           itens?: Json | null
+          moeda?: string | null
           order_sn: string
+          payload?: Json | null
           payload_json?: Json | null
+          qtd_itens?: number | null
           status?: string | null
           updated_at?: string
           valor_total?: number | null
@@ -109,10 +119,15 @@ export type Database = {
           comprador_username?: string | null
           created_at?: string
           data_criacao_pedido?: string | null
+          data_pagamento?: string | null
+          frete_real?: number | null
           id?: string
           itens?: Json | null
+          moeda?: string | null
           order_sn?: string
+          payload?: Json | null
           payload_json?: Json | null
+          qtd_itens?: number | null
           status?: string | null
           updated_at?: string
           valor_total?: number | null
