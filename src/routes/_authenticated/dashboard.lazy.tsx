@@ -37,7 +37,7 @@ export const Route = createLazyFileRoute("/_authenticated/dashboard")({
 const brl = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
-type PeriodoPreset = "hoje" | "ontem" | "7d" | "30d" | "custom";
+type PeriodoPreset = "hoje" | "ontem" | "7d" | "30d" | "90d" | "custom";
 
 function DashboardPage() {
   const [periodo, setPeriodo] = useState<PeriodoPreset>("30d");
@@ -57,6 +57,8 @@ function DashboardPage() {
         return { desde: startOfDay(subDays(agora, 6)).toISOString(), ate: endOfDay(agora).toISOString(), dias: 7, label: "7d" };
       case "30d":
         return { desde: startOfDay(subDays(agora, 29)).toISOString(), ate: endOfDay(agora).toISOString(), dias: 30, label: "30d" };
+      case "90d":
+        return { desde: startOfDay(subDays(agora, 89)).toISOString(), ate: endOfDay(agora).toISOString(), dias: 90, label: "90d" };
       case "custom":
       default: {
         const d = custom ?? agora;
@@ -146,6 +148,7 @@ function DashboardPage() {
     : periodo === "ontem" ? "ontem"
     : periodo === "7d" ? "7d"
     : periodo === "30d" ? "30d"
+    : periodo === "90d" ? "90d"
     : range.label;
 
   const { data: serie, isLoading: loadSerie } = useQuery({
@@ -280,6 +283,7 @@ function DashboardPage() {
               <SelectItem value="ontem">Ontem</SelectItem>
               <SelectItem value="7d">Últimos 7d</SelectItem>
               <SelectItem value="30d">Últimos 30d</SelectItem>
+              <SelectItem value="90d">Últimos 90d</SelectItem>
               <SelectItem value="custom">Data personalizada</SelectItem>
             </SelectContent>
           </Select>
@@ -355,7 +359,7 @@ function DashboardPage() {
               {periodo === "hoje" && "Pedidos e faturamento — hoje"}
               {periodo === "ontem" && "Pedidos e faturamento — ontem"}
               {periodo === "custom" && `Pedidos e faturamento — ${range.label}`}
-              {(periodo === "7d" || periodo === "30d") && `Pedidos e faturamento — últimos ${dias}d`}
+              {(periodo === "7d" || periodo === "30d" || periodo === "90d") && `Pedidos e faturamento — últimos ${dias}d`}
             </CardTitle>
           </CardHeader>
           <CardContent className="h-72">
