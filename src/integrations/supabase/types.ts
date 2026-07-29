@@ -515,6 +515,23 @@ export type Database = {
           vendidos_periodo: number
         }[]
       }
+      produtos_giro_ordenado: {
+        Args: { p_dias?: number; p_dir?: string; p_sort?: string }
+        Returns: {
+          custo_unitario: number
+          dias_de_estoque: number
+          estoque_disponivel: number
+          imagem_url: string
+          margem_pct: number
+          media_diaria: number
+          preco_atual: number
+          produto: string
+          sku: string
+          status_item: string
+          variacao: string
+          vendidos_periodo: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
