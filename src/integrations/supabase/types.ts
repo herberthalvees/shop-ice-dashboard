@@ -162,11 +162,13 @@ export type Database = {
       }
       pedidos: {
         Row: {
+          comissao: number | null
           comprador_username: string | null
           created_at: string
           data_criacao_pedido: string | null
           data_pagamento: string | null
           escrow_atualizado_em: string | null
+          escrow_payload: Json | null
           frete_real: number | null
           id: string
           itens: Json | null
@@ -176,16 +178,20 @@ export type Database = {
           payload_json: Json | null
           qtd_itens: number | null
           status: string | null
+          taxa_servico: number | null
+          taxa_transacao: number | null
           updated_at: string
           valor_liquido: number | null
           valor_total: number | null
         }
         Insert: {
+          comissao?: number | null
           comprador_username?: string | null
           created_at?: string
           data_criacao_pedido?: string | null
           data_pagamento?: string | null
           escrow_atualizado_em?: string | null
+          escrow_payload?: Json | null
           frete_real?: number | null
           id?: string
           itens?: Json | null
@@ -195,16 +201,20 @@ export type Database = {
           payload_json?: Json | null
           qtd_itens?: number | null
           status?: string | null
+          taxa_servico?: number | null
+          taxa_transacao?: number | null
           updated_at?: string
           valor_liquido?: number | null
           valor_total?: number | null
         }
         Update: {
+          comissao?: number | null
           comprador_username?: string | null
           created_at?: string
           data_criacao_pedido?: string | null
           data_pagamento?: string | null
           escrow_atualizado_em?: string | null
+          escrow_payload?: Json | null
           frete_real?: number | null
           id?: string
           itens?: Json | null
@@ -214,6 +224,8 @@ export type Database = {
           payload_json?: Json | null
           qtd_itens?: number | null
           status?: string | null
+          taxa_servico?: number | null
+          taxa_transacao?: number | null
           updated_at?: string
           valor_liquido?: number | null
           valor_total?: number | null
@@ -377,6 +389,7 @@ export type Database = {
       }
     }
     Functions: {
+      aplicar_escrow: { Args: { p_dados: Json }; Returns: number }
       dashboard_kpis: {
         Args: never
         Returns: {
@@ -397,6 +410,7 @@ export type Database = {
           pedidos_total: number
           pedidos_validos: number
           ticket_medio: number
+          total_taxas: number
           valor_liquido: number
         }[]
       }
@@ -442,6 +456,12 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      pedidos_escrow_pendentes: {
+        Args: { p_limite?: number }
+        Returns: {
+          order_sn: string
+        }[]
       }
     }
     Enums: {
