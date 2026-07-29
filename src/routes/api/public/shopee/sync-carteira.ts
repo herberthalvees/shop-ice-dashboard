@@ -118,20 +118,21 @@ async function handler({ request }: { request: Request }) {
     let gravadas = 0;
     let saldoMaisRecente: number | null = null;
     let saldoTs = 0;
-    let buffer: any[] = [];
+    const mapa = new Map<string, any>();
 
     async function flush() {
-      if (buffer.length === 0) return;
+      if (mapa.size === 0) return;
+      const lote = Array.from(mapa.values());
+      mapa.clear();
       const { data, error } = await supabaseAdmin.rpc(
         'aplicar_carteira' as any,
-        { p_dados: buffer },
+        { p_dados: lote },
       );
       if (error) {
         erros.push(`aplicar_carteira: ${error.message}`);
       } else {
         gravadas += Number(data ?? 0);
       }
-      buffer = [];
     }
 
     // Quebra em janelas de <= 15 dias
@@ -159,9 +160,10 @@ async function handler({ request }: { request: Request }) {
         }
 
         const lista: any[] = resp.response?.transaction_list ?? [];
-        encontradas += lista.length;
 
         for (const t of lista) {
+          const id = t?.transaction_id;
+          if (id == null) continue;
           const ts = Number(t.create_time ?? 0);
           const saldo =
             t.current_balance != null && t.current_balance !== ''
@@ -171,11 +173,16 @@ async function handler({ request }: { request: Request }) {
             saldoTs = ts;
             saldoMaisRecente = saldo;
           }
-          buffer.push(t);
-          if (buffer.length >= LOTE_GRAVACAO) {
+          const chave = String(id);
+          const existente = mapa.get(chave);
+          if (!existente || Number(existente.create_time ?? 0) < ts) {
+            mapa.set(chave, t);
+          }
+          if (mapa.size >= LOTE_GRAVACAO) {
             await flush();
           }
         }
+        encontradas += lista.length;
 
         const temMais = Boolean(resp.response?.more);
         if (!temMais || lista.length === 0) break;
