@@ -611,12 +611,14 @@ export type Database = {
           lucro_medio: number
           lucro_pct: number
           pedidos_cancelados: number
+          pedidos_devolvidos: number
           pedidos_validos: number
           taxas: number
           taxas_pct: number
           ticket_medio: number
           unidades: number
           valor_cancelado: number
+          valor_devolvido: number
           valor_liquido: number
         }[]
       }

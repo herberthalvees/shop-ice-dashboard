@@ -113,6 +113,8 @@ function DashboardPage() {
         ticketMedio: Number(r.ticket_medio ?? 0),
         cancelados: Number(r.pedidos_cancelados ?? 0),
         valorCancelado: Number(r.valor_cancelado ?? 0),
+        devolvidos: Number(r.pedidos_devolvidos ?? 0),
+        valorDevolvido: Number(r.valor_devolvido ?? 0),
         taxas: Number(r.taxas ?? 0),
         taxasPct: Number(r.taxas_pct ?? 0),
         custoTotal: Number(r.custo_total ?? 0),
@@ -397,7 +399,7 @@ function DashboardPage() {
       </Card>
 
       {/* BLOCO 2: Cards de resultado */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
         <ResultCard
           label="Vendas"
           value={loadKpis ? null : String(kpis?.pedidosValidos ?? 0)}
@@ -414,6 +416,12 @@ function DashboardPage() {
           label="Canceladas"
           value={loadKpis ? null : String(kpis?.cancelados ?? 0)}
           hint={loadKpis ? undefined : brl(kpis?.valorCancelado ?? 0)}
+          tone="warning"
+        />
+        <ResultCard
+          label="Devoluções"
+          value={loadKpis ? null : String(kpis?.devolvidos ?? 0)}
+          hint={loadKpis ? undefined : brl(kpis?.valorDevolvido ?? 0)}
           tone="warning"
         />
       </div>
