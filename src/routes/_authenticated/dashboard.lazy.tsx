@@ -264,16 +264,44 @@ function DashboardPage() {
               </div>
             </SheetContent>
           </Sheet>
-          <Select value={periodo} onValueChange={(v) => setPeriodo(v as "7" | "30" | "90")}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Últimos 7d</SelectItem>
-            <SelectItem value="30">Últimos 30d</SelectItem>
-            <SelectItem value="90">Últimos 90d</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoPreset)}>
+            <SelectTrigger className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="hoje">Hoje</SelectItem>
+              <SelectItem value="ontem">Ontem</SelectItem>
+              <SelectItem value="7d">Últimos 7d</SelectItem>
+              <SelectItem value="30d">Últimos 30d</SelectItem>
+              <SelectItem value="custom">Data personalizada</SelectItem>
+            </SelectContent>
+          </Select>
+          {periodo === "custom" && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[180px] justify-start text-left font-normal",
+                    !dataCustom && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dataCustom ? format(dataCustom, "dd/MM/yyyy", { locale: ptBR }) : <span>Escolha a data</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={dataCustom}
+                  onSelect={setDataCustom}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                  locale={ptBR}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
       </div>
 
