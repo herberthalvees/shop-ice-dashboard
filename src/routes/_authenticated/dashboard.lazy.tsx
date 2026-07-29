@@ -29,6 +29,8 @@ import {
 import { ShoppingBag, DollarSign, Receipt, Package, Wallet, XCircle as XCircleIcon, Snowflake, ArrowRight, Sparkles, CalendarIcon, Percent, PackageX } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Tooltip as UiTooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 export const Route = createLazyFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -142,6 +144,10 @@ function DashboardPage() {
         valorLiquido: Number(r.valor_liquido ?? 0),
         totalTaxas: Number(r.total_taxas ?? 0),
         cobertura: Number(r.cobertura_liquido ?? 0),
+        faturamentoComEscrow: Number(r.faturamento_com_escrow ?? 0),
+        percentualTaxas: Number(r.percentual_taxas ?? 0),
+        margemLiquida: Number(r.margem_liquida ?? 0),
+        projecaoLiquido: Number(r.projecao_liquido ?? 0),
       };
     },
   });
@@ -343,53 +349,61 @@ function DashboardPage() {
         />
         <KpiCard icon={Receipt} label="Ticket médio" value={loadKpis ? null : brl(kpis?.ticketMedio ?? 0)} />
         <KpiCard icon={Package} label="Itens vendidos" value={loadKpis ? null : String(kpis?.itens ?? 0)} />
-        <KpiCard
-          icon={Wallet}
-          label="Valor líquido"
-          value={
-            loadKpis
-              ? null
-              : (kpis?.cobertura ?? 0) === 0
-                ? "—"
-                : brl(kpis?.valorLiquido ?? 0)
-          }
-          hint={
-            loadKpis
-              ? undefined
-              : (kpis?.cobertura ?? 0) === 0
-                ? "Aguardando sincronização de repasses"
-                : (kpis?.cobertura ?? 0) < 1
-                  ? `parcial: ${pct(kpis?.cobertura ?? 0)} dos pedidos`
-                  : undefined
-          }
-        />
-        <KpiCard
-          icon={Percent}
-          label="Taxas Shopee"
-          value={
-            loadKpis
-              ? null
-              : (kpis?.cobertura ?? 0) === 0
-                ? "—"
-                : brl(kpis?.totalTaxas ?? 0)
-          }
-          hint={
-            loadKpis
-              ? undefined
-              : (kpis?.cobertura ?? 0) === 0
-                ? "Aguardando sincronização de repasses"
-                : (kpis?.cobertura ?? 0) < 1
-                  ? `parcial: ${pct(kpis?.cobertura ?? 0)} · ${
-                      (kpis?.faturamento ?? 0) > 0
-                        ? pct((kpis?.totalTaxas ?? 0) / (kpis?.faturamento ?? 1))
-                        : "—"
-                    } do faturamento`
-                  : (kpis?.faturamento ?? 0) > 0
-                    ? `${pct((kpis?.totalTaxas ?? 0) / (kpis?.faturamento ?? 1))} do faturamento`
-                    : undefined
-          }
-          tone="warning"
-        />
+        {(() => {
+          const cobertura = kpis?.cobertura ?? 0;
+          const estimando = cobertura > 0 && cobertura < 0.95;
+          const semDados = cobertura === 0;
+          const tooltip = "Valor estimado a partir dos pedidos que já tiveram o repasse consultado.";
+
+          const valorLiquidoValue = loadKpis
+            ? null
+            : semDados
+              ? "—"
+              : estimando
+                ? brl(kpis?.projecaoLiquido ?? 0)
+                : brl(kpis?.valorLiquido ?? 0);
+
+          const valorLiquidoHint = loadKpis
+            ? undefined
+            : semDados
+              ? "Aguardando sincronização de repasses"
+              : estimando
+                ? `margem de ${pct(kpis?.margemLiquida ?? 0)} medida em ${pct(cobertura)} dos pedidos`
+                : `margem de ${pct(kpis?.margemLiquida ?? 0)}`;
+
+          const taxasValue = loadKpis
+            ? null
+            : semDados
+              ? "—"
+              : brl(kpis?.totalTaxas ?? 0);
+
+          const taxasHint = loadKpis
+            ? undefined
+            : semDados
+              ? "Aguardando sincronização de repasses"
+              : `${pct(kpis?.percentualTaxas ?? 0)} do faturamento medido`;
+
+          return (
+            <>
+              <KpiCard
+                icon={Wallet}
+                label="Valor líquido"
+                value={valorLiquidoValue}
+                hint={valorLiquidoHint}
+                estimativa={!loadKpis && estimando}
+                tooltip={tooltip}
+              />
+              <KpiCard
+                icon={Percent}
+                label="Taxas Shopee"
+                value={taxasValue}
+                hint={taxasHint}
+                tone="warning"
+                tooltip={tooltip}
+              />
+            </>
+          );
+        })()}
         <KpiCard icon={XCircleIcon} label="Cancelados" value={loadKpis ? null : String(kpis?.cancelados ?? 0)} tone="warning" />
         <EstoqueBaixoKpi />
       </div>
@@ -564,12 +578,16 @@ function KpiCard({
   value,
   hint,
   tone,
+  estimativa,
+  tooltip,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string | null;
   hint?: string;
   tone?: "warning";
+  estimativa?: boolean;
+  tooltip?: string;
 }) {
   const toneRing =
     tone === "warning"
@@ -583,14 +601,41 @@ function KpiCard({
             <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
               {label}
             </span>
+            {estimativa && (
+              <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-500 ring-1 ring-inset ring-amber-500/30">
+                estimativa
+              </span>
+            )}
             <div className="text-2xl font-semibold tabular-nums leading-tight">
               {value === null ? <Skeleton className="h-7 w-24" /> : value}
             </div>
             {hint && <div className="text-[11px] text-muted-foreground leading-tight">{hint}</div>}
           </div>
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing}`}>
-            <Icon className="h-4 w-4" />
-          </div>
+          {tooltip ? (
+            <TooltipProvider delayDuration={100}>
+              <UiTooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Mais informações"
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing} cursor-help`}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-[240px] text-xs leading-relaxed">
+                  <div className="flex items-start gap-1.5">
+                    <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>{tooltip}</span>
+                  </div>
+                </TooltipContent>
+              </UiTooltip>
+            </TooltipProvider>
+          ) : (
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing}`}>
+              <Icon className="h-4 w-4" />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
