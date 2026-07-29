@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown, Check } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createLazyFileRoute("/_authenticated/produtos")({
   component: ProdutosPage,
@@ -22,6 +23,8 @@ const brl = (v: number | null | undefined) =>
   v == null ? "—" : Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 type Linha = {
+  item_id: number;
+  model_id: number;
   sku: string | null;
   produto: string | null;
   variacao: string | null;
@@ -51,6 +54,7 @@ type SortKey =
 type SortDir = "asc" | "desc";
 
 function ProdutosPage() {
+  const qc = useQueryClient();
   const [busca, setBusca] = useState("");
   const [somenteRisco, setSomenteRisco] = useState(false);
   const [dias, setDias] = useState<number>(30);
@@ -67,6 +71,8 @@ function ProdutosPage() {
       });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
+        item_id: Number(r.item_id ?? 0),
+        model_id: Number(r.model_id ?? 0),
         sku: r.sku ?? null,
         produto: r.produto ?? null,
         variacao: r.variacao ?? null,
@@ -276,7 +282,14 @@ function ProdutosPage() {
                         <TableCell className={`text-right ${diasClass}`}>
                           {diasEstoque == null ? "—" : diasEstoque.toFixed(1)}
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">{brl(p.custo_unitario)}</TableCell>
+                        <TableCell className="text-right tabular-nums p-1">
+                          <CustoCell
+                            item_id={p.item_id}
+                            model_id={p.model_id}
+                            initial={p.custo_unitario}
+                            onSaved={() => qc.invalidateQueries({ queryKey: ["produtos-giro"] })}
+                          />
+                        </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {p.margem_pct == null ? "—" : `${p.margem_pct.toFixed(1)}%`}
                         </TableCell>
@@ -290,6 +303,73 @@ function ProdutosPage() {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function CustoCell({
+  item_id,
+  model_id,
+  initial,
+  onSaved,
+}: {
+  item_id: number;
+  model_id: number;
+  initial: number | null;
+  onSaved: () => void;
+}) {
+  const initStr = initial == null ? "" : String(initial).replace(".", ",");
+  const [valor, setValor] = useState<string>(initStr);
+  const [saving, setSaving] = useState(false);
+  const [ok, setOk] = useState(false);
+  useEffect(() => { setValor(initStr); }, [initStr]);
+  useEffect(() => {
+    if (!ok) return;
+    const t = setTimeout(() => setOk(false), 2000);
+    return () => clearTimeout(t);
+  }, [ok]);
+
+  const salvar = async () => {
+    if (valor === initStr) return;
+    const parsed = valor.trim() === "" ? null : Number(valor.replace(",", "."));
+    if (parsed != null && (Number.isNaN(parsed) || parsed < 0)) {
+      toast.error("Custo inválido");
+      setValor(initStr);
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("dim_produto")
+      .upsert(
+        { item_id, model_id, custo_unitario: parsed, atualizado_em: new Date().toISOString() } as any,
+        { onConflict: "item_id,model_id" },
+      );
+    setSaving(false);
+    if (error) {
+      toast.error("Erro ao salvar custo", { description: error.message });
+      return;
+    }
+    setOk(true);
+    onSaved();
+  };
+
+  return (
+    <div className="flex items-center justify-end gap-1">
+      {ok && <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />}
+      <Input
+        type="text"
+        inputMode="decimal"
+        value={valor}
+        disabled={saving}
+        onChange={(e) => setValor(e.target.value)}
+        onBlur={salvar}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
+          if (e.key === "Escape") { setValor(initStr); (e.target as HTMLInputElement).blur(); }
+        }}
+        placeholder="—"
+        className="h-8 w-24 ml-auto text-right tabular-nums"
+      />
     </div>
   );
 }
