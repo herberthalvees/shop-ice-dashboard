@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { checkCronSecret } from '@/lib/cron-auth.server';
 
 function responder(corpo: unknown, status = 200) {
   return new Response(JSON.stringify(corpo, null, 2), {
