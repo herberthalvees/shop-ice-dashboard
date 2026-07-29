@@ -21,6 +21,7 @@ import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authen
 import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/shopee/webhook'
 import { Route as ApiPublicShopeeTesteApiRouteImport } from './routes/api/public/shopee/teste-api'
 import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
+import { Route as ApiPublicShopeeRefreshTokenRouteImport } from './routes/api/public/shopee/refresh-token'
 import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
 import { Route as ApiPublicShopeeCallbackRouteImport } from './routes/api/public/shopee/callback'
 import { Route as ApiPublicShopeeAuthUrlRouteImport } from './routes/api/public/shopee/auth-url'
@@ -96,6 +97,12 @@ const ApiPublicShopeeSyncRoute = ApiPublicShopeeSyncRouteImport.update({
   path: '/api/public/shopee/sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicShopeeRefreshTokenRoute =
+  ApiPublicShopeeRefreshTokenRouteImport.update({
+    id: '/api/public/shopee/refresh-token',
+    path: '/api/public/shopee/refresh-token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicShopeeRefreshRoute = ApiPublicShopeeRefreshRouteImport.update({
   id: '/api/public/shopee/refresh',
   path: '/api/public/shopee/refresh',
@@ -124,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/api/public/shopee/auth-url': typeof ApiPublicShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
+  '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/teste-api': typeof ApiPublicShopeeTesteApiRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
@@ -140,6 +148,7 @@ export interface FileRoutesByTo {
   '/api/public/shopee/auth-url': typeof ApiPublicShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
+  '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/teste-api': typeof ApiPublicShopeeTesteApiRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
@@ -158,6 +167,7 @@ export interface FileRoutesById {
   '/api/public/shopee/auth-url': typeof ApiPublicShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
+  '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/teste-api': typeof ApiPublicShopeeTesteApiRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/refresh'
+    | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/teste-api'
     | '/api/public/shopee/webhook'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/refresh'
+    | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/teste-api'
     | '/api/public/shopee/webhook'
@@ -209,6 +221,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/refresh'
+    | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/teste-api'
     | '/api/public/shopee/webhook'
@@ -222,6 +235,7 @@ export interface RootRouteChildren {
   ApiPublicShopeeAuthUrlRoute: typeof ApiPublicShopeeAuthUrlRoute
   ApiPublicShopeeCallbackRoute: typeof ApiPublicShopeeCallbackRoute
   ApiPublicShopeeRefreshRoute: typeof ApiPublicShopeeRefreshRoute
+  ApiPublicShopeeRefreshTokenRoute: typeof ApiPublicShopeeRefreshTokenRoute
   ApiPublicShopeeSyncRoute: typeof ApiPublicShopeeSyncRoute
   ApiPublicShopeeTesteApiRoute: typeof ApiPublicShopeeTesteApiRoute
   ApiPublicShopeeWebhookRoute: typeof ApiPublicShopeeWebhookRoute
@@ -313,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/shopee/refresh-token': {
+      id: '/api/public/shopee/refresh-token'
+      path: '/api/public/shopee/refresh-token'
+      fullPath: '/api/public/shopee/refresh-token'
+      preLoaderRoute: typeof ApiPublicShopeeRefreshTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shopee/refresh': {
       id: '/api/public/shopee/refresh'
       path: '/api/public/shopee/refresh'
@@ -364,6 +385,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShopeeAuthUrlRoute: ApiPublicShopeeAuthUrlRoute,
   ApiPublicShopeeCallbackRoute: ApiPublicShopeeCallbackRoute,
   ApiPublicShopeeRefreshRoute: ApiPublicShopeeRefreshRoute,
+  ApiPublicShopeeRefreshTokenRoute: ApiPublicShopeeRefreshTokenRoute,
   ApiPublicShopeeSyncRoute: ApiPublicShopeeSyncRoute,
   ApiPublicShopeeTesteApiRoute: ApiPublicShopeeTesteApiRoute,
   ApiPublicShopeeWebhookRoute: ApiPublicShopeeWebhookRoute,
