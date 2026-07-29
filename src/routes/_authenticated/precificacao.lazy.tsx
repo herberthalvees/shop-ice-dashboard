@@ -1,6 +1,6 @@
 import { createLazyFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -60,6 +60,8 @@ type LinhaMargem = {
   unidades: number;
   preco_medio: number;
   custo_unitario: number | null;
+  taxa_percentual: number;
+  taxa_fixa: number;
   liquido_unitario: number;
   lucro_unitario: number | null;
   margem_pct: number | null;
@@ -89,6 +91,8 @@ function PrecificacaoPage() {
         unidades: Number(r.unidades ?? 0),
         preco_medio: Number(r.preco_medio ?? 0),
         custo_unitario: r.custo_unitario == null ? null : Number(r.custo_unitario),
+        taxa_percentual: Number(r.taxa_percentual ?? 0.2),
+        taxa_fixa: Number(r.taxa_fixa ?? 4),
         liquido_unitario: Number(r.liquido_unitario ?? 0),
         lucro_unitario: r.lucro_unitario == null ? null : Number(r.lucro_unitario),
         margem_pct: r.margem_pct == null ? null : Number(r.margem_pct),
@@ -105,18 +109,20 @@ function PrecificacaoPage() {
   }, [linhas, somentePrejuizo]);
 
   const resumo = useMemo(() => {
-    if (!linhas) return { skusPrejuizo: 0, perdaTotal: 0, skusSemCusto: 0 };
+    if (!linhas) return { skusPrejuizo: 0, perdaTotal: 0, skusSemCusto: 0, comCusto: 0, total: 0 };
     let skusPrejuizo = 0;
     let perdaTotal = 0;
     let skusSemCusto = 0;
+    let comCusto = 0;
     for (const l of linhas) {
       if (l.situacao === "prejuizo" && l.lucro_unitario != null) {
         skusPrejuizo += 1;
         perdaTotal += l.lucro_unitario * l.unidades;
       }
       if (l.situacao === "sem custo") skusSemCusto += 1;
+      if (l.custo_unitario != null) comCusto += 1;
     }
-    return { skusPrejuizo, perdaTotal, skusSemCusto };
+    return { skusPrejuizo, perdaTotal, skusSemCusto, comCusto, total: linhas.length };
   }, [linhas]);
 
   async function salvarCusto(sku: string, valorStr: string) {
@@ -138,6 +144,12 @@ function PrecificacaoPage() {
     toast.success("Custo atualizado");
     qc.invalidateQueries({ queryKey: ["analise-margem"] });
   }
+
+  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
+  const focusNext = (i: number) => {
+    const next = inputRefs.current[i + 1];
+    if (next) next.focus();
+  };
 
   return (
     <div className="space-y-6">
@@ -181,6 +193,17 @@ function PrecificacaoPage() {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
+              <CardTitle className="text-sm text-muted-foreground">SKUs sem custo informado</CardTitle>
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-semibold">{resumo.skusSemCusto}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
               <CardTitle className="text-sm text-muted-foreground">SKUs em prejuízo</CardTitle>
               <TrendingDown className="h-4 w-4 text-destructive" />
             </div>
@@ -192,28 +215,33 @@ function PrecificacaoPage() {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm text-muted-foreground">Perda estimada no período</CardTitle>
+              <CardTitle className="text-sm text-muted-foreground">Prejuízo no período</CardTitle>
               <AlertTriangle className="h-4 w-4 text-destructive" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-semibold text-destructive">
-              {brl(resumo.perdaTotal)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm text-muted-foreground">SKUs sem custo</CardTitle>
-              <HelpCircle className="h-4 w-4 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{resumo.skusSemCusto}</div>
+            <div className="text-2xl font-semibold text-destructive">{brl(resumo.perdaTotal)}</div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Progresso de preenchimento de custos */}
+      <Card>
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between text-sm mb-2">
+            <span className="text-muted-foreground">Preenchimento de custos</span>
+            <span className="font-medium">
+              {resumo.comCusto} de {resumo.total} SKUs
+              {resumo.total > 0 && (
+                <span className="text-muted-foreground ml-1">
+                  ({Math.round((resumo.comCusto / resumo.total) * 100)}%)
+                </span>
+              )}
+            </span>
+          </div>
+          <Progress value={resumo.total > 0 ? (resumo.comCusto / resumo.total) * 100 : 0} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2">
@@ -235,11 +263,12 @@ function PrecificacaoPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[120px]">SKU</TableHead>
                     <TableHead>Produto</TableHead>
+                    <TableHead className="w-[120px]">SKU</TableHead>
                     <TableHead className="text-right">Unid.</TableHead>
                     <TableHead className="text-right">Preço médio</TableHead>
                     <TableHead className="text-right w-[130px]">Custo</TableHead>
+                    <TableHead className="text-right">Taxa est.</TableHead>
                     <TableHead className="text-right">Líquido/u</TableHead>
                     <TableHead className="text-right">Lucro/u</TableHead>
                     <TableHead className="text-right">Margem</TableHead>
@@ -247,8 +276,14 @@ function PrecificacaoPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtradas.map((l) => (
-                    <LinhaSKU key={l.sku} linha={l} onSalvar={salvarCusto} />
+                  {filtradas.map((l, i) => (
+                    <LinhaSKU
+                      key={l.sku}
+                      linha={l}
+                      onSalvar={salvarCusto}
+                      inputRef={(el) => { inputRefs.current[i] = el; }}
+                      onEnter={() => focusNext(i)}
+                    />
                   ))}
                 </TableBody>
               </Table>
@@ -260,37 +295,60 @@ function PrecificacaoPage() {
   );
 }
 
-function LinhaSKU({ linha, onSalvar }: { linha: LinhaMargem; onSalvar: (sku: string, v: string) => void | Promise<void> }) {
-  const [valor, setValor] = useState<string>(linha.custo_unitario == null ? "" : String(linha.custo_unitario));
+function LinhaSKU({
+  linha,
+  onSalvar,
+  inputRef,
+  onEnter,
+}: {
+  linha: LinhaMargem;
+  onSalvar: (sku: string, v: string) => void | Promise<void>;
+  inputRef: (el: HTMLInputElement | null) => void;
+  onEnter: () => void;
+}) {
+  const initial = linha.custo_unitario == null ? "" : String(linha.custo_unitario);
+  const [valor, setValor] = useState<string>(initial);
+  useEffect(() => { setValor(initial); }, [initial]);
   const rowClass =
     linha.situacao === "prejuizo" ? "bg-destructive/10 hover:bg-destructive/15"
-    : linha.situacao === "margem baixa" ? "bg-[color:var(--warning,theme(colors.amber.500))]/10 hover:bg-[color:var(--warning,theme(colors.amber.500))]/15"
+    : linha.situacao === "margem baixa" ? "bg-amber-500/10 hover:bg-amber-500/15"
+    : linha.situacao === "sem custo" ? "bg-muted/40 hover:bg-muted/60"
     : "";
   const margemClass =
     linha.situacao === "prejuizo" ? "text-destructive font-medium"
     : linha.situacao === "margem baixa" ? "text-amber-500 font-medium"
     : "";
+  const taxaEstimada = linha.preco_medio * linha.taxa_percentual + linha.taxa_fixa;
+  const salvar = () => {
+    if (valor !== initial) onSalvar(linha.sku, valor);
+  };
   return (
     <TableRow className={rowClass}>
-      <TableCell className="font-mono text-xs">{linha.sku}</TableCell>
       <TableCell className="max-w-[280px] truncate" title={linha.produto ?? ""}>{linha.produto ?? "—"}</TableCell>
+      <TableCell className="font-mono text-xs">{linha.sku}</TableCell>
       <TableCell className="text-right">{linha.unidades.toLocaleString("pt-BR")}</TableCell>
       <TableCell className="text-right">{brl(linha.preco_medio)}</TableCell>
       <TableCell className="text-right">
         <Input
+          ref={inputRef}
           type="number"
           step="0.01"
           min="0"
           value={valor}
           placeholder={linha.situacao === "sem custo" ? "informar" : ""}
           onChange={(e) => setValor(e.target.value)}
-          onBlur={() => {
-            const currentStr = linha.custo_unitario == null ? "" : String(linha.custo_unitario);
-            if (valor !== currentStr) onSalvar(linha.sku, valor);
+          onBlur={salvar}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              salvar();
+              onEnter();
+            }
           }}
           className={`h-8 w-28 ml-auto text-right ${linha.situacao === "sem custo" ? "text-muted-foreground placeholder:text-muted-foreground/60" : ""}`}
         />
       </TableCell>
+      <TableCell className="text-right text-muted-foreground">{brl(taxaEstimada)}</TableCell>
       <TableCell className="text-right">{brl(linha.liquido_unitario)}</TableCell>
       <TableCell className="text-right">{linha.lucro_unitario == null ? "—" : brl(linha.lucro_unitario)}</TableCell>
       <TableCell className={`text-right ${margemClass}`}>
