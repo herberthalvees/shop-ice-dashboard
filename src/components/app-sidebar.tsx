@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Snowflake } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Snowflake, Calculator } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +20,7 @@ const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Pedidos", url: "/pedidos", icon: ShoppingBag },
   { title: "Produtos", url: "/produtos", icon: Package },
+  { title: "Precificação", url: "/precificacao", icon: Calculator },
   { title: "Notificações", url: "/notificacoes", icon: Bell },
   { title: "Configurações", url: "/configuracoes", icon: Settings },
 ] as const;

@@ -389,6 +389,23 @@ export type Database = {
       }
     }
     Functions: {
+      analise_margem_sku: {
+        Args: { p_ate: string; p_de: string }
+        Returns: {
+          custo_unitario: number
+          liquido_unitario: number
+          lucro_unitario: number
+          margem_pct: number
+          preco_medio: number
+          preco_minimo: number
+          produto: string
+          situacao: string
+          sku: string
+          taxa_fixa: number
+          taxa_percentual: number
+          unidades: number
+        }[]
+      }
       aplicar_escrow: { Args: { p_dados: Json }; Returns: number }
       dashboard_kpis: {
         Args: never
