@@ -46,25 +46,28 @@ export type Database = {
           atualizado_em: string
           categoria: string | null
           custo_unitario: number | null
-          item_id: number | null
+          item_id: number
+          model_id: number
           produto: string | null
-          sku: string
+          sku: string | null
         }
         Insert: {
           atualizado_em?: string
           categoria?: string | null
           custo_unitario?: number | null
-          item_id?: number | null
+          item_id: number
+          model_id?: number
           produto?: string | null
-          sku: string
+          sku?: string | null
         }
         Update: {
           atualizado_em?: string
           categoria?: string | null
           custo_unitario?: number | null
-          item_id?: number | null
+          item_id?: number
+          model_id?: number
           produto?: string | null
-          sku?: string
+          sku?: string | null
         }
         Relationships: []
       }
@@ -408,9 +411,11 @@ export type Database = {
         Args: { p_ate: string; p_de: string }
         Returns: {
           custo_unitario: number
+          item_id: number
           liquido_unitario: number
           lucro_unitario: number
           margem_pct: number
+          model_id: number
           preco_medio: number
           preco_minimo: number
           produto: string
@@ -522,8 +527,10 @@ export type Database = {
           dias_de_estoque: number
           estoque_disponivel: number
           imagem_url: string
+          item_id: number
           margem_pct: number
           media_diaria: number
+          model_id: number
           preco_atual: number
           produto: string
           sku: string
