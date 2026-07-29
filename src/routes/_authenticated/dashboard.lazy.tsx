@@ -116,9 +116,10 @@ function DashboardPage() {
     queryFn: async () => {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
-      const [pedidosHoje, pedidosPeriodo, aguardando, estoqueBaixo, cfg] = await Promise.all([
-        supabase.from("pedidos").select("valor_total", { count: "exact" }).gte("data_criacao_pedido", hoje.toISOString()),
-        supabase.from("pedidos").select("valor_total").gte("data_criacao_pedido", range.desde).lte("data_criacao_pedido", range.ate),
+      const fimHoje = new Date(); fimHoje.setHours(23,59,59,999);
+      const [kpiHoje, kpiPeriodo, aguardando, estoqueBaixo, cfg] = await Promise.all([
+        supabase.rpc("dashboard_kpi_periodo" as any, { p_desde: hoje.toISOString(), p_ate: fimHoje.toISOString() }),
+        supabase.rpc("dashboard_kpi_periodo" as any, { p_desde: range.desde, p_ate: range.ate }),
         supabase.from("pedidos").select("id", { count: "exact", head: true }).ilike("status", "%READY_TO_SHIP%"),
         supabase.from("config").select("limite_estoque_baixo").eq("id", 1).maybeSingle(),
         supabase.from("produtos").select("id", { count: "exact", head: true }),
@@ -128,13 +129,13 @@ function DashboardPage() {
         .from("produtos")
         .select("id", { count: "exact", head: true })
         .lte("estoque", limiteReal);
-      const fatHoje = (pedidosHoje.data ?? []).reduce((s, p) => s + Number(p.valor_total ?? 0), 0);
-      const fatPeriodo = (pedidosPeriodo.data ?? []).reduce((s, p) => s + Number(p.valor_total ?? 0), 0);
+      const rowHoje = (kpiHoje.data as any)?.[0] ?? { pedidos: 0, faturamento: 0 };
+      const rowPer = (kpiPeriodo.data as any)?.[0] ?? { pedidos: 0, faturamento: 0 };
       return {
-        pedidosHoje: pedidosHoje.count ?? 0,
-        fatHoje,
-        fatPeriodo,
-        pedidosPeriodo: pedidosPeriodo.data?.length ?? 0,
+        pedidosHoje: Number(rowHoje.pedidos ?? 0),
+        fatHoje: Number(rowHoje.faturamento ?? 0),
+        fatPeriodo: Number(rowPer.faturamento ?? 0),
+        pedidosPeriodo: Number(rowPer.pedidos ?? 0),
         aguardando: aguardando.count ?? 0,
         estoqueBaixo: baixoCount ?? 0,
         limite: limiteReal,
@@ -154,11 +155,10 @@ function DashboardPage() {
   const { data: serie, isLoading: loadSerie } = useQuery({
     queryKey: ["serie", periodo, dataCustom?.toISOString()],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("pedidos")
-        .select("data_criacao_pedido, valor_total")
-        .gte("data_criacao_pedido", range.desde)
-        .lte("data_criacao_pedido", range.ate);
+      const { data } = await supabase.rpc("dashboard_serie_diaria" as any, {
+        p_desde: range.desde,
+        p_ate: range.ate,
+      });
       const buckets = new Map<string, { pedidos: number; faturamento: number }>();
       const start = new Date(range.desde);
       const end = new Date(range.ate);
@@ -168,13 +168,12 @@ function DashboardPage() {
         d.setDate(d.getDate() + i);
         buckets.set(d.toISOString().slice(0, 10), { pedidos: 0, faturamento: 0 });
       }
-      for (const p of data ?? []) {
-        if (!p.data_criacao_pedido) continue;
-        const k = new Date(p.data_criacao_pedido).toISOString().slice(0, 10);
+      for (const r of (data as any[]) ?? []) {
+        const k = String(r.dia).slice(0, 10);
         const b = buckets.get(k);
         if (b) {
-          b.pedidos += 1;
-          b.faturamento += Number(p.valor_total ?? 0);
+          b.pedidos = Number(r.pedidos ?? 0);
+          b.faturamento = Number(r.faturamento ?? 0);
         }
       }
       return Array.from(buckets.entries()).map(([data, v]) => ({
@@ -187,24 +186,15 @@ function DashboardPage() {
   const { data: topProdutos, isLoading: loadTop } = useQuery({
     queryKey: ["topProdutos", periodo, dataCustom?.toISOString()],
     queryFn: async () => {
-      const { data } = await supabase
-        .from("pedidos")
-        .select("itens")
-        .gte("data_criacao_pedido", range.desde)
-        .lte("data_criacao_pedido", range.ate);
-      const map = new Map<string, number>();
-      for (const p of data ?? []) {
-        const itens = (p.itens as any[]) ?? [];
-        for (const it of itens) {
-          const nome = it.item_name ?? it.name ?? it.item_sku ?? `Item ${it.item_id ?? "?"}`;
-          const qtd = Number(it.model_quantity_purchased ?? it.quantity ?? it.qtd ?? 1);
-          map.set(nome, (map.get(nome) ?? 0) + qtd);
-        }
-      }
-      return Array.from(map.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 10)
-        .map(([nome, qtd]) => ({ nome: nome.length > 30 ? nome.slice(0, 30) + "…" : nome, qtd }));
+      const { data } = await supabase.rpc("dashboard_top_produtos" as any, {
+        p_desde: range.desde,
+        p_ate: range.ate,
+        p_limite: 10,
+      });
+      return ((data as any[]) ?? []).map((r) => ({
+        nome: String(r.nome ?? "").length > 30 ? String(r.nome).slice(0, 30) + "…" : String(r.nome ?? ""),
+        qtd: Number(r.qtd ?? 0),
+      }));
     },
   });
 
