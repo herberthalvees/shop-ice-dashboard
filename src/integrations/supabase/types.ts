@@ -43,28 +43,40 @@ export type Database = {
       }
       eventos_log: {
         Row: {
+          assinatura_valida: boolean
+          code: number | null
           created_at: string
           erro: string | null
           id: string
           notificado: boolean
-          payload: Json | null
-          tipo_evento: string
+          payload: Json
+          processado: boolean
+          shop_id: number | null
+          tipo_evento: string | null
         }
         Insert: {
+          assinatura_valida?: boolean
+          code?: number | null
           created_at?: string
           erro?: string | null
           id?: string
           notificado?: boolean
-          payload?: Json | null
-          tipo_evento: string
+          payload: Json
+          processado?: boolean
+          shop_id?: number | null
+          tipo_evento?: string | null
         }
         Update: {
+          assinatura_valida?: boolean
+          code?: number | null
           created_at?: string
           erro?: string | null
           id?: string
           notificado?: boolean
-          payload?: Json | null
-          tipo_evento?: string
+          payload?: Json
+          processado?: boolean
+          shop_id?: number | null
+          tipo_evento?: string | null
         }
         Relationships: []
       }
