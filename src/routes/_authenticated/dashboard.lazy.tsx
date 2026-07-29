@@ -356,11 +356,15 @@ function DashboardPage() {
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={serie ?? []}>
-                  <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis dataKey="data" tick={{ fontSize: 11 }} />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11 }} />
-                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))" }} />
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
+                  <XAxis dataKey="data" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <Tooltip
+                    contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }}
+                    labelStyle={{ color: "var(--muted-foreground)" }}
+                    formatter={(v: any, name: string) => name === "Faturamento (R$)" ? [brl(Number(v)), name] : [v, name]}
+                  />
                   <Legend />
                   <Line yAxisId="left" type="monotone" dataKey="pedidos" name="Pedidos" stroke="var(--color-chart-1)" strokeWidth={2} dot={false} />
                   <Line yAxisId="right" type="monotone" dataKey="faturamento" name="Faturamento (R$)" stroke="var(--color-chart-2)" strokeWidth={2} dot={false} />
@@ -381,12 +385,15 @@ function DashboardPage() {
               <EmptyMini msg="Sem vendas no período." />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={topProdutos ?? []} layout="vertical" margin={{ left: 20 }}>
-                  <CartesianGrid stroke="hsl(var(--border))" strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis type="number" tick={{ fontSize: 11 }} />
-                  <YAxis type="category" dataKey="nome" width={140} tick={{ fontSize: 11 }} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))" }} />
-                  <Bar dataKey="qtd" fill="var(--color-chart-1)" radius={[0, 4, 4, 0]} />
+                <BarChart data={topProdutos ?? []} layout="vertical" margin={{ left: 20, right: 12 }}>
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <YAxis type="category" dataKey="nome" width={150} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <Tooltip
+                    cursor={{ fill: "var(--accent)", opacity: 0.3 }}
+                    contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }}
+                  />
+                  <Bar dataKey="qtd" fill="var(--color-chart-1)" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -441,15 +448,25 @@ function KpiCard({
   value: string | null;
   tone?: "warning";
 }) {
+  const toneRing =
+    tone === "warning"
+      ? "bg-[color:var(--warning)]/12 text-[color:var(--warning)] ring-1 ring-inset ring-[color:var(--warning)]/25"
+      : "bg-primary/12 text-primary ring-1 ring-inset ring-primary/25";
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
-          <Icon className={`h-4 w-4 ${tone === "warning" ? "text-[color:var(--warning)]" : "text-muted-foreground"}`} />
-        </div>
-        <div className="mt-2 text-2xl font-semibold tabular-nums">
-          {value === null ? <Skeleton className="h-7 w-20" /> : value}
+    <Card className="relative overflow-hidden transition-colors hover:border-primary/40">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-2">
+            <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+              {label}
+            </span>
+            <div className="text-2xl font-semibold tabular-nums leading-tight">
+              {value === null ? <Skeleton className="h-7 w-24" /> : value}
+            </div>
+          </div>
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing}`}>
+            <Icon className="h-4 w-4" />
+          </div>
         </div>
       </CardContent>
     </Card>
