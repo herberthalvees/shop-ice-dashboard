@@ -101,6 +101,8 @@ function PedidosPage() {
   const linhas = data?.linhas ?? [];
   const total = data?.total ?? 0;
   const totalPaginas = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const estimadas = totais?.estimadas ?? 0;
+  const nota = estimadas > 0 ? `inclui ${estimadas} linha${estimadas === 1 ? "" : "s"} estimada${estimadas === 1 ? "" : "s"}` : undefined;
 
   async function exportarCSV() {
     const { data: full } = await supabase.rpc("pedidos_detalhe" as any, {
@@ -345,8 +347,8 @@ function PedidosPage() {
 }
 
 function CardTotal({
-  titulo, valor, tom, destaque,
-}: { titulo: string; valor: string | null; tom?: "pos" | "neg"; destaque?: boolean }) {
+  titulo, valor, tom, destaque, nota,
+}: { titulo: string; valor: string | null; tom?: "pos" | "neg"; destaque?: boolean; nota?: string }) {
   return (
     <Card className={destaque ? "border-primary/40" : undefined}>
       <CardHeader className="pb-2">
@@ -360,6 +362,9 @@ function CardTotal({
             {valor}
           </div>
         )}
+        {valor != null && nota ? (
+          <p className="mt-1 text-[11px] text-muted-foreground">{nota}</p>
+        ) : null}
       </CardContent>
     </Card>
   );
