@@ -88,7 +88,7 @@ async function handlePush(request: Request) {
       code,
       tipo_evento: TIPOS_EVENTO[code] ?? `desconhecido_${code}`,
       shop_id: shopId,
-      payload,
+      payload: payload as never,
       assinatura_valida: assinaturaValida,
     });
 
@@ -119,23 +119,6 @@ export const Route = createFileRoute("/api/public/shopee/webhook")({
       OPTIONS: async () => new Response("ok", { headers: corsHeaders }),
       GET: async ({ request }) => handlePush(request),
       POST: async ({ request }) => handlePush(request),
-    },
-  },
-});
-
-export const Route = createFileRoute("/api/public/shopee/webhook")({
-  server: {
-    handlers: {
-      POST: async ({ request }) => {
-        const headers = Object.fromEntries(request.headers.entries());
-        console.log("[shopee-webhook]", { method: request.method, headers });
-        return Response.json({ ok: true, rota: "webhook" }, { status: 200 });
-      },
-      GET: async ({ request }) => {
-        const headers = Object.fromEntries(request.headers.entries());
-        console.log("[shopee-webhook]", { method: request.method, headers });
-        return Response.json({ ok: true, rota: "webhook" }, { status: 200 });
-      },
     },
   },
 });
