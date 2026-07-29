@@ -578,12 +578,16 @@ function KpiCard({
   value,
   hint,
   tone,
+  estimativa,
+  tooltip,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string | null;
   hint?: string;
   tone?: "warning";
+  estimativa?: boolean;
+  tooltip?: string;
 }) {
   const toneRing =
     tone === "warning"
@@ -597,14 +601,41 @@ function KpiCard({
             <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
               {label}
             </span>
+            {estimativa && (
+              <span className="inline-flex items-center rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-500 ring-1 ring-inset ring-amber-500/30">
+                estimativa
+              </span>
+            )}
             <div className="text-2xl font-semibold tabular-nums leading-tight">
               {value === null ? <Skeleton className="h-7 w-24" /> : value}
             </div>
             {hint && <div className="text-[11px] text-muted-foreground leading-tight">{hint}</div>}
           </div>
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing}`}>
-            <Icon className="h-4 w-4" />
-          </div>
+          {tooltip ? (
+            <TooltipProvider delayDuration={100}>
+              <UiTooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Mais informações"
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing} cursor-help`}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="left" className="max-w-[240px] text-xs leading-relaxed">
+                  <div className="flex items-start gap-1.5">
+                    <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>{tooltip}</span>
+                  </div>
+                </TooltipContent>
+              </UiTooltip>
+            </TooltipProvider>
+          ) : (
+            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${toneRing}`}>
+              <Icon className="h-4 w-4" />
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
