@@ -16,6 +16,21 @@ export const Route = createLazyFileRoute("/_authenticated/configuracoes")({
   component: ConfigPage,
 });
 
+type Conexao = {
+  id: number;
+  app_tipo: string;
+  partner_id: number | null;
+  shop_id: number | null;
+  shop_name: string | null;
+  token_expires_at: string | null;
+  status: string;
+};
+
+const NOMES_APP: Record<string, string> = {
+  principal: "App principal (pedidos, produtos, financeiro)",
+  ads: "App de Ads",
+};
+
 function ConfigPage() {
   const search = useSearch({ from: "/_authenticated/configuracoes" });
   const qc = useQueryClient();
