@@ -160,7 +160,6 @@ async function handler({ request }: { request: Request }) {
         }
 
         const lista: any[] = resp.response?.transaction_list ?? [];
-        encontradas += lista.length;
 
         for (const t of lista) {
           const id = t?.transaction_id;
