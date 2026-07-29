@@ -24,6 +24,7 @@ async function hmacSha256Hex(chave: string, mensagem: string): Promise<string> {
 }
 
 async function handler({ request }: { request: Request }) {
+  const unauth = checkCronSecret(request); if (unauth) return unauth;
   try {
     const url = new URL(request.url);
     const forcar = url.searchParams.get('forcar') === '1';

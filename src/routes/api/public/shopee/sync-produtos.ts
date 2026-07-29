@@ -96,6 +96,7 @@ function extrairEstoque(container: any, erros: string[], contexto: string): { di
 }
 
 async function handler(_ctx: { request: Request }) {
+  const unauth = checkCronSecret(_ctx.request); if (unauth) return unauth;
   const inicioExecucao = Date.now();
   const erros: string[] = [];
 

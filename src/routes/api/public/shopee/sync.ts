@@ -61,6 +61,7 @@ function paraIso(segundos: unknown): string | null {
 }
 
 async function handler({ request }: { request: Request }) {
+  const unauth = checkCronSecret(request); if (unauth) return unauth;
   const inicioExecucao = Date.now();
   const erros: string[] = [];
 
