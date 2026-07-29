@@ -23,6 +23,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   Legend,
+  LabelList,
 } from "recharts";
 import { ShoppingBag, DollarSign, Calendar as CalendarIcon, CalendarDays, Truck, AlertTriangle, Snowflake, ArrowRight, Sparkles } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
@@ -109,14 +110,13 @@ function DashboardPage() {
   const notConnected = !loadConn && (!conn || !conn.shop_id);
 
   const { data: kpis, isLoading: loadKpis } = useQuery({
-    queryKey: ["kpis"],
+    queryKey: ["kpis", periodo, dataCustom?.toISOString()],
     queryFn: async () => {
       const hoje = new Date();
       hoje.setHours(0, 0, 0, 0);
-      const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-      const [pedidosHoje, pedidosMes, aguardando, estoqueBaixo, cfg] = await Promise.all([
+      const [pedidosHoje, pedidosPeriodo, aguardando, estoqueBaixo, cfg] = await Promise.all([
         supabase.from("pedidos").select("valor_total", { count: "exact" }).gte("data_criacao_pedido", hoje.toISOString()),
-        supabase.from("pedidos").select("valor_total").gte("data_criacao_pedido", inicioMes.toISOString()),
+        supabase.from("pedidos").select("valor_total").gte("data_criacao_pedido", range.desde).lte("data_criacao_pedido", range.ate),
         supabase.from("pedidos").select("id", { count: "exact", head: true }).ilike("status", "%READY_TO_SHIP%"),
         supabase.from("config").select("limite_estoque_baixo").eq("id", 1).maybeSingle(),
         supabase.from("produtos").select("id", { count: "exact", head: true }),
@@ -127,11 +127,12 @@ function DashboardPage() {
         .select("id", { count: "exact", head: true })
         .lte("estoque", limiteReal);
       const fatHoje = (pedidosHoje.data ?? []).reduce((s, p) => s + Number(p.valor_total ?? 0), 0);
-      const fatMes = (pedidosMes.data ?? []).reduce((s, p) => s + Number(p.valor_total ?? 0), 0);
+      const fatPeriodo = (pedidosPeriodo.data ?? []).reduce((s, p) => s + Number(p.valor_total ?? 0), 0);
       return {
         pedidosHoje: pedidosHoje.count ?? 0,
         fatHoje,
-        fatMes,
+        fatPeriodo,
+        pedidosPeriodo: pedidosPeriodo.data?.length ?? 0,
         aguardando: aguardando.count ?? 0,
         estoqueBaixo: baixoCount ?? 0,
         limite: limiteReal,
@@ -139,6 +140,13 @@ function DashboardPage() {
       };
     },
   });
+
+  const periodoLabel =
+    periodo === "hoje" ? "hoje"
+    : periodo === "ontem" ? "ontem"
+    : periodo === "7d" ? "7d"
+    : periodo === "30d" ? "30d"
+    : range.label;
 
   const { data: serie, isLoading: loadSerie } = useQuery({
     queryKey: ["serie", periodo, dataCustom?.toISOString()],
@@ -335,7 +343,7 @@ function DashboardPage() {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
         <KpiCard icon={ShoppingBag} label="Pedidos hoje" value={loadKpis ? null : String(kpis?.pedidosHoje ?? 0)} />
         <KpiCard icon={DollarSign} label="Faturamento hoje" value={loadKpis ? null : brl(kpis?.fatHoje ?? 0)} />
-        <KpiCard icon={CalendarDays} label="Faturamento mês" value={loadKpis ? null : brl(kpis?.fatMes ?? 0)} />
+        <KpiCard icon={CalendarDays} label={`Faturamento ${periodoLabel}`} value={loadKpis ? null : brl(kpis?.fatPeriodo ?? 0)} />
         <KpiCard icon={Truck} label="Aguardando envio" value={loadKpis ? null : String(kpis?.aguardando ?? 0)} />
         <KpiCard icon={AlertTriangle} label="Estoque baixo" value={loadKpis ? null : String(kpis?.estoqueBaixo ?? 0)} tone="warning" />
       </div>
@@ -355,7 +363,7 @@ function DashboardPage() {
               <Skeleton className="h-full w-full" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={serie ?? []}>
+                <LineChart data={serie ?? []} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
                   <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
                   <XAxis dataKey="data" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
                   <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
@@ -366,8 +374,12 @@ function DashboardPage() {
                     formatter={(v: any, name: string) => name === "Faturamento (R$)" ? [brl(Number(v)), name] : [v, name]}
                   />
                   <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="pedidos" name="Pedidos" stroke="var(--color-chart-1)" strokeWidth={2} dot={false} />
-                  <Line yAxisId="right" type="monotone" dataKey="faturamento" name="Faturamento (R$)" stroke="var(--color-chart-2)" strokeWidth={2} dot={false} />
+                  <Line yAxisId="left" type="monotone" dataKey="pedidos" name="Pedidos" stroke="var(--color-chart-1)" strokeWidth={2} dot={{ r: 3, fill: "var(--color-chart-1)" }} activeDot={{ r: 5 }}>
+                    <LabelList dataKey="pedidos" position="top" fontSize={11} fill="var(--color-chart-1)" />
+                  </Line>
+                  <Line yAxisId="right" type="monotone" dataKey="faturamento" name="Faturamento (R$)" stroke="var(--color-chart-2)" strokeWidth={2} dot={{ r: 3, fill: "var(--color-chart-2)" }} activeDot={{ r: 5 }}>
+                    <LabelList dataKey="faturamento" position="bottom" fontSize={11} fill="var(--color-chart-2)" formatter={(v: any) => Number(v) > 0 ? brl(Number(v)) : ""} />
+                  </Line>
                 </LineChart>
               </ResponsiveContainer>
             )}
@@ -393,7 +405,9 @@ function DashboardPage() {
                     cursor={{ fill: "var(--accent)", opacity: 0.3 }}
                     contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 8, color: "var(--popover-foreground)" }}
                   />
-                  <Bar dataKey="qtd" fill="var(--color-chart-1)" radius={[0, 6, 6, 0]} />
+                  <Bar dataKey="qtd" fill="var(--color-chart-1)" radius={[0, 6, 6, 0]}>
+                    <LabelList dataKey="qtd" position="right" fontSize={11} fill="var(--foreground)" />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             )}
