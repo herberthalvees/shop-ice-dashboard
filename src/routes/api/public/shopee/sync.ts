@@ -65,7 +65,30 @@ async function handler({ request }: { request: Request }) {
 
   try {
     const url = new URL(request.url);
-    const dias = Math.min(Number(url.searchParams.get('dias') ?? '2'), 180);
+    const campo =
+      url.searchParams.get('campo') === 'update_time' ? 'update_time' : 'create_time';
+
+    const agora = Math.floor(Date.now() / 1000);
+    const JANELA = 15 * 24 * 60 * 60; // limite da Shopee
+
+    const deParam = url.searchParams.get('de');
+    const ateParam = url.searchParams.get('ate');
+
+    let inicio: number;
+    let limite: number;
+
+    if (deParam && ateParam) {
+      inicio = Number(deParam);
+      limite = Number(ateParam);
+    } else {
+      const dias = Math.min(Number(url.searchParams.get('dias') ?? '1'), 15);
+      inicio = agora - Math.round(dias * 24 * 60 * 60);
+      limite = agora;
+    }
+
+    if (!inicio || !limite || inicio >= limite) {
+      return responder({ ok: false, erro: 'faixa de datas invalida' }, 400);
+    }
 
     const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
 
@@ -86,14 +109,10 @@ async function handler({ request }: { request: Request }) {
     const shopId = Number(conexao.shop_id);
     const token = conexao.access_token as string;
 
-    const agora = Math.floor(Date.now() / 1000);
-    const JANELA = 15 * 24 * 60 * 60;
-    let inicio = agora - dias * 24 * 60 * 60;
-
     const todosSn: string[] = [];
 
-    while (inicio < agora) {
-      const fim = Math.min(inicio + JANELA, agora);
+    while (inicio < limite) {
+      const fim = Math.min(inicio + JANELA, limite);
       let cursor = '';
       let temMais = true;
       let guarda = 0;
@@ -102,7 +121,7 @@ async function handler({ request }: { request: Request }) {
         guarda++;
 
         const parametros: Record<string, string> = {
-          time_range_field: 'create_time',
+          time_range_field: campo,
           time_from: String(inicio),
           time_to: String(fim),
           page_size: '100',
@@ -185,7 +204,7 @@ async function handler({ request }: { request: Request }) {
     }
 
     console.log('sync concluido', {
-      dias,
+      campo,
       encontrados: unicos.length,
       gravados,
       erros: erros.length,
@@ -193,7 +212,9 @@ async function handler({ request }: { request: Request }) {
 
     return responder({
       ok: erros.length === 0,
-      janela_dias: dias,
+      campo: campo,
+      de: new Date(inicio * 1000).toISOString(),
+      ate: new Date(limite * 1000).toISOString(),
       pedidos_encontrados: unicos.length,
       pedidos_gravados: gravados,
       duracao_ms: Date.now() - inicioExecucao,
