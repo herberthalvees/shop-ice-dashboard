@@ -271,6 +271,10 @@ function LinhaSKU({ linha }: { linha: LinhaMargem }) {
     linha.situacao === "prejuizo" ? "text-destructive font-medium"
     : linha.situacao === "margem baixa" ? "text-amber-500 font-medium"
     : "";
+  const mudou =
+    linha.custo_atual != null &&
+    linha.custo_periodo != null &&
+    Math.abs(linha.custo_atual - linha.custo_periodo) > 0.0001;
   return (
     <TableRow className={rowClass}>
       <TableCell className="max-w-[280px] truncate" title={linha.produto ?? ""}>{linha.produto ?? "—"}</TableCell>
