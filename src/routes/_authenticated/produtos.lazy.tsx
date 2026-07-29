@@ -378,6 +378,7 @@ function ProdutosPage() {
                             item_id={p.item_id}
                             model_id={p.model_id}
                             initial={p.custo_unitario}
+                            titulo={[p.produto, p.variacao].filter(Boolean).join(" — ")}
                             onSaved={() => qc.invalidateQueries({ queryKey: ["produtos-giro"] })}
                           />
                         </TableCell>
@@ -411,17 +412,20 @@ function CustoCell({
   item_id,
   model_id,
   initial,
+  titulo,
   onSaved,
 }: {
   item_id: number;
   model_id: number;
   initial: number | null;
+  titulo?: string | null;
   onSaved: () => void;
 }) {
   const initStr = initial == null ? "" : String(initial).replace(".", ",");
   const [valor, setValor] = useState<string>(initStr);
   const [saving, setSaving] = useState(false);
   const [ok, setOk] = useState(false);
+  const [histOpen, setHistOpen] = useState(false);
   useEffect(() => { setValor(initStr); }, [initStr]);
   useEffect(() => {
     if (!ok) return;
@@ -431,19 +435,21 @@ function CustoCell({
 
   const salvar = async () => {
     if (valor === initStr) return;
-    const parsed = valor.trim() === "" ? null : Number(valor.replace(",", "."));
-    if (parsed != null && (Number.isNaN(parsed) || parsed < 0)) {
+    if (valor.trim() === "") { setValor(initStr); return; }
+    const parsed = Number(valor.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed < 0) {
       toast.error("Custo inválido");
       setValor(initStr);
       return;
     }
     setSaving(true);
-    const { error } = await supabase
-      .from("dim_produto")
-      .upsert(
-        { item_id, model_id, custo_unitario: parsed, atualizado_em: new Date().toISOString() } as any,
-        { onConflict: "item_id,model_id" },
-      );
+    const { error } = await supabase.rpc("registrar_custo" as any, {
+      p_item_id: item_id,
+      p_model_id: model_id,
+      p_custo: parsed,
+      p_inicio: null,
+      p_observacao: null,
+    });
     setSaving(false);
     if (error) {
       toast.error("Erro ao salvar custo", { description: error.message });
@@ -468,7 +474,26 @@ function CustoCell({
           if (e.key === "Escape") { setValor(initStr); (e.target as HTMLInputElement).blur(); }
         }}
         placeholder="—"
-        className="h-8 w-24 ml-auto text-right tabular-nums"
+        className="h-8 w-24 text-right tabular-nums"
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+        title="Histórico de custo"
+        aria-label="Histórico de custo"
+        onClick={() => setHistOpen(true)}
+      >
+        <History className="h-4 w-4" />
+      </Button>
+      <HistoricoCustoSheet
+        open={histOpen}
+        onOpenChange={setHistOpen}
+        item_id={item_id}
+        model_id={model_id}
+        titulo={titulo}
+        onSaved={onSaved}
       />
     </div>
   );
