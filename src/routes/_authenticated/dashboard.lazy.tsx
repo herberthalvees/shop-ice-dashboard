@@ -26,7 +26,7 @@ import {
   Legend,
   Cell,
 } from "recharts";
-import { ShoppingBag, DollarSign, Receipt, Package, Wallet, XCircle as XCircleIcon, Snowflake, ArrowRight, Sparkles, CalendarIcon, Percent } from "lucide-react";
+import { ShoppingBag, DollarSign, Receipt, Package, Wallet, XCircle as XCircleIcon, Snowflake, ArrowRight, Sparkles, CalendarIcon, Percent, PackageX } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -391,6 +391,7 @@ function DashboardPage() {
           tone="warning"
         />
         <KpiCard icon={XCircleIcon} label="Cancelados" value={loadKpis ? null : String(kpis?.cancelados ?? 0)} tone="warning" />
+        <EstoqueBaixoKpi />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
