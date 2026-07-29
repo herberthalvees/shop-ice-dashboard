@@ -36,9 +36,14 @@ export const Route = createLazyFileRoute("/_authenticated/dashboard")({
 const brl = (v: number) =>
   v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
+type PeriodoPreset = "hoje" | "ontem" | "7d" | "30d" | "custom";
+
 function DashboardPage() {
-  const [periodo, setPeriodo] = useState<"7" | "30" | "90">("30");
-  const dias = Number(periodo);
+  const [periodo, setPeriodo] = useState<PeriodoPreset>("30d");
+  const [dataCustom, setDataCustom] = useState<Date | undefined>(new Date());
+
+  const range = computeRange(periodo, dataCustom);
+  const dias = range.dias;
 
   const { data: syncRecent } = useQuery({
     queryKey: ["sync-log-recent"],
