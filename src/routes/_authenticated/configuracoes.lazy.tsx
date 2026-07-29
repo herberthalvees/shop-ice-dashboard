@@ -27,20 +27,18 @@ function ConfigPage() {
     else if (search.conectado === "0") toast.error("Falha ao conectar a loja");
   }, [search.conectado]);
 
-  const { data: conn, isLoading } = useQuery({
+  const { data: conns, isLoading } = useQuery({
     queryKey: ["shopee-connection"],
     queryFn: async () => {
       const { data } = await supabase
         .from("shopee_connection_status" as any)
-        .select("shop_id, shop_name, token_expires_at, status")
-        .eq("id", 1)
-        .maybeSingle();
-      return data as { shop_id: number | null; shop_name: string | null; token_expires_at: string | null; status: string } | null;
+        .select("id, app_tipo, partner_id, shop_id, shop_name, token_expires_at, status");
+      return (data ?? []) as Conexao[];
     },
   });
 
   const authMut = useMutation({
-    mutationFn: async () => await authUrlFn(),
+    mutationFn: async (app: "principal" | "ads") => await authUrlFn({ data: { app } }),
     onSuccess: (r: any) => { if (r?.url) window.location.href = r.url; },
     onError: (e: any) => toast.error("Erro", { description: e.message }),
   });
