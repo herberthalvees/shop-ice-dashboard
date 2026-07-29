@@ -26,7 +26,7 @@ import {
   Legend,
   Cell,
 } from "recharts";
-import { ShoppingBag, DollarSign, Receipt, Package, Wallet, XCircle as XCircleIcon, Snowflake, ArrowRight, Sparkles, CalendarIcon, Percent } from "lucide-react";
+import { ShoppingBag, DollarSign, Receipt, Package, Wallet, XCircle as XCircleIcon, Snowflake, ArrowRight, Sparkles, CalendarIcon, Percent, PackageX } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -391,6 +391,7 @@ function DashboardPage() {
           tone="warning"
         />
         <KpiCard icon={XCircleIcon} label="Cancelados" value={loadKpis ? null : String(kpis?.cancelados ?? 0)} tone="warning" />
+        <EstoqueBaixoKpi />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -601,5 +602,29 @@ function EmptyMini({ msg }: { msg: string }) {
     <div className="flex h-full min-h-32 items-center justify-center text-sm text-muted-foreground">
       {msg}
     </div>
+  );
+}
+
+function EstoqueBaixoKpi() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["estoque-baixo"],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("produtos_com_giro" as any, { p_dias: 30 });
+      const linhas = (data as any[]) ?? [];
+      const emRisco = linhas.filter(
+        (l) => l.dias_de_estoque != null && Number(l.dias_de_estoque) < 7,
+      ).length;
+      return emRisco;
+    },
+    staleTime: 60_000,
+  });
+  return (
+    <KpiCard
+      icon={PackageX}
+      label="Estoque baixo"
+      value={isLoading ? null : String(data ?? 0)}
+      hint="menos de 7 dias"
+      tone="warning"
+    />
   );
 }

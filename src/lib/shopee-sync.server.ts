@@ -2,8 +2,6 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   getOrderList,
   getOrderDetail,
-  getItemList,
-  getItemBaseInfo,
   refreshAccessToken,
 } from "./shopee.server";
 
@@ -65,37 +63,6 @@ export async function runSync() {
     console.error("[sync] pedidos", e);
   }
 
-  let productsImported = 0;
-  try {
-    const list = (await getItemList(conn.access_token, shopId)) as any;
-    const itemIds: number[] = (list?.response?.item ?? []).map((i: any) => i.item_id).filter(Boolean);
-    for (let i = 0; i < itemIds.length; i += 50) {
-      const chunk = itemIds.slice(i, i + 50);
-      const info = (await getItemBaseInfo(conn.access_token, shopId, chunk)) as any;
-      const items = info?.response?.item_list ?? [];
-      for (const it of items) {
-        const price = it.price_info?.[0]?.current_price ?? it.price_info?.[0]?.original_price ?? 0;
-        const stock =
-          it.stock_info_v2?.summary_info?.total_available_stock ??
-          it.stock_info?.[0]?.current_stock ??
-          0;
-        await supabaseAdmin.from("produtos").upsert(
-          {
-            item_id: it.item_id,
-            nome: it.item_name,
-            sku: it.item_sku,
-            preco: Number(price),
-            estoque: Number(stock),
-            status: it.item_status,
-          },
-          { onConflict: "item_id" },
-        );
-        productsImported++;
-      }
-    }
-  } catch (e) {
-    console.error("[sync] produtos", e);
-  }
-
-  return { ok: true, pedidos: ordersImported, produtos: productsImported };
+  // Sincronização de catálogo/estoque agora vive em /api/public/shopee/sync-produtos
+  return { ok: true, pedidos: ordersImported };
 }
