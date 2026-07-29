@@ -175,7 +175,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      shopee_connection_status: {
+        Row: {
+          id: number | null
+          shop_id: number | null
+          shop_name: string | null
+          status: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number | null
+          shop_id?: number | null
+          shop_name?: string | null
+          status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number | null
+          shop_id?: number | null
+          shop_name?: string | null
+          status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
