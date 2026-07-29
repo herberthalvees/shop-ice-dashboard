@@ -1,6 +1,6 @@
-import { createLazyFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useRef, useState, useEffect } from "react";
+import { createLazyFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { CalendarIcon, TrendingDown, AlertTriangle, HelpCircle, Calculator } from "lucide-react";
-import { toast } from "sonner";
+import { CalendarIcon, TrendingDown, AlertTriangle, HelpCircle, Calculator, ExternalLink } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { usePeriodo, computeRange } from "@/lib/periodo-store";
 
 export const Route = createLazyFileRoute("/_authenticated/precificacao")({
   component: PrecificacaoPage,
@@ -28,32 +29,6 @@ const brl = (v: number | null | undefined) =>
 const toISO = (d: Date) => format(d, "yyyy-MM-dd");
 const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
 
-type Preset = "hoje" | "ontem" | "7d" | "30d" | "custom";
-
-function computeRange(preset: Preset, custom?: DateRange): { de: Date; ate: Date } {
-  const hoje = new Date();
-  hoje.setHours(0, 0, 0, 0);
-  if (preset === "hoje") return { de: hoje, ate: hoje };
-  if (preset === "ontem") {
-    const o = new Date(hoje);
-    o.setDate(o.getDate() - 1);
-    return { de: o, ate: o };
-  }
-  if (preset === "7d") {
-    const de = new Date(hoje);
-    de.setDate(de.getDate() - 6);
-    return { de, ate: hoje };
-  }
-  if (preset === "30d") {
-    const de = new Date(hoje);
-    de.setDate(de.getDate() - 29);
-    return { de, ate: hoje };
-  }
-  const de = custom?.from ?? hoje;
-  const ate = custom?.to ?? custom?.from ?? hoje;
-  return { de, ate };
-}
-
 type LinhaMargem = {
   item_id: number;
   model_id: number;
@@ -62,19 +37,16 @@ type LinhaMargem = {
   unidades: number;
   preco_medio: number;
   custo_unitario: number | null;
-  taxa_percentual: number;
-  taxa_fixa: number;
   liquido_unitario: number;
   lucro_unitario: number | null;
   margem_pct: number | null;
   preco_minimo: number | null;
+  roas_minimo: number | null;
   situacao: "prejuizo" | "margem baixa" | "sem custo" | "ok";
 };
 
 function PrecificacaoPage() {
-  const qc = useQueryClient();
-  const [preset, setPreset] = useState<Preset>("30d");
-  const [custom, setCustom] = useState<DateRange | undefined>();
+  const { preset, custom, setPreset, setCustom } = usePeriodo();
   const [customOpen, setCustomOpen] = useState(false);
   const [somentePrejuizo, setSomentePrejuizo] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
@@ -95,12 +67,11 @@ function PrecificacaoPage() {
         unidades: Number(r.unidades ?? 0),
         preco_medio: Number(r.preco_medio ?? 0),
         custo_unitario: r.custo_unitario == null ? null : Number(r.custo_unitario),
-        taxa_percentual: Number(r.taxa_percentual ?? 0.2),
-        taxa_fixa: Number(r.taxa_fixa ?? 4),
         liquido_unitario: Number(r.liquido_unitario ?? 0),
         lucro_unitario: r.lucro_unitario == null ? null : Number(r.lucro_unitario),
         margem_pct: r.margem_pct == null ? null : Number(r.margem_pct),
         preco_minimo: r.preco_minimo == null ? null : Number(r.preco_minimo),
+        roas_minimo: r.roas_minimo == null ? null : Number(r.roas_minimo),
         situacao: String(r.situacao ?? "sem custo") as LinhaMargem["situacao"],
       })) as LinhaMargem[];
     },
@@ -129,33 +100,8 @@ function PrecificacaoPage() {
     return { skusPrejuizo, perdaTotal, skusSemCusto, comCusto, total: linhas.length };
   }, [linhas]);
 
-  async function salvarCusto(item_id: number, model_id: number, valorStr: string) {
-    const parsed = valorStr.trim() === "" ? null : Number(valorStr.replace(",", "."));
-    if (parsed != null && (Number.isNaN(parsed) || parsed < 0)) {
-      toast.error("Custo inválido");
-      return;
-    }
-    const { error } = await supabase
-      .from("dim_produto")
-      .upsert(
-        { item_id, model_id, custo_unitario: parsed, atualizado_em: new Date().toISOString() } as any,
-        { onConflict: "item_id,model_id" },
-      );
-    if (error) {
-      toast.error("Erro ao salvar custo", { description: error.message });
-      return;
-    }
-    toast.success("Custo atualizado");
-    qc.invalidateQueries({ queryKey: ["analise-margem"] });
-  }
-
-  const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
-  const focusNext = (i: number) => {
-    const next = inputRefs.current[i + 1];
-    if (next) next.focus();
-  };
-
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -163,7 +109,7 @@ function PrecificacaoPage() {
           <p className="text-sm text-muted-foreground">Análise de margem e preço mínimo por SKU · {rangeLabel}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={preset} onValueChange={(v) => setPreset(v as Preset)}>
+          <Select value={preset} onValueChange={(v) => { setPreset(v as any); if (v === "custom") setCustomOpen(true); }}>
             <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="hoje">Hoje</SelectItem>
@@ -182,7 +128,7 @@ function PrecificacaoPage() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-auto p-0 bg-popover">
-                <Calendar mode="range" numberOfMonths={2} selected={custom} onSelect={setCustom} locale={ptBR} />
+                <Calendar mode="range" numberOfMonths={2} selected={custom} onSelect={(r: DateRange | undefined) => setCustom(r)} locale={ptBR} />
               </PopoverContent>
             </Popover>
           )}
@@ -271,48 +217,48 @@ function PrecificacaoPage() {
                     <TableHead className="w-[120px]">SKU</TableHead>
                     <TableHead className="text-right">Unid.</TableHead>
                     <TableHead className="text-right">Preço médio</TableHead>
-                    <TableHead className="text-right w-[130px]">Custo</TableHead>
-                    <TableHead className="text-right">Taxa est.</TableHead>
+                    <TableHead className="text-right w-[160px]">Custo</TableHead>
                     <TableHead className="text-right">Líquido/u</TableHead>
                     <TableHead className="text-right">Lucro/u</TableHead>
                     <TableHead className="text-right">Margem</TableHead>
                     <TableHead className="text-right">Preço mín.</TableHead>
+                    <TableHead className="text-right">
+                      <Tooltip>
+                        <TooltipTrigger className="inline-flex items-center gap-1">
+                          ROAS mín. <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          Faturamento mínimo por real investido em anúncios para não ter prejuízo.
+                        </TooltipContent>
+                      </Tooltip>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtradas.map((l, i) => (
-                    <LinhaSKU
-                      key={`${l.item_id}-${l.model_id}`}
-                      linha={l}
-                      onSalvar={salvarCusto}
-                      inputRef={(el) => { inputRefs.current[i] = el; }}
-                      onEnter={() => focusNext(i)}
-                    />
+                  {filtradas.map((l) => (
+                    <LinhaSKU key={`${l.item_id}-${l.model_id}`} linha={l} />
                   ))}
                 </TableBody>
               </Table>
             </div>
           )}
+          <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
+            <span>{resumo.total} variações no total</span>
+            <span>
+              {resumo.comCusto} com custo preenchido
+              {resumo.total > 0 && (
+                <span className="ml-1">({Math.round((resumo.comCusto / resumo.total) * 100)}%)</span>
+              )}
+            </span>
+          </div>
         </CardContent>
       </Card>
     </div>
+    </TooltipProvider>
   );
 }
 
-function LinhaSKU({
-  linha,
-  onSalvar,
-  inputRef,
-  onEnter,
-}: {
-  linha: LinhaMargem;
-  onSalvar: (item_id: number, model_id: number, v: string) => void | Promise<void>;
-  inputRef: (el: HTMLInputElement | null) => void;
-  onEnter: () => void;
-}) {
-  const initial = linha.custo_unitario == null ? "" : String(linha.custo_unitario);
-  const [valor, setValor] = useState<string>(initial);
-  useEffect(() => { setValor(initial); }, [initial]);
+function LinhaSKU({ linha }: { linha: LinhaMargem }) {
   const rowClass =
     linha.situacao === "prejuizo" ? "bg-destructive/10 hover:bg-destructive/15"
     : linha.situacao === "margem baixa" ? "bg-amber-500/10 hover:bg-amber-500/15"
@@ -322,10 +268,6 @@ function LinhaSKU({
     linha.situacao === "prejuizo" ? "text-destructive font-medium"
     : linha.situacao === "margem baixa" ? "text-amber-500 font-medium"
     : "";
-  const taxaEstimada = linha.preco_medio * linha.taxa_percentual + linha.taxa_fixa;
-  const salvar = () => {
-    if (valor !== initial) onSalvar(linha.item_id, linha.model_id, valor);
-  };
   return (
     <TableRow className={rowClass}>
       <TableCell className="max-w-[280px] truncate" title={linha.produto ?? ""}>{linha.produto ?? "—"}</TableCell>
@@ -333,32 +275,27 @@ function LinhaSKU({
       <TableCell className="text-right">{linha.unidades.toLocaleString("pt-BR")}</TableCell>
       <TableCell className="text-right">{brl(linha.preco_medio)}</TableCell>
       <TableCell className="text-right">
-        <Input
-          ref={inputRef}
-          type="number"
-          step="0.01"
-          min="0"
-          value={valor}
-          placeholder={linha.situacao === "sem custo" ? "informar" : ""}
-          onChange={(e) => setValor(e.target.value)}
-          onBlur={salvar}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              salvar();
-              onEnter();
-            }
-          }}
-          className={`h-8 w-28 ml-auto text-right ${linha.situacao === "sem custo" ? "text-muted-foreground placeholder:text-muted-foreground/60" : ""}`}
-        />
+        {linha.custo_unitario == null ? (
+          <Link
+            to="/produtos"
+            search={{ q: linha.sku } as any}
+            className="inline-flex items-center gap-1 text-primary hover:underline text-xs"
+          >
+            informar em Produtos <ExternalLink className="h-3 w-3" />
+          </Link>
+        ) : (
+          <span className="tabular-nums">{brl(linha.custo_unitario)}</span>
+        )}
       </TableCell>
-      <TableCell className="text-right text-muted-foreground">{brl(taxaEstimada)}</TableCell>
       <TableCell className="text-right">{brl(linha.liquido_unitario)}</TableCell>
       <TableCell className="text-right">{linha.lucro_unitario == null ? "—" : brl(linha.lucro_unitario)}</TableCell>
       <TableCell className={`text-right ${margemClass}`}>
         {linha.margem_pct == null ? "—" : `${linha.margem_pct.toFixed(1)}%`}
       </TableCell>
       <TableCell className="text-right">{brl(linha.preco_minimo)}</TableCell>
+      <TableCell className="text-right tabular-nums">
+        {linha.roas_minimo == null ? "—" : `${linha.roas_minimo.toFixed(2)}×`}
+      </TableCell>
     </TableRow>
   );
 }
