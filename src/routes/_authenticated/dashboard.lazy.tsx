@@ -24,7 +24,7 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { ShoppingBag, DollarSign, Calendar as CalendarIcon, Truck, AlertTriangle, Snowflake, ArrowRight, Sparkles } from "lucide-react";
+import { ShoppingBag, DollarSign, Calendar as CalendarIcon, CalendarDays, Truck, AlertTriangle, Snowflake, ArrowRight, Sparkles } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -335,7 +335,7 @@ function DashboardPage() {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
         <KpiCard icon={ShoppingBag} label="Pedidos hoje" value={loadKpis ? null : String(kpis?.pedidosHoje ?? 0)} />
         <KpiCard icon={DollarSign} label="Faturamento hoje" value={loadKpis ? null : brl(kpis?.fatHoje ?? 0)} />
-        <KpiCard icon={Calendar} label="Faturamento mês" value={loadKpis ? null : brl(kpis?.fatMes ?? 0)} />
+        <KpiCard icon={CalendarDays} label="Faturamento mês" value={loadKpis ? null : brl(kpis?.fatMes ?? 0)} />
         <KpiCard icon={Truck} label="Aguardando envio" value={loadKpis ? null : String(kpis?.aguardando ?? 0)} />
         <KpiCard icon={AlertTriangle} label="Estoque baixo" value={loadKpis ? null : String(kpis?.estoqueBaixo ?? 0)} tone="warning" />
       </div>
