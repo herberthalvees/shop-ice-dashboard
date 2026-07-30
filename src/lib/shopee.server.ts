@@ -1,5 +1,6 @@
 // Server-only helpers para a API Shopee Open Platform.
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { getRequestHeader } from "@tanstack/react-start/server";
 import { credenciais } from "./shopee-credenciais.server";
 
 export const SHOPEE_BASE = "https://partner.shopeemobile.com";
