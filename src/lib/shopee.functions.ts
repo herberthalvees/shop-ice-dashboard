@@ -1,16 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getRequestHeader } from "@tanstack/react-start/server";
-
-function originFromRequest(): string {
-  const forwardedProto = getRequestHeader("x-forwarded-proto");
-  const forwardedHost = getRequestHeader("x-forwarded-host");
-  const host = getRequestHeader("host");
-  const proto = forwardedProto ?? "https";
-  const h = forwardedHost ?? host;
-  if (!h) throw new Error("Não foi possível determinar a origem da requisição");
-  return `${proto}://${h}`;
-}
 
 export const getShopeeAuthUrl = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -18,7 +7,7 @@ export const getShopeeAuthUrl = createServerFn({ method: "GET" })
     app: data?.app === "ads" ? "ads" : "principal",
   }))
   .handler(async ({ data }) => {
-    const { buildAuthUrl } = await import("./shopee.server");
+    const { buildAuthUrl, originFromRequest } = await import("./shopee.server");
     return { url: buildAuthUrl(originFromRequest(), data.app) };
   });
 
