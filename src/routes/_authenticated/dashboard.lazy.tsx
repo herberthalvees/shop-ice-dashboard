@@ -89,13 +89,14 @@ function DashboardPage() {
   const ToneIcon = syncTone === "err" ? XCircle : syncTone === "warn" ? AlertCircle : CheckCircle2;
 
   const { data: conn, isLoading: loadConn } = useQuery({
-    queryKey: ["shopee-connection"],
+    queryKey: ["shopee-connection-status", "principal"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("shopee_connection_status" as any)
         .select("shop_id, shop_name, status")
         .eq("id", 1)
         .maybeSingle();
+      if (error) throw error;
       return data as { shop_id: number | null; shop_name: string | null; status: string } | null;
     },
   });

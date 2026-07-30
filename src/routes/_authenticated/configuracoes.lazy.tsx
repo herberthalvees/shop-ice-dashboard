@@ -42,14 +42,18 @@ function ConfigPage() {
     else if (search.conectado === "0") toast.error("Falha ao conectar a loja");
   }, [search.conectado]);
 
-  const { data: conns, isLoading } = useQuery({
-    queryKey: ["shopee-connection"],
+  const { data: conns = [], isLoading, error: conexoesError } = useQuery<Conexao[]>({
+    queryKey: ["shopee-connections", "all"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("shopee_connection_status" as any)
         .select("id, app_tipo, partner_id, shop_id, shop_name, token_expires_at, status");
-      return ((data ?? []) as unknown) as Conexao[];
+      if (error) throw error;
+      if (!Array.isArray(data)) return [];
+      return data as unknown as Conexao[];
     },
+    staleTime: 30_000,
+    retry: 2,
   });
 
   const authMut = useMutation({
@@ -63,7 +67,8 @@ function ConfigPage() {
     onSuccess: (r: any) => {
       if (r?.ok) toast.success("Sincronização concluída", { description: `${r.pedidos ?? 0} pedidos · ${r.produtos ?? 0} produtos` });
       else toast.error("Sync falhou", { description: r?.error ?? "erro" });
-      qc.invalidateQueries();
+      qc.invalidateQueries({ queryKey: ["shopee-connections"] });
+      qc.invalidateQueries({ queryKey: ["shopee-connection-status"] });
     },
     onError: (e: any) => toast.error("Erro", { description: e.message }),
   });
@@ -75,11 +80,12 @@ function ConfigPage() {
   const { data: cfg } = useQuery({
     queryKey: ["config-fiscal"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("config")
         .select("aliquota_imposto")
         .eq("id", 1)
         .maybeSingle();
+      if (error) throw error;
       return (data as { aliquota_imposto: number | null } | null);
     },
   });
@@ -128,8 +134,8 @@ function ConfigPage() {
     revogada: "bg-destructive/20 text-destructive border-destructive/30",
   };
 
-  const principal = conns?.find((c) => c.app_tipo === "principal") ?? null;
-  const ads = conns?.find((c) => c.app_tipo === "ads") ?? null;
+  const principal = conns.find((c) => c.app_tipo === "principal") ?? null;
+  const ads = conns.find((c) => c.app_tipo === "ads") ?? null;
 
   return (
     <div className="space-y-6">
@@ -137,6 +143,16 @@ function ConfigPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Configurações</h1>
         <p className="text-sm text-muted-foreground">Gerencie as conexões com a Shopee e sua conta.</p>
       </div>
+
+      {conexoesError && (
+        <div role="alert" className="flex items-start gap-3 rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="font-medium">Não foi possível carregar as conexões.</p>
+            <p className="mt-1 text-muted-foreground">Tente novamente em instantes.</p>
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="grid gap-4 lg:grid-cols-2">
