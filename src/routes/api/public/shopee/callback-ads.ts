@@ -7,6 +7,13 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
+function redirecionar(origin: string, ok: boolean, erro?: string) {
+  const destino = new URL("/configuracoes", origin);
+  destino.searchParams.set("conectado", ok ? "1" : "0");
+  if (erro) destino.searchParams.set("erro", erro);
+  return Response.redirect(destino.toString(), 302);
+}
+
 function responder(corpo: unknown, status = 200) {
   return new Response(JSON.stringify(corpo), {
     status,
@@ -40,12 +47,12 @@ export const Route = createFileRoute("/api/public/shopee/callback-ads")({
           const shopIdParam = url.searchParams.get("shop_id");
 
           if (!code || !shopIdParam) {
-            return responder({ ok: false, erro: "parametros ausentes", esperado: ["code", "shop_id"] }, 400);
+            return redirecionar(url.origin, false, "parametros ausentes no retorno da Shopee");
           }
 
           const { partnerId, partnerKey, apiBase, faltando } = credenciaisObrigatorias("ads");
           if (faltando.length > 0) {
-            return responder({ ok: false, erro: "secrets ausentes", faltando }, 500);
+            return redirecionar(url.origin, false, `credenciais ausentes: ${faltando.join(", ")}`);
           }
 
           const path = "/api/v2/auth/token/get";
@@ -69,10 +76,10 @@ export const Route = createFileRoute("/api/public/shopee/callback-ads")({
 
           if (dados.error && dados.error !== "") {
             console.error("shopee ads recusou a troca do code", { error: dados.error, message: dados.message });
-            return responder({ ok: false, erro: dados.error, mensagem: dados.message }, 400);
+            return redirecionar(url.origin, false, String(dados.message ?? dados.error));
           }
           if (!dados.access_token || !dados.refresh_token) {
-            return responder({ ok: false, erro: "resposta sem tokens" }, 500);
+            return redirecionar(url.origin, false, "resposta da Shopee sem tokens");
           }
 
           const segundos = Number(dados.expire_in ?? 14400);
@@ -91,44 +98,16 @@ export const Route = createFileRoute("/api/public/shopee/callback-ads")({
             updated_at: new Date().toISOString(),
           };
 
-          const { data: existente } = await supabaseAdmin
+          const { error: erroBanco } = await supabaseAdmin
             .from("shopee_connection")
-            .select("id")
-            .eq("app_tipo", "ads")
-            .maybeSingle();
-
-          let erroBanco = null as { message: string } | null;
-          if (existente) {
-            const { error } = await supabaseAdmin
-              .from("shopee_connection")
-              .update(registro)
-              .eq("id", existente.id);
-            erroBanco = error;
-          } else {
-            const { data: maiores } = await supabaseAdmin
-              .from("shopee_connection")
-              .select("id")
-              .order("id", { ascending: false })
-              .limit(1);
-            const novoId = (maiores?.[0]?.id ?? 0) + 1;
-            const { error } = await supabaseAdmin
-              .from("shopee_connection")
-              .insert({ id: novoId, ...registro });
-            erroBanco = error;
-          }
+            .upsert(registro, { onConflict: "app_tipo" });
 
           if (erroBanco) {
             console.error("falha ao gravar conexao ads", erroBanco.message);
-            return responder({ ok: false, erro: "falha ao gravar no banco" }, 500);
+            return redirecionar(url.origin, false, "falha ao gravar no banco");
           }
 
-          return responder({
-            ok: true,
-            mensagem: "app de Ads conectado com sucesso",
-            app_tipo: "ads",
-            shop_id: Number(shopIdParam),
-            token_expira_em: expiraEm,
-          });
+          return redirecionar(url.origin, true);
         } catch (erro) {
           console.error("erro no callback ads", String(erro));
           return responder({ ok: false, erro: "erro interno" }, 500);

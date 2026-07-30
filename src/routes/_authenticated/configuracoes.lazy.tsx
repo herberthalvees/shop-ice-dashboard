@@ -38,9 +38,14 @@ function ConfigPage() {
   const syncFn = useServerFn(runShopeeSync);
 
   useEffect(() => {
-    if (search.conectado === "1") toast.success("Loja Shopee conectada");
-    else if (search.conectado === "0") toast.error("Falha ao conectar a loja");
-  }, [search.conectado]);
+    if (search.conectado === "1") {
+      toast.success("Conexão Shopee concluída");
+      qc.invalidateQueries({ queryKey: ["shopee-connections"] });
+      qc.invalidateQueries({ queryKey: ["shopee-connection-status"] });
+    } else if (search.conectado === "0") {
+      toast.error("Falha ao conectar", { description: search.erro ?? "Tente novamente." });
+    }
+  }, [search.conectado, search.erro, qc]);
 
   const { data: conns = [], isLoading, error: conexoesError } = useQuery<Conexao[]>({
     queryKey: ["shopee-connections", "all"],

@@ -28,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/configuracoes")({
   }),
   validateSearch: (s: Record<string, unknown>) => ({
     conectado: s.conectado === "1" ? "1" : s.conectado === "0" ? "0" : undefined,
+    erro: typeof s.erro === "string" ? s.erro : undefined,
   }),
   errorComponent: ConfiguracoesError,
   notFoundComponent: () => (
