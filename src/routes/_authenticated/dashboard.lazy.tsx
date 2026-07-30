@@ -188,6 +188,26 @@ function DashboardPage() {
     staleTime: 60_000,
   });
 
+  const { data: ads, isLoading: loadAds } = useQuery({
+    queryKey: ["ads-resumo", p_de, p_ate],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("ads_resumo" as any, { p_de, p_ate });
+      if (error) throw error;
+      const r = ((data as any)?.[0] ?? {}) as any;
+      return {
+        investimento: Number(r.investimento ?? 0),
+        receita: Number(r.receita ?? 0),
+        pedidos: Number(r.pedidos ?? 0),
+        roas: Number(r.roas ?? 0),
+        acos: Number(r.acos ?? 0),
+        tacos: Number(r.tacos ?? 0),
+      };
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+    retry: 2,
+  });
+
   const { data: cancelados, isLoading: loadCanc } = useQuery({
     queryKey: ["cancelados", p_de, p_ate],
     queryFn: async () => {
@@ -469,24 +489,37 @@ function DashboardPage() {
         <CompCard label="Líquido Shopee" valor={loadKpis ? null : brl(kpis?.valorLiquido ?? 0)} pct={null} tone="primary" />
       </div>
 
-      {/* BLOCO 4: Ads placeholder */}
-      <Card className="border-dashed opacity-70">
+      {/* BLOCO 4: Ads */}
+      <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <TrendingUp className="h-4 w-4" /> Ads
-            <Badge variant="secondary" className="text-[10px]">em breve</Badge>
           </CardTitle>
-          <p className="text-xs text-muted-foreground">Aguardando liberação da API de Ads</p>
+          <p className="text-xs text-muted-foreground">{rangeLabel}</p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-            {["Investimento", "Receita", "ROAS", "ACOS", "TACOS"].map((r) => (
-              <div key={r} className="rounded-md border border-dashed p-3">
-                <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{r}</div>
-                <div className="mt-1 text-lg font-semibold text-muted-foreground/60">—</div>
-              </div>
-            ))}
-          </div>
+          {!loadAds && (ads?.investimento ?? 0) === 0 && (ads?.receita ?? 0) === 0 ? (
+            <p className="text-sm text-muted-foreground">Sem dados de Ads no período selecionado.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+              {[
+                { r: "Investimento", v: brl(ads?.investimento ?? 0) },
+                { r: "Receita", v: brl(ads?.receita ?? 0) },
+                { r: "ROAS", v: (ads?.roas ?? 0).toFixed(2).replace(".", ",") },
+                { r: "ACOS", v: `${(ads?.acos ?? 0).toFixed(1).replace(".", ",")}%` },
+                { r: "TACOS", v: `${(ads?.tacos ?? 0).toFixed(1).replace(".", ",")}%` },
+              ].map((item) => (
+                <div key={item.r} className="rounded-md border p-3">
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{item.r}</div>
+                  {loadAds ? (
+                    <Skeleton className="mt-1 h-6 w-24" />
+                  ) : (
+                    <div className="mt-1 text-lg font-semibold">{item.v}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
