@@ -115,10 +115,12 @@ async function handler({ request }: { request: Request }) {
 
   const inicio = Date.now();
   const erros: string[] = [];
+  const tentativas: Array<{ endpoint: string; erro: string | null; itens: number }> = [];
   let primeiroErroCru: string | null = null;
 
   function registrarErro(contexto: string, mensagem: string, cru?: string) {
     erros.push(`${contexto}: ${mensagem}`);
+    tentativas.push({ endpoint: contexto, erro: mensagem, itens: 0 });
     if (primeiroErroCru === null && cru) primeiroErroCru = cru;
   }
 
@@ -192,6 +194,11 @@ async function handler({ request }: { request: Request }) {
           });
         }
       }
+      tentativas.push({
+        endpoint: 'get_all_cpc_ads_hourly_performance',
+        erro: null,
+        itens: itens.length,
+      });
       if (mapa.size > 0) endpointUsado = 'get_all_cpc_ads_hourly_performance';
     }
 
@@ -230,6 +237,7 @@ async function handler({ request }: { request: Request }) {
             bruto: c,
           });
         }
+        tentativas.push({ endpoint: 'get_all_cid', erro: null, itens: campanhas.length });
         if (mapa.size > 0) endpointUsado = 'get_all_cid';
       }
     }
@@ -291,6 +299,7 @@ async function handler({ request }: { request: Request }) {
       campanhas_encontradas: registros.length,
       gravadas,
       duracao_ms: Date.now() - inicio,
+      tentativas,
       erros: erros.slice(0, 20),
       primeiro_erro_cru: primeiroErroCru,
     });
