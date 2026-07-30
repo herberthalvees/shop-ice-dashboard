@@ -143,3 +143,12 @@ export async function getItemBaseInfo(accessToken: string, shopId: number, itemI
   const res = await fetch(url);
   return await res.json();
 }
+export function originFromRequest(): string {
+  const forwardedProto = getRequestHeader("x-forwarded-proto");
+  const forwardedHost = getRequestHeader("x-forwarded-host");
+  const host = getRequestHeader("host");
+  const proto = forwardedProto ?? "https";
+  const h = forwardedHost ?? host;
+  if (!h) throw new Error("Não foi possível determinar a origem da requisição");
+  return `${proto}://${h}`;
+}
