@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      ads_campanhas: {
+        Row: {
+          campaign_id: number
+          cliques: number | null
+          created_at: string
+          ctr: number | null
+          data: string
+          id: number
+          impressoes: number | null
+          investimento: number | null
+          item_id: number | null
+          nome: string | null
+          payload: Json | null
+          pedidos: number | null
+          receita: number | null
+          roas: number | null
+          status: string | null
+        }
+        Insert: {
+          campaign_id: number
+          cliques?: number | null
+          created_at?: string
+          ctr?: number | null
+          data: string
+          id?: number
+          impressoes?: number | null
+          investimento?: number | null
+          item_id?: number | null
+          nome?: string | null
+          payload?: Json | null
+          pedidos?: number | null
+          receita?: number | null
+          roas?: number | null
+          status?: string | null
+        }
+        Update: {
+          campaign_id?: number
+          cliques?: number | null
+          created_at?: string
+          ctr?: number | null
+          data?: string
+          id?: number
+          impressoes?: number | null
+          investimento?: number | null
+          item_id?: number | null
+          nome?: string | null
+          payload?: Json | null
+          pedidos?: number | null
+          receita?: number | null
+          roas?: number | null
+          status?: string | null
+        }
+        Relationships: []
+      }
       carteira_transacoes: {
         Row: {
           comprador: string | null
@@ -590,6 +644,17 @@ export type Database = {
       }
     }
     Functions: {
+      ads_resumo: {
+        Args: { p_ate: string; p_de: string }
+        Returns: {
+          acos: number
+          investimento: number
+          pedidos: number
+          receita: number
+          roas: number
+          tacos: number
+        }[]
+      }
       analise_margem_sku: {
         Args: { p_ate: string; p_de: string }
         Returns: {
@@ -628,6 +693,7 @@ export type Database = {
           unidades: number
         }[]
       }
+      aplicar_ads: { Args: { p_dados: Json }; Returns: number }
       aplicar_carteira: { Args: { p_dados: Json }; Returns: number }
       aplicar_escrow: { Args: { p_dados: Json }; Returns: number }
       aplicar_produtos: { Args: { p_dados: Json }; Returns: number }
