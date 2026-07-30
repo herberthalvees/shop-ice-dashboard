@@ -101,10 +101,11 @@ function DashboardPage() {
   });
   const notConnected = !loadConn && (!conn || !conn.shop_id);
 
-  const { data: kpis, isLoading: loadKpis } = useQuery({
+  const { data: kpis, isLoading: loadKpis, error: erroKpis } = useQuery({
     queryKey: ["kpis", p_de, p_ate],
     queryFn: async () => {
-      const { data } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de, p_ate });
+      const { data, error } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de, p_ate });
+      if (error) throw error;
       const r = ((data as any)?.[0] ?? {}) as any;
       return {
         pedidosValidos: Number(r.pedidos_validos ?? 0),
@@ -128,12 +129,16 @@ function DashboardPage() {
         lucroMedio: Number(r.lucro_medio ?? 0),
       };
     },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+    retry: 2,
   });
 
   const { data: serie, isLoading: loadSerie } = useQuery({
     queryKey: ["serie", p_de, p_ate],
     queryFn: async () => {
-      const { data } = await supabase.rpc("dashboard_serie_periodo" as any, { p_de, p_ate });
+      const { data, error } = await supabase.rpc("dashboard_serie_periodo" as any, { p_de, p_ate });
+      if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         periodo: String(r.periodo),
         rotulo: String(r.rotulo),
@@ -142,12 +147,16 @@ function DashboardPage() {
         parcial: Boolean(r.parcial),
       }));
     },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+    retry: 2,
   });
 
   const { data: topProdutos, isLoading: loadTop } = useQuery({
     queryKey: ["topProdutos", p_de, p_ate],
     queryFn: async () => {
-      const { data } = await supabase.rpc("dashboard_top_produtos_periodo" as any, { p_de, p_ate, p_limite: 10 });
+      const { data, error } = await supabase.rpc("dashboard_top_produtos_periodo" as any, { p_de, p_ate, p_limite: 10 });
+      if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         nomeCompleto: String(r.produto ?? r.sku ?? ""),
         nome: String(r.produto ?? r.sku ?? "").length > 40
@@ -158,18 +167,24 @@ function DashboardPage() {
         receita: Number(r.receita ?? 0),
       }));
     },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+    retry: 2,
   });
 
   const { data: recentes, isLoading: loadRec } = useQuery({
     queryKey: ["recentes"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("pedidos")
         .select("order_sn, status, valor_total, comprador_username, data_criacao_pedido")
         .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
         .limit(10);
+      if (error) throw error;
       return data ?? [];
     },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
   });
 
   const { data: cancelados, isLoading: loadCanc } = useQuery({
@@ -177,7 +192,7 @@ function DashboardPage() {
     queryFn: async () => {
       const desde = new Date(p_de + "T00:00:00-03:00").toISOString();
       const ate2 = new Date(p_ate + "T23:59:59-03:00").toISOString();
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("pedidos")
         .select("order_sn, valor_total, comprador_username, data_criacao_pedido")
         .eq("status", "CANCELLED")
@@ -185,14 +200,18 @@ function DashboardPage() {
         .lte("data_criacao_pedido", ate2)
         .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
         .limit(50);
+      if (error) throw error;
       return data ?? [];
     },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
   });
 
   const { data: abc, isLoading: loadAbc } = useQuery({
     queryKey: ["abc", p_de, p_ate],
     queryFn: async () => {
-      const { data } = await supabase.rpc("dashboard_curva_abc" as any, { p_de, p_ate, p_limite: 50 });
+      const { data, error } = await supabase.rpc("dashboard_curva_abc" as any, { p_de, p_ate, p_limite: 50 });
+      if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         produto: String(r.produto ?? r.sku ?? ""),
         sku: String(r.sku ?? ""),
@@ -203,6 +222,9 @@ function DashboardPage() {
         classe: String(r.classe ?? ""),
       }));
     },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+    retry: 2,
   });
 
   const rangeLabel = de.getTime() === ate.getTime()
