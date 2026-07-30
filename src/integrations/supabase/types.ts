@@ -986,6 +986,23 @@ export type Database = {
           vendidos_periodo: number
         }[]
       }
+      produtos_com_giro_impl: {
+        Args: { p_ate: string; p_de: string }
+        Returns: {
+          dias_de_estoque: number
+          estoque_disponivel: number
+          imagem_url: string
+          item_id: number
+          media_diaria: number
+          model_id: number
+          preco_atual: number
+          produto: string
+          sku: string
+          status_item: string
+          variacao: string
+          vendidos_periodo: number
+        }[]
+      }
       produtos_giro_ordenado: {
         Args: { p_dias?: number; p_dir?: string; p_sort?: string }
         Returns: {
