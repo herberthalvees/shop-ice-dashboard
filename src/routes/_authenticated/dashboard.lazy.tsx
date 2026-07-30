@@ -188,6 +188,41 @@ function DashboardPage() {
     staleTime: 60_000,
   });
 
+  const { data: ads, isLoading: loadAds } = useQuery({
+    queryKey: ["ads-resumo", p_de, p_ate],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("ads_resumo" as any, { p_de, p_ate });
+      if (error) throw error;
+      const r = ((data as any)?.[0] ?? {}) as any;
+      return {
+        investimento: Number(r.investimento ?? 0),
+        receita: Number(r.receita ?? 0),
+        pedidos: Number(r.pedidos ?? 0),
+        roas: Number(r.roas ?? 0),
+        acos: Number(r.acos ?? 0),
+        tacos: Number(r.tacos ?? 0),
+      };
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+    retry: 2,
+  });
+
+  const { data: recentesLegacy } = useQuery({
+    queryKey: ["recentes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pedidos")
+        .select("order_sn, status, valor_total, comprador_username, data_criacao_pedido")
+        .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+  });
+
   const { data: cancelados, isLoading: loadCanc } = useQuery({
     queryKey: ["cancelados", p_de, p_ate],
     queryFn: async () => {
