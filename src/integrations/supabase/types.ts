@@ -422,7 +422,7 @@ export type Database = {
         Insert: {
           access_token?: string | null
           app_tipo?: string
-          id: number
+          id?: number
           partner_id?: number | null
           refresh_token?: string | null
           shop_id?: number | null
