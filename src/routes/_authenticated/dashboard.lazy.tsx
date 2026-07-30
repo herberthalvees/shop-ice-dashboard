@@ -94,7 +94,7 @@ function DashboardPage() {
       const { data, error } = await supabase
         .from("shopee_connection_status" as any)
         .select("shop_id, shop_name, status")
-        .eq("id", 1)
+        .eq("app_tipo", "principal")
         .maybeSingle();
       if (error) throw error;
       return data as { shop_id: number | null; shop_name: string | null; status: string } | null;
