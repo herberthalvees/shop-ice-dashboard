@@ -194,6 +194,9 @@ async function handler({ request }: { request: Request }) {
           });
         }
       }
+      if (url.searchParams.get('debug') === '1') {
+        return responder({ debug: t1.texto });
+      }
       tentativas.push({
         endpoint: 'get_all_cpc_ads_hourly_performance',
         erro: null,
