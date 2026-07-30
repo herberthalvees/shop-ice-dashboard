@@ -505,6 +505,27 @@ export type Database = {
         }
         Relationships: []
       }
+      usuarios_papeis: {
+        Row: {
+          created_at: string
+          nome: string | null
+          papel: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          nome?: string | null
+          papel?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          nome?: string | null
+          papel?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       pedido_itens_custeado: {
@@ -709,6 +730,7 @@ export type Database = {
           taxas_pct: number
         }[]
       }
+      eh_owner: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -1,0 +1,1 @@
+alter view public.shopee_connection_status set (security_invoker = on);
