@@ -161,46 +161,49 @@ async function handler({ request }: { request: Request }) {
     const mapa = new Map<string, Registro>();
     let endpointUsado: string | null = null;
 
-    // ---- Tentativa 1: performance horaria de todos os anuncios CPC ----
-    const t1 = await chamarShopee(
-      '/api/v2/ads/get_all_cpc_ads_hourly_performance',
-      token,
-      shopId,
-      { performance_date: inicioStr },
-    );
-    const erroT1 = t1.json?.error;
-    if (erroT1) {
-      registrarErro('get_all_cpc_ads_hourly_performance', String(erroT1), t1.texto);
-    } else {
-      const lista: any[] = t1.json?.response ?? t1.json?.response?.campaign_list ?? [];
-      const itens = Array.isArray(lista) ? lista : [];
-      for (const c of itens) {
-        const campaignId = Number(c.campaign_id ?? c.campaign?.campaign_id ?? 0);
-        if (!campaignId) continue;
-        const horas: any[] = c.hourly_performance ?? c.performance_list ?? [c];
-        for (const h of horas) {
-          acumular(mapa, {
-            campaign_id: campaignId,
-            nome: c.campaign_name ?? c.ads_name ?? null,
-            item_id: c.item_id != null ? Number(c.item_id) : null,
-            status: c.campaign_status ?? c.state ?? null,
-            data: `${inicioStr.split('-').reverse().join('-')}T00:00:00Z`,
-            investimento: num(h.expense ?? h.cost),
-            impressoes: num(h.impression),
-            cliques: num(h.click),
-            pedidos: num(h.order ?? h.order_amount ?? h.broad_order),
-            receita: num(h.gmv ?? h.direct_gmv ?? h.broad_gmv),
-            bruto: { campanha: c, hora: h },
-          });
-        }
+    // ---- Tentativa 1: performance horaria de todos os anuncios CPC (nivel loja) ----
+    // Retorna uma linha por hora do dia; agregamos por dia em uma campanha
+    // sintetica (campaign_id = 0) representando o total de Ads da loja.
+    let itensT1 = 0;
+    let erroT1: string | null = null;
+    const UM_DIA = 24 * 60 * 60;
+    for (let dia = de; dia <= ate; dia += UM_DIA) {
+      const dataDia = dataDDMMYYYY(new Date(dia * 1000));
+      const t1 = await chamarShopee(
+        '/api/v2/ads/get_all_cpc_ads_hourly_performance',
+        token,
+        shopId,
+        { performance_date: dataDia },
+      );
+      if (t1.json?.error) {
+        erroT1 = String(t1.json.error);
+        registrarErro('get_all_cpc_ads_hourly_performance', erroT1, t1.texto);
+        break;
       }
-      if (url.searchParams.get('debug') === '1') {
-        return responder({ debug: t1.texto });
+      const lista: any[] = Array.isArray(t1.json?.response) ? t1.json.response : [];
+      itensT1 += lista.length;
+      for (const h of lista) {
+        const [dd, mm, yyyy] = String(h.date ?? dataDia).split('-');
+        acumular(mapa, {
+          campaign_id: 0,
+          nome: 'Shopee Ads (total da loja)',
+          item_id: null,
+          status: null,
+          data: `${yyyy}-${mm}-${dd}T00:00:00Z`,
+          investimento: num(h.expense),
+          impressoes: num(h.impression),
+          cliques: num(h.clicks ?? h.click),
+          pedidos: num(h.broad_order ?? h.direct_order),
+          receita: num(h.broad_gmv ?? h.direct_gmv),
+          bruto: { fonte: 'hourly_performance', dia: dataDia },
+        });
       }
+    }
+    if (!erroT1) {
       tentativas.push({
         endpoint: 'get_all_cpc_ads_hourly_performance',
         erro: null,
-        itens: itens.length,
+        itens: itensT1,
       });
       if (mapa.size > 0) endpointUsado = 'get_all_cpc_ads_hourly_performance';
     }
