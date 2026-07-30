@@ -140,7 +140,7 @@ async function handler({ request }: { request: Request }) {
     for (let janelaDe = de; janelaDe < ate; janelaDe += JANELA_MAX_SEG) {
       const janelaAte = Math.min(janelaDe + JANELA_MAX_SEG, ate);
 
-      for (let page = 1; page <= MAX_PAGINAS; page++) {
+      for (let page = 0; page < MAX_PAGINAS; page++) {
         const resp = await chamarShopee(
           '/api/v2/payment/get_wallet_transaction_list',
           token,
