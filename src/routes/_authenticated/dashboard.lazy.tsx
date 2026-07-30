@@ -374,6 +374,18 @@ function DashboardPage() {
         </Card>
       )}
 
+      {erroKpis && (
+        <Card className="border-destructive/40 bg-destructive/10">
+          <CardContent className="flex items-center gap-3 p-4 text-sm">
+            <AlertTriangle className="h-4 w-4 text-destructive" />
+            <span>
+              Não foi possível carregar os indicadores deste período:{" "}
+              {(erroKpis as any)?.message ?? "erro desconhecido"}. Os valores exibidos podem estar desatualizados.
+            </span>
+          </CardContent>
+        </Card>
+      )}
+
       {/* BLOCO 1: Faixa de destaque */}
       <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-background">
         <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/20 blur-3xl" aria-hidden />
