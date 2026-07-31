@@ -184,10 +184,7 @@ function DrePage() {
                 label="(-) Publicidade (Ads)"
                 valor={data?.ads}
                 tone="negative"
-                badge={
-                  Number(data?.ads ?? 0) === 0 ? undefined : <Badge variant="secondary">{pct(data?.ads_pct)}</Badge>
-                }
-                hint={Number(data?.ads ?? 0) === 0 ? "aguardando integração com Ads" : undefined}
+                badge={<Badge variant="secondary">{pct(data?.ads_pct)}</Badge>}
               />
               <div className="py-2">
                 <Linha
