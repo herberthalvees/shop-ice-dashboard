@@ -51,6 +51,7 @@ type Linha = {
 
 type SortKey =
   | "grupo"
+  | "grupo_vendidos"
   | "produto"
   | "variacao"
   | "sku"
@@ -152,6 +153,20 @@ function ProdutosPage() {
     const sorted = [...base];
     if (sortKey === "grupo") {
       sorted.sort((a, b) => cmpStr(a.produto, b.produto) || cmpStr(a.variacao, b.variacao));
+    } else if (sortKey === "grupo_vendidos") {
+      const totalPorAnuncio = new Map<string, number>();
+      for (const l of base) {
+        const k = String(l.item_id ?? l.produto ?? "");
+        totalPorAnuncio.set(k, (totalPorAnuncio.get(k) ?? 0) + (l.vendidos_periodo ?? 0));
+      }
+      const tot = (l: Linha) => totalPorAnuncio.get(String(l.item_id ?? l.produto ?? "")) ?? 0;
+      sorted.sort(
+        (a, b) =>
+          tot(b) - tot(a) ||
+          cmpStr(a.produto, b.produto) ||
+          (b.vendidos_periodo ?? 0) - (a.vendidos_periodo ?? 0) ||
+          cmpStr(a.variacao, b.variacao),
+      );
     } else if (sortKey === "produto") {
       sorted.sort((a, b) => dir * cmpStr(a.produto, b.produto) || cmpStr(a.variacao, b.variacao));
     } else if (sortKey === "variacao") {
@@ -182,7 +197,7 @@ function ProdutosPage() {
     return { total, comCusto };
   }, [data]);
 
-  const agrupar = sortKey === "grupo";
+  const agrupar = sortKey === "grupo" || sortKey === "grupo_vendidos";
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -286,6 +301,14 @@ function ProdutosPage() {
               onClick={() => { setSortKey("grupo"); setSortDir("asc"); }}
             >
               Por anúncio
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={sortKey === "grupo_vendidos" ? "default" : "outline"}
+              onClick={() => { setSortKey("grupo_vendidos"); setSortDir("desc"); }}
+            >
+              Por anúncio · mais vendidos
             </Button>
             <Button
               type="button"
