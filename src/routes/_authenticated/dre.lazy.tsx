@@ -286,14 +286,16 @@ function DrePage() {
                   </div>
                 )}
               </div>
+              <Linha
+                label="(-) Devoluções (ajustes pós-repasse)"
+                valor={data?.devolucoes}
+                tone="negative"
+                badge={<Badge variant="secondary">{pct(data?.devolucoes_pct)}</Badge>}
+              />
               <div className="pt-2">
                 <Linha
                   label="= Resultado Operacional"
                   valor={data?.resultado_operacional}
-                  strong
-                  badge={<Badge variant="secondary">{pct(data?.resultado_operacional_pct)}</Badge>}
-                />
-              </div>
                   strong
                   badge={<Badge variant="secondary">{pct(data?.resultado_operacional_pct)}</Badge>}
                 />
