@@ -71,6 +71,15 @@ function diaISO(unixSeg: number) {
   return new Date(unixSeg * 1000).toISOString().slice(0, 10);
 }
 
+function dataShopeeParaISO(valor: unknown, fallback: string) {
+  const texto = String(valor ?? fallback);
+  const partes = texto.split('-');
+  if (partes.length === 3 && partes[0].length === 2) {
+    return `${partes[2]}-${partes[1]}-${partes[0]}T00:00:00Z`;
+  }
+  return `${texto.slice(0, 10)}T00:00:00Z`;
+}
+
 function num(v: unknown): number {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
@@ -208,45 +217,137 @@ async function handler({ request }: { request: Request }) {
       if (mapa.size > 0) endpointUsado = 'get_all_cpc_ads_hourly_performance';
     }
 
-    // ---- Tentativa 2: toggle info + lista de campanhas (get_all_cid) ----
-    if (!endpointUsado) {
-      const toggle = await chamarShopee('/api/v2/ads/get_shop_toggle_info', token, shopId);
-      if (toggle.json?.error) {
-        registrarErro('get_shop_toggle_info', String(toggle.json.error), toggle.texto);
+    // ---- Performance por campanha de produto ----
+    // O endpoint horario acima e apenas consolidado da loja e nunca traz item_id.
+    // Buscamos sempre as campanhas, suas configuracoes (vinculo com o produto) e
+    // a performance diaria. Sem esta etapa, a visao "Ads por produto" fica vazia.
+    const campanhas: Array<{ campaign_id: number; ad_type: string | null }> = [];
+    let offset = 0;
+    const limite = 500;
+    for (let pagina = 0; pagina < 100; pagina += 1) {
+      const listaCampanhas = await chamarShopee(
+        '/api/v2/ads/get_product_level_campaign_id_list',
+        token,
+        shopId,
+        { ad_type: 'all', offset: String(offset), limit: String(limite) },
+      );
+      if (listaCampanhas.json?.error) {
+        registrarErro(
+          'get_product_level_campaign_id_list',
+          String(listaCampanhas.json.error),
+          listaCampanhas.texto,
+        );
+        break;
       }
+      const lote: any[] = listaCampanhas.json?.response?.campaign_list ?? [];
+      for (const campanha of lote) {
+        const campaignId = Number(campanha.campaign_id ?? 0);
+        if (campaignId) {
+          campanhas.push({ campaign_id: campaignId, ad_type: campanha.ad_type ?? null });
+        }
+      }
+      if (!listaCampanhas.json?.response?.has_next_page || lote.length === 0) break;
+      offset += lote.length;
+    }
+    tentativas.push({
+      endpoint: 'get_product_level_campaign_id_list',
+      erro: null,
+      itens: campanhas.length,
+    });
 
-      const cid = await chamarShopee('/api/v2/ads/get_all_cid', token, shopId, {
-        start_date: inicioStr,
-        end_date: fimStr,
-      });
-      if (cid.json?.error) {
-        registrarErro('get_all_cid', String(cid.json.error), cid.texto);
-      } else {
-        const campanhas: any[] =
-          cid.json?.response?.campaign_list ??
-          cid.json?.response?.cid_list ??
-          (Array.isArray(cid.json?.response) ? cid.json.response : []);
-        for (const c of campanhas) {
-          const campaignId = Number(c.campaign_id ?? c.cid ?? 0);
-          if (!campaignId) continue;
-          acumular(mapa, {
-            campaign_id: campaignId,
-            nome: c.campaign_name ?? c.ads_name ?? null,
-            item_id: c.item_id != null ? Number(c.item_id) : null,
-            status: c.campaign_status ?? c.state ?? null,
-            data: `${diaISO(de)}T00:00:00Z`,
-            investimento: num(c.expense ?? c.cost),
-            impressoes: num(c.impression),
-            cliques: num(c.click),
-            pedidos: num(c.order),
-            receita: num(c.gmv ?? c.broad_gmv),
-            bruto: c,
+    const itemPorCampanha = new Map<number, { item_id: number; nome: string | null; status: string | null }>();
+    for (let i = 0; i < campanhas.length; i += 100) {
+      const ids = campanhas.slice(i, i + 100).map((c) => c.campaign_id).join(',');
+      if (!ids) continue;
+      const configuracoes = await chamarShopee(
+        '/api/v2/ads/get_product_level_campaign_setting_info',
+        token,
+        shopId,
+        { info_type_list: '1,4', campaign_id_list: ids },
+      );
+      if (configuracoes.json?.error) {
+        registrarErro(
+          'get_product_level_campaign_setting_info',
+          String(configuracoes.json.error),
+          configuracoes.texto,
+        );
+        continue;
+      }
+      const lista: any[] = configuracoes.json?.response?.campaign_list ?? [];
+      for (const configuracao of lista) {
+        const campaignId = Number(configuracao.campaign_id ?? 0);
+        const comum = configuracao.common_info ?? {};
+        const autoProdutos: any[] = configuracao.auto_product_ads_info ?? [];
+        const idsItens: unknown[] = Array.isArray(comum.item_id_list) ? comum.item_id_list : [];
+        const itemId = Number(autoProdutos[0]?.item_id ?? idsItens[0] ?? 0);
+        // Performance de campanha so pode ser atribuida sem duplicidade quando
+        // existe um unico produto associado. Campanhas multi-item exigem o
+        // relatorio GMS por item e, portanto, nao sao rateadas artificialmente.
+        const quantidadeItens = autoProdutos.length || idsItens.length;
+        if (campaignId && itemId && quantidadeItens === 1) {
+          itemPorCampanha.set(campaignId, {
+            item_id: itemId,
+            nome: autoProdutos[0]?.product_name ?? comum.ad_name ?? null,
+            status: autoProdutos[0]?.status ?? comum.campaign_status ?? null,
           });
         }
-        tentativas.push({ endpoint: 'get_all_cid', erro: null, itens: campanhas.length });
-        if (mapa.size > 0) endpointUsado = 'get_all_cid';
       }
     }
+
+    let campanhasComProduto = 0;
+    for (let i = 0; i < campanhas.length; i += 100) {
+      const loteCampanhas = campanhas.slice(i, i + 100);
+      const ids = loteCampanhas.map((c) => c.campaign_id).join(',');
+      if (!ids) continue;
+      const performance = await chamarShopee(
+        '/api/v2/ads/get_product_campaign_daily_performance',
+        token,
+        shopId,
+        { start_date: inicioStr, end_date: fimStr, campaign_id_list: ids },
+      );
+      if (performance.json?.error) {
+        registrarErro(
+          'get_product_campaign_daily_performance',
+          String(performance.json.error),
+          performance.texto,
+        );
+        continue;
+      }
+      const respostas: any[] = Array.isArray(performance.json?.response)
+        ? performance.json.response
+        : [performance.json?.response].filter(Boolean);
+      for (const resposta of respostas) {
+        const lista: any[] = resposta?.campaign_list ?? [];
+        for (const campanha of lista) {
+          const campaignId = Number(campanha.campaign_id ?? 0);
+          const produto = itemPorCampanha.get(campaignId);
+          if (!produto) continue;
+          campanhasComProduto += 1;
+          const metricas: any[] = campanha.metrics_list ?? [];
+          for (const metrica of metricas) {
+            acumular(mapa, {
+              campaign_id: campaignId,
+              nome: produto.nome ?? campanha.ad_name ?? null,
+              item_id: produto.item_id,
+              status: produto.status,
+              data: dataShopeeParaISO(metrica.date, diaISO(de)),
+              investimento: num(metrica.expense),
+              impressoes: num(metrica.impression),
+              cliques: num(metrica.clicks ?? metrica.click),
+              pedidos: num(metrica.broad_order ?? metrica.direct_order),
+              receita: num(metrica.broad_gmv ?? metrica.direct_gmv),
+              bruto: { fonte: 'product_campaign_daily_performance', campanha, metrica },
+            });
+          }
+        }
+      }
+    }
+    tentativas.push({
+      endpoint: 'get_product_campaign_daily_performance',
+      erro: null,
+      itens: campanhasComProduto,
+    });
+    if (campanhasComProduto > 0) endpointUsado = 'hourly_performance + product_campaign_daily_performance';
 
     // ---- Tentativa 3: lista de palavras-chave recomendadas (diagnostico) ----
     if (!endpointUsado) {
