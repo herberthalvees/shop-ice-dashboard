@@ -188,6 +188,39 @@ export type Database = {
         }
         Relationships: []
       }
+      despesas_variaveis: {
+        Row: {
+          ativa: boolean
+          created_at: string
+          descricao: string
+          dia_corte_ciclo: number | null
+          franquia_pedidos: number | null
+          id: number
+          updated_at: string
+          valor_por_pedido: number
+        }
+        Insert: {
+          ativa?: boolean
+          created_at?: string
+          descricao: string
+          dia_corte_ciclo?: number | null
+          franquia_pedidos?: number | null
+          id?: number
+          updated_at?: string
+          valor_por_pedido?: number
+        }
+        Update: {
+          ativa?: boolean
+          created_at?: string
+          descricao?: string
+          dia_corte_ciclo?: number | null
+          franquia_pedidos?: number | null
+          id?: number
+          updated_at?: string
+          valor_por_pedido?: number
+        }
+        Relationships: []
+      }
       dim_produto: {
         Row: {
           atualizado_em: string
@@ -731,6 +764,10 @@ export type Database = {
           saques: number
         }[]
       }
+      contar_pedidos_periodo: {
+        Args: { p_ate: string; p_de: string }
+        Returns: number
+      }
       dashboard_curva_abc: {
         Args: { p_ate: string; p_de: string; p_limite: number }
         Returns: {
@@ -908,6 +945,8 @@ export type Database = {
           cmv_pct: number
           despesas_fixas: number
           despesas_fixas_pct: number
+          despesas_variaveis: number
+          despesas_variaveis_pct: number
           impostos: number
           impostos_pct: number
           lucro_bruto: number
@@ -944,6 +983,21 @@ export type Database = {
           resultado_operacional_pct: number
           taxas_marketplace: number
           taxas_pct: number
+        }[]
+      }
+      dre_variaveis_detalhe: {
+        Args: { p_ano: number; p_mes: number }
+        Returns: {
+          ciclo_fim: string
+          ciclo_inicio: string
+          descricao: string
+          dia_corte_ciclo: number
+          franquia_pedidos: number
+          id: number
+          pedidos_base: number
+          pedidos_cobrados: number
+          valor: number
+          valor_por_pedido: number
         }[]
       }
       eh_owner: { Args: never; Returns: boolean }
