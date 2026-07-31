@@ -30,6 +30,20 @@ const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
 const PAGE_SIZE = 50;
 const NAO_CONCRETIZADO = ["UNPAID", "CANCELLED", "TO_RETURN"];
 
+function corMargem(margem: number | null) {
+  const m = margem == null ? -Infinity : Number(margem);
+  if (m >= 0 && m <= 5) {
+    return { texto: "text-destructive", badge: "border-destructive/40 bg-destructive/10 text-destructive" };
+  }
+  if (m > 5 && m <= 10) {
+    return { texto: "text-amber-400", badge: "border-amber-400/40 bg-amber-400/10 text-amber-400" };
+  }
+  if (m > 10) {
+    return { texto: "text-emerald-500", badge: "border-emerald-500/40 bg-emerald-500/10 text-emerald-500" };
+  }
+  return { texto: "text-muted-foreground", badge: "border-muted-foreground/40 bg-muted-foreground/10 text-muted-foreground" };
+}
+
 type Linha = {
   total_linhas: number;
   order_sn: string;
