@@ -432,10 +432,10 @@ function DashboardPage() {
                   <div className="flex flex-col gap-1">
                     <div className="flex items-baseline gap-2">
                       <span className="text-sm text-muted-foreground">Lucro (sem Ads)</span>
-                      <span className={`text-2xl font-semibold tabular-nums ${((kpis?.lucroSemAds ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                      <span className={`text-2xl font-semibold tabular-nums ${((kpis?.lucroSemAds ?? 0) >= 0) ? "text-[color:var(--warning)]" : "text-destructive"}`}>
                         {brl(kpis?.lucroSemAds ?? 0)}
                       </span>
-                      <span className={`text-sm tabular-nums ${((kpis?.lucroSemAdsPct ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                      <span className={`text-sm tabular-nums ${((kpis?.lucroSemAdsPct ?? 0) >= 0) ? "text-[color:var(--warning)]" : "text-destructive"}`}>
                         ({(kpis?.lucroSemAdsPct ?? 0).toFixed(1).replace(".", ",")}%)
                       </span>
                     </div>
@@ -449,19 +449,21 @@ function DashboardPage() {
                       </span>
                     </div>
                   </div>
-                  {(kpis?.coberturaCusto ?? 1) < 1 && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 px-2 py-0.5 text-[11px] text-[color:var(--warning)]">
-                      <AlertTriangle className="h-3 w-3" />
-                      custo informado em {((kpis?.coberturaCusto ?? 0) * 100).toFixed(0)}% das unidades
-                    </span>
-                  )}
                 </>
               )}
             </div>
           </div>
-          <div className="text-right">
+          <div className="flex flex-col items-end gap-3 text-right">
+            {!loadKpis && (kpis?.coberturaCusto ?? 1) < 1 && (kpis?.coberturaCusto ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 px-2 py-0.5 text-[11px] text-[color:var(--warning)]">
+                <AlertTriangle className="h-3 w-3" />
+                custo informado em {((kpis?.coberturaCusto ?? 0) * 100).toFixed(0)}% das unidades
+              </span>
+            )}
+            <div>
             <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Período</span>
             <div className="text-sm tabular-nums">{rangeLabel}</div>
+            </div>
           </div>
         </CardContent>
       </Card>
