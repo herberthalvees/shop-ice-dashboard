@@ -217,7 +217,10 @@ function DrePage() {
               <CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">
                 Despesas Operacionais
               </CardTitle>
-              <GerenciarDespesas despesas={despesas ?? []} />
+              <div className="flex items-center gap-2">
+                <GerenciarVariaveis variaveis={variaveis ?? []} />
+                <GerenciarDespesas despesas={despesas ?? []} />
+              </div>
             </CardHeader>
             <CardContent className="divide-y">
               <Linha
@@ -257,6 +260,10 @@ function DrePage() {
               <div className="pt-2">
                 <Linha
                   label="= Resultado Operacional"
+                  valor={data?.resultado_operacional}
+                  strong
+                  badge={<Badge variant="secondary">{pct(data?.resultado_operacional_pct)}</Badge>}
+                />
                   valor={data?.resultado_operacional}
                   strong
                   badge={<Badge variant="secondary">{pct(data?.resultado_operacional_pct)}</Badge>}
