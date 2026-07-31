@@ -125,8 +125,10 @@ function DashboardPage() {
         imposto: Number(r.imposto ?? 0),
         impostoPct: Number(r.imposto_pct ?? 0),
         valorLiquido: Number(r.valor_liquido ?? 0),
-        lucro: Number(r.lucro ?? 0),
-        lucroPct: Number(r.lucro_pct ?? 0),
+        lucroSemAds: Number(r.lucro_sem_ads ?? 0),
+        lucroSemAdsPct: Number(r.lucro_sem_ads_pct ?? 0),
+        lucroComAds: Number(r.lucro_com_ads ?? 0),
+        lucroComAdsPct: Number(r.lucro_com_ads_pct ?? 0),
         lucroMedio: Number(r.lucro_medio ?? 0),
       };
     },
@@ -427,14 +429,25 @@ function DashboardPage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm text-muted-foreground">Lucro</span>
-                    <span className={`text-2xl font-semibold tabular-nums ${((kpis?.lucro ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
-                      {brl(kpis?.lucro ?? 0)}
-                    </span>
-                    <span className={`text-sm tabular-nums ${((kpis?.lucroPct ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
-                      ({(kpis?.lucroPct ?? 0).toFixed(1).replace(".", ",")}%)
-                    </span>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-sm text-muted-foreground">Lucro (sem Ads)</span>
+                      <span className={`text-2xl font-semibold tabular-nums ${((kpis?.lucroSemAds ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                        {brl(kpis?.lucroSemAds ?? 0)}
+                      </span>
+                      <span className={`text-sm tabular-nums ${((kpis?.lucroSemAdsPct ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                        ({(kpis?.lucroSemAdsPct ?? 0).toFixed(1).replace(".", ",")}%)
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-xs text-muted-foreground">Lucro (com Ads)</span>
+                      <span className={`text-lg font-semibold tabular-nums ${((kpis?.lucroComAds ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                        {brl(kpis?.lucroComAds ?? 0)}
+                      </span>
+                      <span className={`text-xs tabular-nums ${((kpis?.lucroComAdsPct ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                        ({(kpis?.lucroComAdsPct ?? 0).toFixed(1).replace(".", ",")}%)
+                      </span>
+                    </div>
                   </div>
                   {(kpis?.coberturaCusto ?? 1) < 1 && (
                     <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 px-2 py-0.5 text-[11px] text-[color:var(--warning)]">
