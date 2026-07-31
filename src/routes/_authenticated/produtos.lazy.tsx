@@ -21,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { HistoricoCustoSheet } from "@/components/historico-custo";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const Route = createLazyFileRoute("/_authenticated/produtos")({
   component: ProdutosPage,
@@ -259,6 +260,12 @@ function ProdutosPage() {
         </div>
       </div>
 
+      <Tabs defaultValue="catalogo" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="catalogo">Catálogo</TabsTrigger>
+          <TabsTrigger value="ads">Ads</TabsTrigger>
+        </TabsList>
+        <TabsContent value="catalogo" className="space-y-4">
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center gap-3">
@@ -404,7 +411,124 @@ function ProdutosPage() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+        <TabsContent value="ads">
+          <AdsPorProduto p_de={p_de} p_ate={p_ate} rangeLabel={rangeLabel} />
+        </TabsContent>
+      </Tabs>
     </div>
+  );
+}
+
+type LinhaAds = {
+  item_id: number;
+  produto: string | null;
+  investimento: number;
+  receita_ads: number;
+  cliques: number;
+  impressoes: number;
+  ctr: number;
+  roas: number;
+};
+
+function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: string; rangeLabel: string }) {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["produtos-com-ads", p_de, p_ate],
+    queryFn: async (): Promise<LinhaAds[]> => {
+      const { data, error } = await supabase.rpc("produtos_com_ads" as any, { p_de, p_ate });
+      if (error) throw error;
+      return ((data as any[]) ?? []).map((r) => ({
+        item_id: Number(r.item_id ?? 0),
+        produto: r.produto ?? null,
+        investimento: Number(r.investimento ?? 0),
+        receita_ads: Number(r.receita_ads ?? 0),
+        cliques: Number(r.cliques ?? 0),
+        impressoes: Number(r.impressoes ?? 0),
+        ctr: Number(r.ctr ?? 0),
+        roas: Number(r.roas ?? 0),
+      }));
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+  });
+
+  const linhas = data ?? [];
+
+  return (
+    <Card>
+      <CardHeader>
+        <div>
+          <h2 className="text-base font-semibold">Desempenho de Ads por produto</h2>
+          <p className="text-sm text-muted-foreground">{rangeLabel} · ordenado por investimento</p>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-[360px]">Produto</TableHead>
+                <TableHead className="text-right">Investimento</TableHead>
+                <TableHead className="text-right">Receita gerada</TableHead>
+                <TableHead className="text-right">Cliques</TableHead>
+                <TableHead className="text-right">Impressões</TableHead>
+                <TableHead className="text-right">CTR</TableHead>
+                <TableHead className="text-right">ROAS</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 6 }).map((_, i) => (
+                  <TableRow key={i}><TableCell colSpan={7}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
+                ))
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-10 text-sm text-destructive">
+                    Não foi possível carregar os dados de Ads.
+                  </TableCell>
+                </TableRow>
+              ) : linhas.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-10 text-sm text-muted-foreground">
+                    Sem dados de Ads por produto no período selecionado.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                linhas.map((l) => {
+                  const rowClass =
+                    l.roas > 5
+                      ? "bg-[color:var(--success)]/10 hover:bg-[color:var(--success)]/15"
+                      : l.roas < 2
+                        ? "bg-destructive/10 hover:bg-destructive/15"
+                        : undefined;
+                  const roasClass =
+                    l.roas > 5
+                      ? "text-[color:var(--success)]"
+                      : l.roas < 2
+                        ? "text-destructive"
+                        : "";
+                  return (
+                    <TableRow key={l.item_id} className={rowClass}>
+                      <TableCell className="font-medium max-w-[420px]">
+                        <span className="line-clamp-2">{l.produto ?? `Item ${l.item_id}`}</span>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">{brl(l.investimento)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{brl(l.receita_ads)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{l.cliques.toLocaleString("pt-BR")}</TableCell>
+                      <TableCell className="text-right tabular-nums">{l.impressoes.toLocaleString("pt-BR")}</TableCell>
+                      <TableCell className="text-right tabular-nums">{l.ctr.toFixed(2).replace(".", ",")}%</TableCell>
+                      <TableCell className={cn("text-right tabular-nums font-semibold", roasClass)}>
+                        {l.roas.toFixed(2).replace(".", ",")}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

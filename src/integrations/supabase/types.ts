@@ -1039,6 +1039,19 @@ export type Database = {
           order_sn: string
         }[]
       }
+      produtos_com_ads: {
+        Args: { p_ate: string; p_de: string }
+        Returns: {
+          cliques: number
+          ctr: number
+          impressoes: number
+          investimento: number
+          item_id: number
+          produto: string
+          receita_ads: number
+          roas: number
+        }[]
+      }
       produtos_com_giro: {
         Args: { p_ate: string; p_de: string }
         Returns: {
