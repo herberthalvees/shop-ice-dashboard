@@ -293,6 +293,10 @@ function DrePage() {
                   strong
                   badge={<Badge variant="secondary">{pct(data?.resultado_operacional_pct)}</Badge>}
                 />
+              </div>
+                  strong
+                  badge={<Badge variant="secondary">{pct(data?.resultado_operacional_pct)}</Badge>}
+                />
                 <Progress
                   value={Math.max(0, Math.min(100, Number(data?.resultado_operacional_pct ?? 0)))}
                   className="mt-1 h-2 [&>div]:bg-emerald-500"
