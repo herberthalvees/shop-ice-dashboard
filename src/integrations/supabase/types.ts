@@ -947,6 +947,8 @@ export type Database = {
           despesas_fixas_pct: number
           despesas_variaveis: number
           despesas_variaveis_pct: number
+          devolucoes: number
+          devolucoes_pct: number
           impostos: number
           impostos_pct: number
           lucro_bruto: number
