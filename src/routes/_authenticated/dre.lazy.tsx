@@ -33,6 +33,28 @@ type Despesa = {
   ativa: boolean;
 };
 
+type Variavel = {
+  id: number;
+  descricao: string;
+  valor_por_pedido: number;
+  franquia_pedidos: number | null;
+  dia_corte_ciclo: number | null;
+  ativa: boolean;
+};
+
+type VariavelDetalhe = {
+  id: number;
+  descricao: string;
+  valor_por_pedido: number;
+  franquia_pedidos: number | null;
+  dia_corte_ciclo: number | null;
+  pedidos_base: number;
+  pedidos_cobrados: number;
+  ciclo_inicio: string;
+  ciclo_fim: string;
+  valor: number;
+};
+
 function Linha({
   label,
   valor,
@@ -94,6 +116,30 @@ function DrePage() {
         .order("descricao");
       if (error) throw error;
       return (data ?? []) as Despesa[];
+    },
+  });
+
+  const { data: variaveis } = useQuery({
+    queryKey: ["despesas-variaveis"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("despesas_variaveis")
+        .select("id, descricao, valor_por_pedido, franquia_pedidos, dia_corte_ciclo, ativa")
+        .order("descricao");
+      if (error) throw error;
+      return (data ?? []) as Variavel[];
+    },
+  });
+
+  const { data: variaveisDetalhe } = useQuery({
+    queryKey: ["dre-variaveis-detalhe", ano, mes],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("dre_variaveis_detalhe", {
+        p_ano: ano,
+        p_mes: mes,
+      });
+      if (error) throw error;
+      return (data ?? []) as VariavelDetalhe[];
     },
   });
 
@@ -171,7 +217,10 @@ function DrePage() {
               <CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">
                 Despesas Operacionais
               </CardTitle>
-              <GerenciarDespesas despesas={despesas ?? []} />
+              <div className="flex items-center gap-2">
+                <GerenciarVariaveis variaveis={variaveis ?? []} />
+                <GerenciarDespesas despesas={despesas ?? []} />
+              </div>
             </CardHeader>
             <CardContent className="divide-y">
               <Linha
@@ -203,6 +252,35 @@ function DrePage() {
                           {d.categoria && <span className="opacity-60">· {d.categoria}</span>}
                         </span>
                         <span className="tabular-nums">{brl(d.valor)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="py-2">
+                <Linha
+                  label="(-) Despesas Variáveis (por pedido)"
+                  valor={data?.despesas_variaveis}
+                  tone="negative"
+                  badge={<Badge variant="secondary">{pct(data?.despesas_variaveis_pct)}</Badge>}
+                />
+                {(variaveisDetalhe ?? []).length > 0 && (
+                  <div className="mt-1 space-y-1 pl-6">
+                    {(variaveisDetalhe ?? []).map((v) => (
+                      <div key={v.id} className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <CornerDownRight className="h-3 w-3" />
+                          {v.descricao}
+                          <span className="opacity-60">
+                            · {v.pedidos_cobrados.toLocaleString("pt-BR")} de{" "}
+                            {v.pedidos_base.toLocaleString("pt-BR")} pedidos ×{" "}
+                            {brl(v.valor_por_pedido)}
+                            {v.franquia_pedidos
+                              ? ` (franquia ${v.franquia_pedidos.toLocaleString("pt-BR")}, ciclo ${format(new Date(v.ciclo_inicio + "T12:00:00"), "dd/MM")}–${format(new Date(v.ciclo_fim + "T12:00:00"), "dd/MM")})`
+                              : ""}
+                          </span>
+                        </span>
+                        <span className="tabular-nums">{brl(v.valor)}</span>
                       </div>
                     ))}
                   </div>
@@ -256,6 +334,168 @@ function DrePage() {
         </div>
       )}
     </div>
+  );
+}
+
+function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
+  const [descricao, setDescricao] = useState("");
+  const [valorPedido, setValorPedido] = useState("");
+  const [franquia, setFranquia] = useState("");
+  const [diaCorte, setDiaCorte] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ["despesas-variaveis"] });
+    qc.invalidateQueries({ queryKey: ["dre-variaveis-detalhe"] });
+    qc.invalidateQueries({ queryKey: ["dre-mensal"] });
+  };
+
+  const limpar = () => {
+    setEditId(null);
+    setDescricao("");
+    setValorPedido("");
+    setFranquia("");
+    setDiaCorte("");
+  };
+
+  async function salvar() {
+    const v = Number(valorPedido.replace(",", "."));
+    if (!descricao.trim() || !Number.isFinite(v)) {
+      toast.error("Informe descrição e valor por pedido válidos");
+      return;
+    }
+    const f = franquia.trim() ? Number(franquia.replace(/\D/g, "")) : null;
+    const dc = diaCorte.trim() ? Number(diaCorte.replace(/\D/g, "")) : null;
+    if (dc !== null && (dc < 1 || dc > 28)) {
+      toast.error("Dia de corte deve ficar entre 1 e 28");
+      return;
+    }
+    setSaving(true);
+    const payload = {
+      descricao: descricao.trim(),
+      valor_por_pedido: v,
+      franquia_pedidos: f,
+      dia_corte_ciclo: dc,
+    };
+    const tabela = (supabase as any).from("despesas_variaveis");
+    const { error } = editId ? await tabela.update(payload).eq("id", editId) : await tabela.insert(payload);
+    setSaving(false);
+    if (error) {
+      toast.error("Erro ao salvar", { description: error.message });
+      return;
+    }
+    toast.success(editId ? "Regra atualizada" : "Regra criada");
+    limpar();
+    refresh();
+  }
+
+  async function toggleAtiva(r: Variavel, ativa: boolean) {
+    const { error } = await (supabase as any).from("despesas_variaveis").update({ ativa }).eq("id", r.id);
+    if (error) return toast.error("Erro ao atualizar", { description: error.message });
+    refresh();
+  }
+
+  async function remover(r: Variavel) {
+    const { error } = await (supabase as any).from("despesas_variaveis").delete().eq("id", r.id);
+    if (error) return toast.error("Erro ao excluir", { description: error.message });
+    toast.success("Regra excluída");
+    if (editId === r.id) limpar();
+    refresh();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) limpar(); }}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          <Settings2 className="mr-2 h-4 w-4" />
+          Variáveis
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Despesas variáveis por pedido</DialogTitle>
+        </DialogHeader>
+        <p className="text-xs text-muted-foreground">
+          Sem franquia, cobra o valor em todos os pedidos válidos do mês. Com franquia, cobra apenas o que exceder a
+          quantidade dentro do ciclo que começa no dia de corte.
+        </p>
+
+        <div className="grid gap-3">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Descrição</Label>
+              <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Insumos por envio" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Valor por pedido (R$)</Label>
+              <Input value={valorPedido} onChange={(e) => setValorPedido(e.target.value)} placeholder="0,20" inputMode="decimal" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Franquia de pedidos (opcional)</Label>
+              <Input value={franquia} onChange={(e) => setFranquia(e.target.value)} placeholder="1800" inputMode="numeric" />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Dia de corte do ciclo (1–28)</Label>
+              <Input value={diaCorte} onChange={(e) => setDiaCorte(e.target.value)} placeholder="24" inputMode="numeric" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={salvar} disabled={saving}>
+              {editId ? <Check className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
+              {editId ? "Salvar alterações" : "Adicionar"}
+            </Button>
+            {editId && (
+              <Button size="sm" variant="ghost" onClick={limpar}>
+                <X className="mr-2 h-4 w-4" />
+                Cancelar
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+          {variaveis.length === 0 && (
+            <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma regra cadastrada.</p>
+          )}
+          {variaveis.map((r) => (
+            <div key={r.id} className="flex items-center justify-between gap-3 rounded-md border p-2">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{r.descricao}</p>
+                <p className="text-xs text-muted-foreground">
+                  {brl(r.valor_por_pedido)} por pedido
+                  {r.franquia_pedidos ? ` · acima de ${r.franquia_pedidos.toLocaleString("pt-BR")}` : ""}
+                  {r.dia_corte_ciclo ? ` · ciclo dia ${r.dia_corte_ciclo}` : ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-1">
+                <Switch checked={r.ativa} onCheckedChange={(v) => toggleAtiva(r, v)} aria-label="Ativa" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setEditId(r.id);
+                    setDescricao(r.descricao);
+                    setValorPedido(String(r.valor_por_pedido).replace(".", ","));
+                    setFranquia(r.franquia_pedidos ? String(r.franquia_pedidos) : "");
+                    setDiaCorte(r.dia_corte_ciclo ? String(r.dia_corte_ciclo) : "");
+                  }}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => remover(r)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
