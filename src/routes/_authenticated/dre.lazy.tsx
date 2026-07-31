@@ -257,13 +257,38 @@ function DrePage() {
                   </div>
                 )}
               </div>
+              <div className="py-2">
+                <Linha
+                  label="(-) Despesas Variáveis (por pedido)"
+                  valor={data?.despesas_variaveis}
+                  tone="negative"
+                  badge={<Badge variant="secondary">{pct(data?.despesas_variaveis_pct)}</Badge>}
+                />
+                {(variaveisDetalhe ?? []).length > 0 && (
+                  <div className="mt-1 space-y-1 pl-6">
+                    {(variaveisDetalhe ?? []).map((v) => (
+                      <div key={v.id} className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <CornerDownRight className="h-3 w-3" />
+                          {v.descricao}
+                          <span className="opacity-60">
+                            · {v.pedidos_cobrados.toLocaleString("pt-BR")} de{" "}
+                            {v.pedidos_base.toLocaleString("pt-BR")} pedidos ×{" "}
+                            {brl(v.valor_por_pedido)}
+                            {v.franquia_pedidos
+                              ? ` (franquia ${v.franquia_pedidos.toLocaleString("pt-BR")}, ciclo ${format(new Date(v.ciclo_inicio + "T12:00:00"), "dd/MM")}–${format(new Date(v.ciclo_fim + "T12:00:00"), "dd/MM")})`
+                              : ""}
+                          </span>
+                        </span>
+                        <span className="tabular-nums">{brl(v.valor)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="pt-2">
                 <Linha
                   label="= Resultado Operacional"
-                  valor={data?.resultado_operacional}
-                  strong
-                  badge={<Badge variant="secondary">{pct(data?.resultado_operacional_pct)}</Badge>}
-                />
                   valor={data?.resultado_operacional}
                   strong
                   badge={<Badge variant="secondary">{pct(data?.resultado_operacional_pct)}</Badge>}
