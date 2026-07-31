@@ -655,6 +655,16 @@ export type Database = {
           tacos: number
         }[]
       }
+      ads_totais_periodo: {
+        Args: { p_ate: string; p_de: string }
+        Returns: {
+          cliques: number
+          impressoes: number
+          investimento: number
+          pedidos: number
+          receita: number
+        }[]
+      }
       analise_margem_sku: {
         Args: { p_ate: string; p_de: string }
         Returns: {
