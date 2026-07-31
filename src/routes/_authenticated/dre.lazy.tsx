@@ -33,6 +33,28 @@ type Despesa = {
   ativa: boolean;
 };
 
+type Variavel = {
+  id: number;
+  descricao: string;
+  valor_por_pedido: number;
+  franquia_pedidos: number | null;
+  dia_corte_ciclo: number | null;
+  ativa: boolean;
+};
+
+type VariavelDetalhe = {
+  id: number;
+  descricao: string;
+  valor_por_pedido: number;
+  franquia_pedidos: number | null;
+  dia_corte_ciclo: number | null;
+  pedidos_base: number;
+  pedidos_cobrados: number;
+  ciclo_inicio: string;
+  ciclo_fim: string;
+  valor: number;
+};
+
 function Linha({
   label,
   valor,
@@ -94,6 +116,30 @@ function DrePage() {
         .order("descricao");
       if (error) throw error;
       return (data ?? []) as Despesa[];
+    },
+  });
+
+  const { data: variaveis } = useQuery({
+    queryKey: ["despesas-variaveis"],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("despesas_variaveis")
+        .select("id, descricao, valor_por_pedido, franquia_pedidos, dia_corte_ciclo, ativa")
+        .order("descricao");
+      if (error) throw error;
+      return (data ?? []) as Variavel[];
+    },
+  });
+
+  const { data: variaveisDetalhe } = useQuery({
+    queryKey: ["dre-variaveis-detalhe", ano, mes],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("dre_variaveis_detalhe", {
+        p_ano: ano,
+        p_mes: mes,
+      });
+      if (error) throw error;
+      return (data ?? []) as VariavelDetalhe[];
     },
   });
 
