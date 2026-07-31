@@ -308,9 +308,7 @@ function PedidosPage() {
                                   "font-semibold tabular-nums " +
                                   (naoConcretizado || semCusto
                                     ? "text-muted-foreground"
-                                    : (lucro ?? 0) >= 0
-                                      ? "text-emerald-500"
-                                      : "text-destructive")
+                                    : corMargem(Number(r.margem_pct)).texto)
                                 }
                               >
                                 {brl(lucro)}
@@ -330,12 +328,7 @@ function PedidosPage() {
                               ) : r.margem_pct != null ? (
                                 <Badge
                                   variant="outline"
-                                  className={
-                                    "text-[10px] " +
-                                    ((lucro ?? 0) >= 0
-                                      ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-500"
-                                      : "border-destructive/40 bg-destructive/10 text-destructive")
-                                  }
+                                  className={"text-[10px] " + corMargem(Number(r.margem_pct)).badge}
                                 >
                                   {Number(r.margem_pct).toFixed(1)}%
                                 </Badge>
