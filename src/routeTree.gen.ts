@@ -28,6 +28,7 @@ import { Route as ApiPublicShopeeSyncEscrowRouteImport } from './routes/api/publ
 import { Route as ApiPublicShopeeSyncCarteiraRouteImport } from './routes/api/public/shopee/sync-carteira'
 import { Route as ApiPublicShopeeSyncAdsRouteImport } from './routes/api/public/shopee/sync-ads'
 import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
+import { Route as ApiPublicShopeeResumoDiarioRouteImport } from './routes/api/public/shopee/resumo-diario'
 import { Route as ApiPublicShopeeRefreshTokenRouteImport } from './routes/api/public/shopee/refresh-token'
 import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
 import { Route as ApiPublicShopeeCallbackAdsRouteImport } from './routes/api/public/shopee/callback-ads'
@@ -149,6 +150,12 @@ const ApiPublicShopeeSyncRoute = ApiPublicShopeeSyncRouteImport.update({
   path: '/api/public/shopee/sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicShopeeResumoDiarioRoute =
+  ApiPublicShopeeResumoDiarioRouteImport.update({
+    id: '/api/public/shopee/resumo-diario',
+    path: '/api/public/shopee/resumo-diario',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicShopeeRefreshTokenRoute =
   ApiPublicShopeeRefreshTokenRouteImport.update({
     id: '/api/public/shopee/refresh-token',
@@ -189,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
+  '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-ads': typeof ApiPublicShopeeSyncAdsRoute
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
@@ -213,6 +221,7 @@ export interface FileRoutesByTo {
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
+  '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-ads': typeof ApiPublicShopeeSyncAdsRoute
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
@@ -239,6 +248,7 @@ export interface FileRoutesById {
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
+  '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-ads': typeof ApiPublicShopeeSyncAdsRoute
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/callback-ads'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
+    | '/api/public/shopee/resumo-diario'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-ads'
     | '/api/public/shopee/sync-carteira'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/callback-ads'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
+    | '/api/public/shopee/resumo-diario'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-ads'
     | '/api/public/shopee/sync-carteira'
@@ -314,6 +326,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/callback-ads'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
+    | '/api/public/shopee/resumo-diario'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-ads'
     | '/api/public/shopee/sync-carteira'
@@ -332,6 +345,7 @@ export interface RootRouteChildren {
   ApiPublicShopeeCallbackAdsRoute: typeof ApiPublicShopeeCallbackAdsRoute
   ApiPublicShopeeRefreshRoute: typeof ApiPublicShopeeRefreshRoute
   ApiPublicShopeeRefreshTokenRoute: typeof ApiPublicShopeeRefreshTokenRoute
+  ApiPublicShopeeResumoDiarioRoute: typeof ApiPublicShopeeResumoDiarioRoute
   ApiPublicShopeeSyncRoute: typeof ApiPublicShopeeSyncRoute
   ApiPublicShopeeSyncAdsRoute: typeof ApiPublicShopeeSyncAdsRoute
   ApiPublicShopeeSyncCarteiraRoute: typeof ApiPublicShopeeSyncCarteiraRoute
@@ -475,6 +489,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/shopee/resumo-diario': {
+      id: '/api/public/shopee/resumo-diario'
+      path: '/api/public/shopee/resumo-diario'
+      fullPath: '/api/public/shopee/resumo-diario'
+      preLoaderRoute: typeof ApiPublicShopeeResumoDiarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shopee/refresh-token': {
       id: '/api/public/shopee/refresh-token'
       path: '/api/public/shopee/refresh-token'
@@ -541,6 +562,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShopeeCallbackAdsRoute: ApiPublicShopeeCallbackAdsRoute,
   ApiPublicShopeeRefreshRoute: ApiPublicShopeeRefreshRoute,
   ApiPublicShopeeRefreshTokenRoute: ApiPublicShopeeRefreshTokenRoute,
+  ApiPublicShopeeResumoDiarioRoute: ApiPublicShopeeResumoDiarioRoute,
   ApiPublicShopeeSyncRoute: ApiPublicShopeeSyncRoute,
   ApiPublicShopeeSyncAdsRoute: ApiPublicShopeeSyncAdsRoute,
   ApiPublicShopeeSyncCarteiraRoute: ApiPublicShopeeSyncCarteiraRoute,
@@ -551,13 +573,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
