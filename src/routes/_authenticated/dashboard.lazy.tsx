@@ -469,7 +469,7 @@ function DashboardPage() {
       </Card>
 
       {/* BLOCO 2: Cards de resultado */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-6">
         <ResultCard
           label="Vendas"
           value={loadKpis ? null : String(kpis?.pedidosValidos ?? 0)}
@@ -477,9 +477,21 @@ function DashboardPage() {
         />
         <ResultCard label="Ticket médio" value={loadKpis ? null : brl(kpis?.ticketMedio ?? 0)} />
         <ResultCard
-          label="Lucro médio"
+          label="Lucro médio (sem Ads)"
+          value={
+            loadKpis
+              ? null
+              : (kpis?.coberturaCusto ?? 0) === 0 || (kpis?.pedidosValidos ?? 0) === 0
+                ? "—"
+                : brl((kpis?.lucroSemAds ?? 0) / (kpis?.pedidosValidos || 1))
+          }
+          hint={loadKpis ? undefined : "por pedido, antes de Ads"}
+          tone="warning"
+        />
+        <ResultCard
+          label="Lucro médio (com Ads)"
           value={loadKpis ? null : ((kpis?.coberturaCusto ?? 0) === 0 ? "—" : brl(kpis?.lucroMedio ?? 0))}
-          hint={loadKpis ? undefined : "por pedido"}
+          hint={loadKpis ? undefined : "por pedido, já com Ads"}
           tone={((kpis?.lucroMedio ?? 0) < 0) ? "danger" : "success"}
         />
         <ResultCard
