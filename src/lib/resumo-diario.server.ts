@@ -32,9 +32,7 @@ function dataExtenso(iso: string): string {
   const [ano, mes, dia] = iso.split("-").map(Number);
   const d = new Date(Date.UTC(ano!, mes! - 1, dia!));
   const semana = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"][d.getUTCDay()];
-  return `${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}`.padStart(5, "0")
-    ? `${semana}, ${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}`
-    : "";
+  return `${semana}, ${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}`;
 }
 
 export type ResultadoResumo = {
