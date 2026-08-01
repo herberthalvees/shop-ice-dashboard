@@ -1,14 +1,18 @@
 // Monta e envia o resumo diario para o webhook de WhatsApp. Server-only.
 const TZ = "America/Sao_Paulo";
 
-export function ontemSaoPaulo(): string {
+export function hojeSaoPaulo(): string {
   const partes = new Intl.DateTimeFormat("en-CA", {
     timeZone: TZ,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
-  const [ano, mes, dia] = partes.split("-").map(Number);
+  return partes;
+}
+
+export function ontemSaoPaulo(): string {
+  const [ano, mes, dia] = hojeSaoPaulo().split("-").map(Number);
   const d = new Date(Date.UTC(ano!, mes! - 1, dia!));
   d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);

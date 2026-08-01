@@ -73,6 +73,9 @@ export const enviarResumoAgora = createServerFn({ method: "POST" })
         : undefined,
   }))
   .handler(async ({ data }) => {
-    const { enviarResumoDiario } = await import("./resumo-diario.server");
-    return await enviarResumoDiario({ dataRef: data.data, ignorarToggle: true });
+    const { enviarResumoDiario, hojeSaoPaulo } = await import("./resumo-diario.server");
+    return await enviarResumoDiario({
+      dataRef: data.data ?? hojeSaoPaulo(),
+      ignorarToggle: true,
+    });
   });
