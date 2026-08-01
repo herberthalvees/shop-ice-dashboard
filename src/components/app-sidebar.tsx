@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import logoAsset from "@/assets/dreamice-logo.png.asset.json";
 
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -46,14 +47,16 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b">
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 text-primary">
-            <Snowflake className="h-4 w-4" />
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold tracking-tight">Dream Ice</span>
-              <span className="text-xs text-muted-foreground">Painel Shopee</span>
+          {collapsed ? (
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 text-primary">
+              <Snowflake className="h-4 w-4" />
             </div>
+          ) : (
+            <img
+              src={logoAsset.url}
+              alt="Dream Ice Shop"
+              className="h-9 w-auto object-contain"
+            />
           )}
         </div>
       </SidebarHeader>
