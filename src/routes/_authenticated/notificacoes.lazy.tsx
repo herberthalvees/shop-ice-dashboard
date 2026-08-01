@@ -179,6 +179,108 @@ function NotifPage() {
         <CardHeader>
           <CardTitle className="text-base">Histórico (últimos 50 eventos)</CardTitle>
         </CardHeader>
+        <CardContent className="hidden" />
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <CalendarClock className="h-4 w-4" /> Resumo diário
+          </CardTitle>
+          <CardDescription>
+            Enviado automaticamente todos os dias às 01:00 (Brasília) com os números do dia anterior.
+            Controle o envio automático pelo evento “Resumo diário” acima.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="data-resumo">Data (opcional)</Label>
+              <Input
+                id="data-resumo"
+                type="date"
+                className="w-[180px]"
+                value={dataResumo}
+                onChange={(e) => setDataResumo(e.target.value)}
+              />
+            </div>
+            <Button onClick={() => resumoMut.mutate()} disabled={resumoMut.isPending || !url}>
+              {resumoMut.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="mr-2 h-4 w-4" />
+              )}
+              Enviar resumo agora
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Sem data preenchida, envia o resumo de ontem.
+          </p>
+
+          {previa && (
+            <pre className="whitespace-pre-wrap rounded-lg border bg-muted/40 p-3 text-xs">
+              {previa}
+            </pre>
+          )}
+
+          <div>
+            <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+              Últimos envios
+            </Label>
+            {loadResumos ? (
+              <div className="mt-2 space-y-2">
+                {[...Array(3)].map((_, i) => (
+                  <Skeleton key={i} className="h-9 w-full" />
+                ))}
+              </div>
+            ) : (resumos ?? []).length === 0 ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                Nenhum resumo enviado ainda.
+              </div>
+            ) : (
+              <div className="mt-2 divide-y divide-border">
+                {(resumos ?? []).map((r: any) => (
+                  <div key={r.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {r.enviado ? (
+                        <CheckCircle2 className="h-4 w-4 shrink-0 text-[color:var(--success)]" />
+                      ) : (
+                        <XCircle className="h-4 w-4 shrink-0 text-destructive" />
+                      )}
+                      <div className="min-w-0">
+                        <div className="font-medium">{r.chave}</div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {new Date(r.created_at).toLocaleString("pt-BR")}
+                          {r.erro && <span className="text-destructive"> · {r.erro}</span>}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {r.detalhe?.mensagem && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setPrevia(r.detalhe.mensagem)}
+                        >
+                          Ver
+                        </Button>
+                      )}
+                      <Badge variant={r.enviado ? "secondary" : "destructive"}>
+                        {r.enviado ? "enviado" : "falhou"}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Histórico (últimos 50 eventos)</CardTitle>
+        </CardHeader>
         <CardContent>
           {loadLogs ? (
             <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
