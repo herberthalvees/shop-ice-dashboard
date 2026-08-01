@@ -63,3 +63,16 @@ export const sendTestNotification = createServerFn({ method: "POST" })
       return { ok: false, error: (e as Error).message };
     }
   });
+
+export const enviarResumoAgora = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { data?: string } | undefined) => ({
+    data:
+      typeof data?.data === "string" && /^\d{4}-\d{2}-\d{2}$/.test(data.data)
+        ? data.data
+        : undefined,
+  }))
+  .handler(async ({ data }) => {
+    const { enviarResumoDiario } = await import("./resumo-diario.server");
+    return await enviarResumoDiario({ dataRef: data.data, ignorarToggle: true });
+  });
