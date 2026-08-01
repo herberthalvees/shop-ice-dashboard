@@ -84,6 +84,28 @@ export async function enviarResumoDiario(opts?: {
     return { ok: false, data_referencia: dataRef, enviado: false, erro: "sem dados para o periodo" };
   }
 
+  if (dataRef > hojeSaoPaulo()) {
+    return {
+      ok: false,
+      data_referencia: dataRef,
+      enviado: false,
+      erro: "data no futuro — nao existem dados para essa data",
+    };
+  }
+
+  const semMovimento =
+    Number(k["pedidos_validos"] ?? 0) === 0 &&
+    Number(k["pedidos_cancelados"] ?? 0) === 0 &&
+    Number(k["faturamento"] ?? 0) === 0;
+  if (semMovimento) {
+    return {
+      ok: false,
+      data_referencia: dataRef,
+      enviado: false,
+      erro: "nenhum pedido registrado nessa data — resumo nao enviado para evitar valores zerados",
+    };
+  }
+
   let carteira: Record<string, unknown> | null = null;
   try {
     const { data: cRaw } = await supabaseAdmin.rpc("carteira_resumo", {
