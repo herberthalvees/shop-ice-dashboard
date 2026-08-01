@@ -207,7 +207,7 @@ function NotifPage() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Sem data preenchida, envia o resumo de ontem.
+            Envio manual: sem data preenchida usa o dia de hoje. O envio automático das 01:00 sempre usa o dia anterior.
           </p>
 
           {previa && (
