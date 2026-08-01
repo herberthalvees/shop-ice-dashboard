@@ -68,6 +68,36 @@ export type Database = {
         }
         Relationships: []
       }
+      alertas_enviados: {
+        Row: {
+          chave: string
+          created_at: string
+          detalhe: Json | null
+          enviado: boolean
+          erro: string | null
+          id: string
+          tipo: string
+        }
+        Insert: {
+          chave: string
+          created_at?: string
+          detalhe?: Json | null
+          enviado?: boolean
+          erro?: string | null
+          id?: string
+          tipo: string
+        }
+        Update: {
+          chave?: string
+          created_at?: string
+          detalhe?: Json | null
+          enviado?: boolean
+          erro?: string | null
+          id?: string
+          tipo?: string
+        }
+        Relationships: []
+      }
       carteira_transacoes: {
         Row: {
           comprador: string | null
