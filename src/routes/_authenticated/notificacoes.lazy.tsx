@@ -12,8 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Send, Loader2, CheckCircle2, XCircle } from "lucide-react";
-import { sendTestNotification } from "@/lib/shopee.functions";
+import { Send, Loader2, CheckCircle2, XCircle, CalendarClock } from "lucide-react";
+import { sendTestNotification, enviarResumoAgora } from "@/lib/shopee.functions";
 
 export const Route = createLazyFileRoute("/_authenticated/notificacoes")({
   component: NotifPage,
@@ -24,11 +24,15 @@ const TIPOS = [
   { key: "pedido_cancelado", label: "Pedido cancelado" },
   { key: "pedido_enviado", label: "Pedido enviado" },
   { key: "estoque_baixo", label: "Estoque baixo" },
+  { key: "resumo_diario", label: "Resumo diário (01:00)" },
 ] as const;
 
 function NotifPage() {
   const qc = useQueryClient();
   const testFn = useServerFn(sendTestNotification);
+  const resumoFn = useServerFn(enviarResumoAgora);
+  const [dataResumo, setDataResumo] = useState("");
+  const [previa, setPrevia] = useState<string | null>(null);
 
   const { data: cfg, isLoading } = useQuery({
     queryKey: ["config"],
@@ -83,6 +87,31 @@ function NotifPage() {
       if (r?.ok) toast.success("Teste enviado com sucesso");
       else toast.error("Falha no teste", { description: r?.error ?? `HTTP ${r?.status}` });
       qc.invalidateQueries({ queryKey: ["eventos_log"] });
+    },
+    onError: (e: any) => toast.error("Erro", { description: e.message }),
+  });
+
+  const { data: resumos, isLoading: loadResumos } = useQuery({
+    queryKey: ["alertas_enviados", "resumo_diario"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("alertas_enviados")
+        .select("*")
+        .eq("tipo", "resumo_diario")
+        .order("chave", { ascending: false })
+        .limit(15);
+      return data ?? [];
+    },
+  });
+
+  const resumoMut = useMutation({
+    mutationFn: async () =>
+      await resumoFn({ data: dataResumo ? { data: dataResumo } : {} } as any),
+    onSuccess: (r: any) => {
+      setPrevia(r?.mensagem ?? null);
+      if (r?.enviado) toast.success(`Resumo de ${r.data_referencia} enviado`);
+      else toast.error("Resumo não enviado", { description: r?.erro ?? "erro desconhecido" });
+      qc.invalidateQueries({ queryKey: ["alertas_enviados", "resumo_diario"] });
     },
     onError: (e: any) => toast.error("Erro", { description: e.message }),
   });
