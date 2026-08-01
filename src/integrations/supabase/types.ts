@@ -1033,6 +1033,7 @@ export type Database = {
         }[]
       }
       eh_owner: { Args: never; Returns: boolean }
+      eh_owner_ou_service_role: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
