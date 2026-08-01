@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Snowflake, Loader2 } from "lucide-react";
+import logoAsset from "@/assets/dreamice-logo.png.asset.json";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -93,9 +94,8 @@ function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex items-center justify-center gap-2">
-          <Snowflake className="h-6 w-6 text-primary" />
-          <span className="text-xl font-semibold tracking-tight">Dream Ice</span>
+        <div className="mb-8 flex items-center justify-center">
+          <img src={logoAsset.url} alt="Dream Ice Shop" className="h-16 w-auto object-contain" />
         </div>
         <Card>
           <CardHeader>
