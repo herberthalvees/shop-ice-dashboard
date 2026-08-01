@@ -177,13 +177,6 @@ function NotifPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Histórico (últimos 50 eventos)</CardTitle>
-        </CardHeader>
-        <CardContent className="hidden" />
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarClock className="h-4 w-4" /> Resumo diário
           </CardTitle>
