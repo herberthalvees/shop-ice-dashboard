@@ -31,7 +31,13 @@ function NotifPage() {
   const qc = useQueryClient();
   const testFn = useServerFn(sendTestNotification);
   const resumoFn = useServerFn(enviarResumoAgora);
-  const [dataResumo, setDataResumo] = useState("");
+  const hojeSP = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Sao_Paulo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+  const [dataResumo, setDataResumo] = useState(hojeSP);
   const [previa, setPrevia] = useState<string | null>(null);
 
   const { data: cfg, isLoading } = useQuery({
@@ -193,6 +199,7 @@ function NotifPage() {
                 id="data-resumo"
                 type="date"
                 className="w-[180px]"
+                max={hojeSP}
                 value={dataResumo}
                 onChange={(e) => setDataResumo(e.target.value)}
               />
