@@ -873,15 +873,19 @@ export type Database = {
       dashboard_kpis_periodo_impl: {
         Args: { p_ate: string; p_de: string }
         Returns: {
+          ads_investimento: number
+          ads_pct: number
           cobertura_custo: number
           custo_pct: number
           custo_total: number
           faturamento: number
           imposto: number
           imposto_pct: number
-          lucro: number
+          lucro_com_ads: number
+          lucro_com_ads_pct: number
           lucro_medio: number
-          lucro_pct: number
+          lucro_sem_ads: number
+          lucro_sem_ads_pct: number
           pedidos_cancelados: number
           pedidos_devolvidos: number
           pedidos_validos: number
