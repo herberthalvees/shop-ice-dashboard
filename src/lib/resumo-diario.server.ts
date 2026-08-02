@@ -67,7 +67,7 @@ export async function enviarResumoDiario(opts?: {
 
   if (!opts?.ignorarToggle) {
     const eventos = (cfg?.eventos ?? {}) as Record<string, unknown>;
-    if (!cfg?.notificacoes_ativas || eventos["resumo_diario"] === false) {
+    if (eventos["resumo_diario"] === false) {
       return { ok: false, data_referencia: dataRef, enviado: false, erro: "resumo diario desativado" };
     }
   }
