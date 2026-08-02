@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { Database, Brain, Table2, Trash2 } from "lucide-react";
+import { Database, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   Conversation,
@@ -17,14 +17,12 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
+import { CodeBlock } from "@/components/ai-elements/code-block";
 import {
-  Tool,
-  ToolContent,
-  ToolHeader,
-  ToolInput,
-  ToolOutput,
-  type ToolPart,
-} from "@/components/ai-elements/tool";
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,12 +33,58 @@ const SUGESTOES = [
   "Compare margem dos meus 10 produtos mais vendidos nos últimos 30 dias",
 ];
 
-const ICONES_FERRAMENTA: Record<string, typeof Database> = {
-  consultar_banco: Database,
-  listar_tabelas: Table2,
-  salvar_memoria: Brain,
-  esquecer_memoria: Trash2,
+const ROTULOS: Record<string, string> = {
+  consultar_banco: "consulta ao banco",
+  listar_tabelas: "leitura do schema",
+  salvar_memoria: "aprendizado salvo",
+  esquecer_memoria: "aprendizado removido",
 };
+
+type PartTool = {
+  type: string;
+  toolName?: string;
+  state?: string;
+  input?: unknown;
+  output?: unknown;
+  errorText?: string;
+};
+
+function DetalhesAtividade({ partes }: { partes: PartTool[] }) {
+  const resumo = partes
+    .map((p) => ROTULOS[p.toolName ?? p.type.replace("tool-", "")] ?? "ação")
+    .reduce<Record<string, number>>((acc, r) => ({ ...acc, [r]: (acc[r] ?? 0) + 1 }), {});
+  const texto = Object.entries(resumo)
+    .map(([r, n]) => (n > 1 ? `${n} ${r}s` : `1 ${r}`))
+    .join(" · ");
+
+  return (
+    <Collapsible className="group/act not-prose">
+      <CollapsibleTrigger className="flex items-center gap-1.5 rounded-md px-1 py-0.5 text-[11px] text-muted-foreground/70 transition hover:text-foreground">
+        <Database className="size-3" />
+        {texto}
+        <ChevronRight className="size-3 transition-transform group-data-[state=open]/act:rotate-90" />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="mt-2 space-y-3 border-l pl-3">
+        {partes.map((p, i) => {
+          const input = p.input as { sql?: string } | undefined;
+          return (
+            <div key={i} className="space-y-1.5 text-xs">
+              <p className="font-medium text-muted-foreground">
+                {ROTULOS[p.toolName ?? p.type.replace("tool-", "")] ?? p.type}
+              </p>
+              {input?.sql ? (
+                <CodeBlock code={input.sql} language="sql" />
+              ) : input ? (
+                <CodeBlock code={JSON.stringify(input, null, 2)} language="json" />
+              ) : null}
+              {p.errorText && <p className="text-destructive">{p.errorText}</p>}
+            </div>
+          );
+        })}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
 
 export function ChatIA({
   conversaId,
@@ -87,9 +131,9 @@ export function ChatIA({
   }
 
   return (
-    <div className="flex h-[calc(100vh-10rem)] flex-col overflow-hidden rounded-xl border bg-card/40">
+    <div className="flex h-[calc(100vh-10rem)] flex-col overflow-hidden rounded-2xl border bg-gradient-to-b from-card/50 to-background/40 shadow-[0_20px_50px_-30px_rgba(0,0,0,0.9)]">
       <Conversation className="flex-1">
-        <ConversationContent className="mx-auto w-full max-w-3xl">
+        <ConversationContent className="mx-auto w-full max-w-3xl gap-6 px-4 py-6">
           {messages.length === 0 ? (
             <div className="space-y-4">
               <ConversationEmptyState
@@ -111,61 +155,45 @@ export function ChatIA({
               </div>
             </div>
           ) : (
-            messages.map((m) => (
-              <div key={m.id} className="space-y-2">
-                {m.parts.map((part, i) => {
-                  if (part.type === "text") {
-                    return (
-                      <Message from={m.role} key={`${m.id}-${i}`}>
-                        <MessageContent
-                          className={m.role === "assistant" ? "bg-transparent p-0 text-foreground" : undefined}
-                        >
-                          <MessageResponse>{part.text}</MessageResponse>
-                        </MessageContent>
-                      </Message>
-                    );
-                  }
-                  if (part.type.startsWith("tool-")) {
-                    const tp = part as ToolPart;
-                    const nome = ("toolName" in tp && tp.toolName) || part.type.replace("tool-", "");
-                    const Icone = ICONES_FERRAMENTA[nome] ?? Database;
-                    const rotulos: Record<string, string> = {
-                      consultar_banco: "Consultando o banco",
-                      listar_tabelas: "Lendo o schema",
-                      salvar_memoria: "Guardando aprendizado",
-                      esquecer_memoria: "Removendo aprendizado",
-                    };
-                    return (
-                      <Tool defaultOpen={false} key={`${m.id}-${i}`}>
-                        <ToolHeader
-                          type={tp.type as `tool-${string}`}
-                          state={tp.state}
-                          title={rotulos[nome] ?? nome}
-                        />
-                        <ToolContent>
-                          <div className="flex items-center gap-2 px-4 pt-3 text-xs text-muted-foreground">
-                            <Icone className="size-3.5 text-primary" />
-                            {nome}
-                          </div>
-                          <ToolInput input={tp.input} />
-                          <ToolOutput output={tp.output} errorText={tp.errorText} />
-                        </ToolContent>
-                      </Tool>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-            ))
+            messages.map((m) => {
+              const ferramentas = m.parts.filter((p) =>
+                p.type.startsWith("tool-"),
+              ) as unknown as PartTool[];
+              const textos = m.parts.filter((p) => p.type === "text");
+
+              return (
+                <div key={m.id} className="space-y-2">
+                  {ferramentas.length > 0 && m.role === "assistant" && (
+                    <DetalhesAtividade partes={ferramentas} />
+                  )}
+                  {textos.map((part, i) => (
+                    <Message from={m.role} key={`${m.id}-${i}`}>
+                      <MessageContent
+                        className={
+                          m.role === "assistant"
+                            ? "bg-transparent p-0 text-foreground"
+                            : "rounded-2xl bg-primary text-primary-foreground"
+                        }
+                      >
+                        <MessageResponse>
+                          {"text" in part ? (part.text as string) : ""}
+                        </MessageResponse>
+                      </MessageContent>
+                    </Message>
+                  ))}
+                </div>
+              );
+            })
           )}
-          {status === "submitted" && <Shimmer>Analisando os dados...</Shimmer>}
+          {carregando && <Shimmer>Analisando os dados...</Shimmer>}
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
 
-      <div className="border-t bg-background/60 p-3">
+      <div className="border-t bg-background/70 p-3 backdrop-blur">
         <div className="mx-auto w-full max-w-3xl">
           <PromptInput
+            className="rounded-2xl"
             onSubmit={(_, e) => {
               e.preventDefault();
               void enviar(texto);
