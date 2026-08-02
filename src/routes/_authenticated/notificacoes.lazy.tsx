@@ -192,6 +192,19 @@ function NotifPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {!ativas && (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm">
+              <strong>Envio automático bloqueado:</strong> a chave “Notificações ativas” está
+              desligada, então o disparo das 01:00 não envia nada mesmo com o evento “Resumo
+              diário” marcado. Ligue o switch acima e salve.
+            </div>
+          )}
+          {ativas && ativos["resumo_diario"] === false && (
+            <div className="rounded-lg border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 p-3 text-sm">
+              O evento “Resumo diário (01:00)” está desmarcado — o envio automático não vai
+              ocorrer.
+            </div>
+          )}
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-2">
               <Label htmlFor="data-resumo">Data (opcional)</Label>
