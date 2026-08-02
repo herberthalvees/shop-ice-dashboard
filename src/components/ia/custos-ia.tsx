@@ -50,7 +50,7 @@ export function CustosIA() {
           <Sparkles className="h-4 w-4" /> Custos da IA
         </CardTitle>
         <CardDescription>
-          Consumo do Dream IA por interação. Créditos são uma estimativa baseada na tarifa por
+          Consumo do DreamAI por interação. Créditos são uma estimativa baseada na tarifa por
           tokens do modelo.
         </CardDescription>
       </CardHeader>
@@ -59,7 +59,7 @@ export function CustosIA() {
           <Skeleton className="h-40 w-full" />
         ) : linhas.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nenhuma interação registrada ainda. Use o Dream IA para começar o histórico.
+            Nenhuma interação registrada ainda. Use o DreamAI para começar o histórico.
           </p>
         ) : (
           <>

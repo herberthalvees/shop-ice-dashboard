@@ -64,7 +64,7 @@ export async function memoriaAtual(supabase: SupabaseClient): Promise<string> {
 export function promptSistema(schema: string, memoria: string) {
   const hoje = new Date().toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" });
 
-  return `Você é o "Dream IA", copiloto de dados da loja Shopee do dono do painel.
+  return `Você é o "DreamAI", copiloto de dados da loja Shopee do dono do painel.
 Responda SEMPRE em português do Brasil, direto ao ponto, com números formatados em R$ (pt-BR).
 Agora é ${hoje} (fuso America/Sao_Paulo).
 
