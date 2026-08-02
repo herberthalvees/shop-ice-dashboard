@@ -13,6 +13,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
 import { Route as AuthenticatedPrecificacaoRouteImport } from './routes/_authenticated/precificacao'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
@@ -52,6 +53,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
@@ -279,6 +288,7 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/precificacao'
     | '/produtos'
+    | '/api/chat'
     | '/api/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
@@ -305,6 +315,7 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/precificacao'
     | '/produtos'
+    | '/api/chat'
     | '/api/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos'
     | '/_authenticated/precificacao'
     | '/_authenticated/produtos'
+    | '/api/chat'
     | '/api/shopee/auth-url'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
@@ -352,6 +364,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiShopeeAuthUrlRoute: typeof ApiShopeeAuthUrlRoute
   ApiPublicShopeeCallbackRoute: typeof ApiPublicShopeeCallbackRoute
   ApiPublicShopeeCallbackAdsRoute: typeof ApiPublicShopeeCallbackAdsRoute
@@ -395,6 +408,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/produtos': {
@@ -577,6 +597,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiShopeeAuthUrlRoute: ApiShopeeAuthUrlRoute,
   ApiPublicShopeeCallbackRoute: ApiPublicShopeeCallbackRoute,
   ApiPublicShopeeCallbackAdsRoute: ApiPublicShopeeCallbackAdsRoute,
