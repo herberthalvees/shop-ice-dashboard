@@ -125,7 +125,9 @@ const AuthenticatedIaIndexRoute = AuthenticatedIaIndexRouteImport.update({
   id: '/ia/',
   path: '/ia/',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_authenticated/ia.index.lazy').then((d) => d.Route),
+)
 const ApiShopeeAuthUrlRoute = ApiShopeeAuthUrlRouteImport.update({
   id: '/api/shopee/auth-url',
   path: '/api/shopee/auth-url',
