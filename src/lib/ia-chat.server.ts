@@ -81,7 +81,8 @@ Agora é ${hoje} (fuso America/Sao_Paulo).
 - Receita/faturamento vem de \`pedidos.valor_total\` (ou \`pedido_itens.receita\` por item); \`valor_liquido\` é o repasse (escrow) já líquido de tarifas.
 - Tarifas Shopee = \`comissao\` + \`taxa_servico\` + \`taxa_transacao\` em \`pedidos\`.
 - CMV: custo unitário vigente em \`produto_custos\` (casar por item_id + model_id e vigência: \`vigencia_inicio <= data\` e (\`vigencia_fim\` nula ou >= data)) multiplicado pela quantidade em \`pedido_itens\`.
-- Ads: \`ads_campanhas\` (investimento, receita, roas) — ligar a produto por \`item_id\`.
+- Ads: \`ads_campanhas\` (investimento, receita, roas) — ligar a produto por \`item_id\`. A coluna \`data\` é o DIA da campanha gravado como timestamptz na meia-noite UTC, NÃO converta para America/Sao_Paulo: filtre sempre com \`(data AT TIME ZONE 'UTC')::date\` (ex: \`= current_date - 1\`). Usar \`data::date\` direto ou \`AT TIME ZONE 'America/Sao_Paulo'\` joga o dia para trás e faz o investimento aparecer como R$ 0,00.
+- Antes de concluir que algum valor é R$ 0,00 (especialmente ads), confira o total do dia sem filtros extras (ex: \`select (data AT TIME ZONE 'UTC')::date d, sum(investimento) from ads_campanhas group by 1 order by 1 desc limit 5\`) para não reportar zero por causa de filtro/fuso errado.
 - Pedidos cancelados/devolvidos têm status como 'CANCELLED', 'TO_RETURN' — exclua-os de faturamento quando fizer análise de lucro, e diga que excluiu.
 - Imposto: alíquota em \`config.aliquota_imposto\` (percentual sobre receita).
 - Despesas fixas (\`despesas_fixas\`) e variáveis por pedido (\`despesas_variaveis\`) entram no resultado mensal.
