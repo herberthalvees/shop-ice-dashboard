@@ -29,15 +29,29 @@ export async function refreshTokenIfNeeded() {
 }
 
 export async function runSync() {
-  const conn = await getConnection();
+  let conn = await getConnection();
   if (!conn?.access_token || !conn.shop_id) return { ok: false, error: "sem conexão ativa" };
+  if (!conn.token_expires_at || new Date(conn.token_expires_at).getTime() <= Date.now() + 5 * 60_000) {
+    const refresh = await refreshTokenIfNeeded();
+    if (!refresh.ok) return refresh;
+    conn = await getConnection();
+    if (!conn?.access_token || !conn.shop_id) return { ok: false, error: "token renovado indisponível" };
+  }
   const now = Math.floor(Date.now() / 1000);
   const from = now - 24 * 3600;
   const shopId = Number(conn.shop_id);
 
   let ordersImported = 0;
   try {
-    const list = (await getOrderList(conn.access_token, shopId, from, now)) as any;
+    let list = (await getOrderList(conn.access_token, shopId, from, now)) as any;
+    const erroLista = `${list?.error ?? ''} ${list?.message ?? ''}`.toLowerCase();
+    if (erroLista.includes("invalid_acceess_token") || erroLista.includes("invalid_access_token")) {
+      const refresh = await refreshTokenIfNeeded();
+      if (!refresh.ok) return refresh;
+      conn = await getConnection();
+      if (!conn?.access_token) return { ok: false, error: "token renovado indisponível" };
+      list = (await getOrderList(conn.access_token, shopId, from, now)) as any;
+    }
     const orderSns: string[] = (list?.response?.order_list ?? []).map((o: any) => o.order_sn).filter(Boolean);
     for (let i = 0; i < orderSns.length; i += 50) {
       const chunk = orderSns.slice(i, i + 50);
