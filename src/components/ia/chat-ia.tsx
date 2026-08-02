@@ -57,7 +57,7 @@ export function ChatIA({
       new DefaultChatTransport({
         api: "/api/chat",
         body: { conversaId },
-        headers: async () => {
+        headers: async (): Promise<Record<string, string>> => {
           const { data } = await supabase.auth.getSession();
           const token = data.session?.access_token;
           return token ? { Authorization: `Bearer ${token}` } : {};
@@ -129,15 +129,24 @@ export function ChatIA({
                     const tp = part as ToolPart;
                     const nome = ("toolName" in tp && tp.toolName) || part.type.replace("tool-", "");
                     const Icone = ICONES_FERRAMENTA[nome] ?? Database;
+                    const rotulos: Record<string, string> = {
+                      consultar_banco: "Consultando o banco",
+                      listar_tabelas: "Lendo o schema",
+                      salvar_memoria: "Guardando aprendizado",
+                      esquecer_memoria: "Removendo aprendizado",
+                    };
                     return (
                       <Tool defaultOpen={false} key={`${m.id}-${i}`}>
                         <ToolHeader
-                          type={tp.type}
+                          type={tp.type as `tool-${string}`}
                           state={tp.state}
-                          icon={<Icone className="size-3.5" />}
-                          title={nome === "consultar_banco" ? "Consultando o banco" : nome}
+                          title={rotulos[nome] ?? nome}
                         />
                         <ToolContent>
+                          <div className="flex items-center gap-2 px-4 pt-3 text-xs text-muted-foreground">
+                            <Icone className="size-3.5 text-primary" />
+                            {nome}
+                          </div>
                           <ToolInput input={tp.input} />
                           <ToolOutput output={tp.output} errorText={tp.errorText} />
                         </ToolContent>
