@@ -125,7 +125,8 @@ export const Route = createFileRoute("/api/chat")({
           onFinish: async ({ totalUsage, steps }) => {
             const entrada = totalUsage?.inputTokens ?? 0;
             const saida = totalUsage?.outputTokens ?? 0;
-            const raciocinio = totalUsage?.reasoningTokens ?? 0;
+            const raciocinio =
+              (totalUsage as { reasoningTokens?: number } | undefined)?.reasoningTokens ?? 0;
             const custo =
               (entrada / 1000) * CREDITOS_POR_1K_ENTRADA + (saida / 1000) * CREDITOS_POR_1K_SAIDA;
             const { error } = await supabase.from("ia_uso").insert({
