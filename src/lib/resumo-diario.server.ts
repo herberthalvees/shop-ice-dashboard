@@ -35,8 +35,21 @@ function pct(valor: unknown): string {
 function dataExtenso(iso: string): string {
   const [ano, mes, dia] = iso.split("-").map(Number);
   const d = new Date(Date.UTC(ano!, mes! - 1, dia!));
-  const semana = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"][d.getUTCDay()];
+  const semana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][d.getUTCDay()];
   return `${semana}, ${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}`;
+}
+
+function dataCurta(iso: string): string {
+  const [, mes, dia] = iso.split("-");
+  return `${dia}/${mes}`;
+}
+
+const LARGURA = 15;
+
+function linha(rotulo: string, valor: string): string {
+  const base = `${rotulo} `;
+  const pontos = Math.max(1, LARGURA - base.length);
+  return `${base}${".".repeat(pontos)} ${valor}`;
 }
 
 export function horaSaoPaulo(): string {
