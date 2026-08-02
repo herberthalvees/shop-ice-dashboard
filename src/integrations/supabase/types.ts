@@ -406,6 +406,50 @@ export type Database = {
           },
         ]
       }
+      ia_uso: {
+        Row: {
+          conversa_id: string | null
+          created_at: string
+          custo_creditos: number
+          id: string
+          modelo: string
+          passos: number
+          tokens_entrada: number
+          tokens_raciocinio: number
+          tokens_saida: number
+        }
+        Insert: {
+          conversa_id?: string | null
+          created_at?: string
+          custo_creditos?: number
+          id?: string
+          modelo: string
+          passos?: number
+          tokens_entrada?: number
+          tokens_raciocinio?: number
+          tokens_saida?: number
+        }
+        Update: {
+          conversa_id?: string | null
+          created_at?: string
+          custo_creditos?: number
+          id?: string
+          modelo?: string
+          passos?: number
+          tokens_entrada?: number
+          tokens_raciocinio?: number
+          tokens_saida?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_uso_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "ia_conversas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pedido_itens: {
         Row: {
           created_at: string
