@@ -321,7 +321,11 @@ export const MessageBranchPage = ({
 
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
-const streamdownPlugins = { cjk, code, math, mermaid };
+// Cast: streamdown and @streamdown/code ship slightly different shiki language
+// unions, which makes the plugin map structurally incompatible at the type level.
+const streamdownPlugins = { cjk, code, math, mermaid } as unknown as ComponentProps<
+  typeof Streamdown
+>["plugins"];
 
 export const MessageResponse = memo(
   ({ className, ...props }: MessageResponseProps) => (
