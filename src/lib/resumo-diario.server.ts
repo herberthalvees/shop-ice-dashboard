@@ -143,28 +143,52 @@ export async function enviarResumoDiario(opts?: {
   }
 
   const hora = horaSaoPaulo();
-  const linhas = [
-    parcial
-      ? `⏱️ *Parcial Dream Ice — ${dataExtenso(dataRef)} às ${hora}*`
-      : `📊 *Resumo Dream Ice — ${dataExtenso(dataRef)}*`,
-    "",
-    `💰 Faturamento: R$ ${brl(k["faturamento"])}`,
-    `📦 Vendas: ${Number(k["pedidos_validos"] ?? 0)} pedidos (${Number(k["unidades"] ?? 0)} unidades)`,
-    `🎟️ Ticket medio: R$ ${brl(k["ticket_medio"])}`,
-    `📉 Custos: R$ ${brl(k["custo_total"])} (${pct(k["custo_pct"])}%)`,
-    `🏷️ Tarifas Shopee: R$ ${brl(k["taxas"])} (${pct(k["taxas_pct"])}%)`,
-    `📢 Ads investido: R$ ${brl(k["ads_investimento"])} (${pct(k["ads_pct"])}%)`,
-    `🧾 Impostos: R$ ${brl(k["imposto"])} (${pct(k["imposto_pct"])}%)`,
-    `✅ Lucro (sem Ads): R$ ${brl(k["lucro_sem_ads"])} (${pct(k["lucro_sem_ads_pct"])}%)`,
-    `✅ Lucro (com Ads): R$ ${brl(k["lucro_com_ads"])} (${pct(k["lucro_com_ads_pct"])}%)`,
-    `❌ Cancelados: ${Number(k["pedidos_cancelados"] ?? 0)} (R$ ${brl(k["valor_cancelado"])})`,
-    `↩️ Devolvidos: ${Number(k["pedidos_devolvidos"] ?? 0)} (R$ ${brl(k["valor_devolvido"])})`,
-  ];
+  const pedidos = Number(k["pedidos_validos"] ?? 0);
+  const cancelados = Number(k["pedidos_cancelados"] ?? 0);
+  const devolvidos = Number(k["pedidos_devolvidos"] ?? 0);
+  const lucroComAds = Number(k["lucro_com_ads"] ?? 0);
+  const lucroPorPedido = pedidos > 0 ? lucroComAds / pedidos : 0;
 
-  if (carteira) {
-    linhas.push("");
-    linhas.push(`🏦 Entradas na carteira: R$ ${brl(carteira["entradas"])}`);
-    linhas.push(`🚚 Em transito: R$ ${brl(carteira["em_transito"])}`);
+  const linhas: string[] = parcial
+    ? [`⏱️ *PARCIAL DREAM ICE* — ${dataCurta(dataRef)} às ${hora}`]
+    : ["📊 *RESUMO DREAM ICE*", `📅 ${dataExtenso(dataRef)}`];
+
+  linhas.push(
+    "",
+    "*💰 VENDAS*",
+    linha("Faturamento", `R$ ${brl(k["faturamento"])}`),
+    linha("Pedidos", `${pedidos} (${Number(k["unidades"] ?? 0)} un.)`),
+    linha("Ticket médio", `R$ ${brl(k["ticket_medio"])}`),
+    "",
+    "*📉 CUSTOS*",
+    linha("Produtos", `R$ ${brl(k["custo_total"])} (${pct(k["custo_pct"])}%)`),
+    linha("Tarifas Shopee", `R$ ${brl(k["taxas"])} (${pct(k["taxas_pct"])}%)`),
+    linha("Ads", `R$ ${brl(k["ads_investimento"])} (${pct(k["ads_pct"])}%)`),
+    linha("Impostos", `R$ ${brl(k["imposto"])} (${pct(k["imposto_pct"])}%)`),
+    "",
+    "*✅ LUCRO*",
+    linha("Sem Ads", `R$ ${brl(k["lucro_sem_ads"])} (${pct(k["lucro_sem_ads_pct"])}%)`),
+    linha("Com Ads", `R$ ${brl(lucroComAds)} (${pct(k["lucro_com_ads_pct"])}%)`),
+    linha("Por pedido", `R$ ${brl(lucroPorPedido)}`),
+  );
+
+  if (cancelados > 0 || devolvidos > 0) {
+    linhas.push("", "*⚠️ PERDAS*");
+    if (cancelados > 0) linhas.push(linha("Cancelados", `${cancelados} (R$ ${brl(k["valor_cancelado"])})`));
+    if (devolvidos > 0) linhas.push(linha("Devolvidos", `${devolvidos} (R$ ${brl(k["valor_devolvido"])})`));
+  }
+
+  if (carteira && (Number(carteira["entradas"] ?? 0) !== 0 || Number(carteira["em_transito"] ?? 0) !== 0)) {
+    linhas.push(
+      "",
+      "*🏦 CARTEIRA*",
+      linha("Entradas", `R$ ${brl(carteira["entradas"])}`),
+      linha("Em trânsito", `R$ ${brl(carteira["em_transito"])}`),
+    );
+  }
+
+  if (parcial) {
+    linhas.push("", "_Dados parciais do dia em andamento_");
   }
 
   const mensagem = linhas.join("\n");
