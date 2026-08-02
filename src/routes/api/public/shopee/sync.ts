@@ -61,6 +61,11 @@ function paraIso(segundos: unknown): string | null {
   return new Date(n * 1000).toISOString();
 }
 
+function tokenInvalido(resposta: { error?: string; message?: string } | null | undefined) {
+  const texto = `${resposta?.error ?? ''} ${resposta?.message ?? ''}`.toLowerCase();
+  return texto.includes('invalid_acceess_token') || texto.includes('invalid_access_token');
+}
+
 async function handler({ request }: { request: Request }) {
   const unauth = checkCronSecret(request); if (unauth) return unauth;
   const inicioExecucao = Date.now();
@@ -105,12 +110,38 @@ async function handler({ request }: { request: Request }) {
       return responder({ ok: false, erro: 'nenhuma loja conectada' }, 400);
     }
 
-    if (new Date(conexao.token_expires_at as string) < new Date()) {
-      return responder({ ok: false, erro: 'access_token expirado' }, 400);
-    }
-
     const shopId = Number(conexao.shop_id);
-    const token = conexao.access_token as string;
+    let token = conexao.access_token as string;
+    let tokenRenovadoNestaExecucao = false;
+
+    const renovarERecarregarToken = async () => {
+      if (tokenRenovadoNestaExecucao) return false;
+      tokenRenovadoNestaExecucao = true;
+      const { refreshTokenIfNeeded } = await import('@/lib/shopee-sync.server');
+      const renovacao = await refreshTokenIfNeeded();
+      if (!renovacao.ok) {
+        erros.push(`refresh_token: ${renovacao.error ?? 'falha ao renovar'}`);
+        return false;
+      }
+      const { data: atualizada } = await supabaseAdmin
+        .from('shopee_connection')
+        .select('access_token')
+        .eq('app_tipo', 'principal')
+        .maybeSingle();
+      if (!atualizada?.access_token) {
+        erros.push('refresh_token: token renovado nao encontrado');
+        return false;
+      }
+      token = atualizada.access_token;
+      return true;
+    };
+
+    if (!conexao.token_expires_at || new Date(conexao.token_expires_at as string) <= new Date()) {
+      const recuperado = await renovarERecarregarToken();
+      if (!recuperado) {
+        return responder({ ok: false, erro: 'access_token expirado', erros }, 400);
+      }
+    }
 
     const todosSn: string[] = [];
     const inicioOriginal = inicio;
@@ -132,12 +163,21 @@ async function handler({ request }: { request: Request }) {
         };
         if (cursor) parametros.cursor = cursor;
 
-        const lista = await chamarShopee(
+        let lista = await chamarShopee(
           '/api/v2/order/get_order_list',
           token,
           shopId,
           parametros,
         );
+
+        if (tokenInvalido(lista) && await renovarERecarregarToken()) {
+          lista = await chamarShopee(
+            '/api/v2/order/get_order_list',
+            token,
+            shopId,
+            parametros,
+          );
+        }
 
         if (lista.error && lista.error !== '') {
           erros.push(`get_order_list: ${lista.error} ${lista.message ?? ''}`);
@@ -161,7 +201,7 @@ async function handler({ request }: { request: Request }) {
     for (let i = 0; i < unicos.length; i += 50) {
       const lote = unicos.slice(i, i + 50);
 
-      const detalhe = await chamarShopee(
+      let detalhe = await chamarShopee(
         '/api/v2/order/get_order_detail',
         token,
         shopId,
@@ -171,6 +211,19 @@ async function handler({ request }: { request: Request }) {
             'buyer_username,total_amount,item_list,pay_time,actual_shipping_fee',
         },
       );
+
+      if (tokenInvalido(detalhe) && await renovarERecarregarToken()) {
+        detalhe = await chamarShopee(
+          '/api/v2/order/get_order_detail',
+          token,
+          shopId,
+          {
+            order_sn_list: lote.join(','),
+            response_optional_fields:
+              'buyer_username,total_amount,item_list,pay_time,actual_shipping_fee',
+          },
+        );
+      }
 
       if (detalhe.error && detalhe.error !== '') {
         erros.push(`get_order_detail: ${detalhe.error} ${detalhe.message ?? ''}`);
