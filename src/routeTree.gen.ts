@@ -138,7 +138,9 @@ const AuthenticatedIaConversaIdRoute =
     id: '/ia/$conversaId',
     path: '/ia/$conversaId',
     getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/_authenticated/ia.$conversaId.lazy').then((d) => d.Route),
+  )
 const ApiPublicShopeeWebhookRoute = ApiPublicShopeeWebhookRouteImport.update({
   id: '/api/public/shopee/webhook',
   path: '/api/public/shopee/webhook',
