@@ -19,7 +19,7 @@ import logoAsset from "@/assets/dreamice-logo.png.asset.json";
 
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Dream IA", url: "/ia", icon: Bot },
+  { title: "DreamAI", url: "/ia", icon: Bot },
   { title: "Pedidos", url: "/pedidos", icon: ShoppingBag },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
   { title: "DRE", url: "/dre", icon: FileSpreadsheet },

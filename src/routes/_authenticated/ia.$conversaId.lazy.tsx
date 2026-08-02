@@ -36,7 +36,7 @@ function IaConversa() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-2xl font-semibold">Dream IA</h1>
+        <h1 className="text-2xl font-semibold">DreamAI</h1>
         <p className="text-sm text-muted-foreground">
           Consultas em tempo real no banco do painel: pedidos, custos, ads, carteira e DRE.
         </p>
