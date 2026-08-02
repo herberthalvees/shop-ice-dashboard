@@ -54,6 +54,9 @@ const grupos = [
 const tile3d =
   "relative flex size-7 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-br from-white/12 to-black/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_2px_5px_rgba(0,0,0,0.45)] transition-all duration-200 group-hover/menu-item:-translate-y-[1px]";
 
+const botaoMenu =
+  "h-9 gap-2.5 rounded-lg group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-0 group-data-[collapsible=icon]:justify-center";
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -74,18 +77,18 @@ export function AppSidebar() {
       collapsible="icon"
       className="[&_[data-sidebar=sidebar]]:bg-gradient-to-b [&_[data-sidebar=sidebar]]:from-sidebar [&_[data-sidebar=sidebar]]:to-background"
     >
-      <SidebarHeader className="border-b border-sidebar-border/60">
+      <SidebarHeader className="border-b border-sidebar-border/60 group-data-[collapsible=icon]:px-0">
         <Link
           to="/dashboard"
-          className="flex items-center gap-2.5 px-1 py-1.5 transition-opacity hover:opacity-90"
+          className="flex items-center gap-2.5 px-1 py-1.5 transition-opacity hover:opacity-90 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
         >
-          <span className="relative flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-gradient-to-br from-primary/25 via-background to-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_6px_14px_-6px_rgba(0,0,0,0.9)]">
+          <span className="relative flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-gradient-to-br from-primary/25 via-background to-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_6px_14px_-6px_rgba(0,0,0,0.9)] group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:rounded-lg">
             <img
               src={markUrl}
               alt="Dream Ice"
               width={36}
               height={36}
-              className="size-6 object-contain drop-shadow-[0_0_6px_rgba(255,140,40,0.55)]"
+              className="size-6 object-contain drop-shadow-[0_0_6px_rgba(255,140,40,0.55)] group-data-[collapsible=icon]:size-5"
             />
           </span>
           {!collapsed && (
@@ -113,9 +116,12 @@ export function AppSidebar() {
                         asChild
                         isActive={active}
                         tooltip={item.title}
-                        className="h-9 gap-2.5 rounded-lg data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/20 data-[active=true]:to-transparent data-[active=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                        className={
+                          botaoMenu +
+                          " data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/20 data-[active=true]:to-transparent data-[active=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                        }
                       >
-                        <Link to={item.url}>
+                        <Link to={item.url} className="group-data-[collapsible=icon]:justify-center">
                           <span
                             className={
                               tile3d +
@@ -133,7 +139,9 @@ export function AppSidebar() {
                               }
                             />
                           </span>
-                          <span className="truncate font-medium">{item.title}</span>
+                          <span className="truncate font-medium group-data-[collapsible=icon]:hidden">
+                            {item.title}
+                          </span>
                           {active && (
                             <span className="ml-auto h-4 w-1 rounded-full bg-primary shadow-[0_0_8px_rgba(255,140,40,0.8)] group-data-[collapsible=icon]:hidden" />
                           )}
@@ -150,11 +158,11 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border/60">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleSignOut} tooltip="Sair" className="h-9 gap-2.5">
+            <SidebarMenuButton onClick={handleSignOut} tooltip="Sair" className={botaoMenu}>
               <span className={tile3d}>
                 <LogOut className="size-4 text-sidebar-foreground/70" />
               </span>
-              <span className="font-medium">Sair</span>
+              <span className="font-medium group-data-[collapsible=icon]:hidden">Sair</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
