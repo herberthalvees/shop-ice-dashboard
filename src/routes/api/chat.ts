@@ -6,6 +6,11 @@ import { clienteUsuario, memoriaAtual, promptSistema, resumoSchema } from "@/lib
 
 type CorpoChat = { messages?: unknown; conversaId?: unknown };
 
+const MODELO_IA = "openai/gpt-5.6-sol";
+// Tarifa aproximada em créditos Lovable por 1k tokens (calibrada pelos logs do gateway).
+const CREDITOS_POR_1K_ENTRADA = 0.02;
+const CREDITOS_POR_1K_SAIDA = 0.12;
+
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
@@ -111,12 +116,29 @@ export const Route = createFileRoute("/api/chat")({
         });
 
         const resultado = streamText({
-          model: gateway("openai/gpt-5.6-sol"),
+          model: gateway(MODELO_IA),
           system: promptSistema(schema, memoria),
           messages: await convertToModelMessages(mensagens),
           tools: { consultar_banco, listar_tabelas, salvar_memoria, esquecer_memoria },
           stopWhen: stepCountIs(50),
           providerOptions: { lovable: { reasoningEffort: "none" } },
+          onFinish: async ({ totalUsage, steps }) => {
+            const entrada = totalUsage?.inputTokens ?? 0;
+            const saida = totalUsage?.outputTokens ?? 0;
+            const raciocinio = totalUsage?.reasoningTokens ?? 0;
+            const custo =
+              (entrada / 1000) * CREDITOS_POR_1K_ENTRADA + (saida / 1000) * CREDITOS_POR_1K_SAIDA;
+            const { error } = await supabase.from("ia_uso").insert({
+              conversa_id: conversaId,
+              modelo: MODELO_IA,
+              tokens_entrada: entrada,
+              tokens_saida: saida,
+              tokens_raciocinio: raciocinio,
+              passos: steps?.length ?? 1,
+              custo_creditos: Number(custo.toFixed(6)),
+            });
+            if (error) console.error("falha ao registrar uso ia", error.message);
+          },
         });
 
         return resultado.toUIMessageStreamResponse({
