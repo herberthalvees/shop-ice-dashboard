@@ -23,6 +23,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as ApiShopeeAuthUrlRouteImport } from './routes/api/shopee/auth-url'
 import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/shopee/webhook'
+import { Route as ApiPublicShopeeWatchdogRouteImport } from './routes/api/public/shopee/watchdog'
 import { Route as ApiPublicShopeeSyncProdutosRouteImport } from './routes/api/public/shopee/sync-produtos'
 import { Route as ApiPublicShopeeSyncEscrowRouteImport } from './routes/api/public/shopee/sync-escrow'
 import { Route as ApiPublicShopeeSyncCarteiraRouteImport } from './routes/api/public/shopee/sync-carteira'
@@ -122,6 +123,11 @@ const ApiPublicShopeeWebhookRoute = ApiPublicShopeeWebhookRouteImport.update({
   path: '/api/public/shopee/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicShopeeWatchdogRoute = ApiPublicShopeeWatchdogRouteImport.update({
+  id: '/api/public/shopee/watchdog',
+  path: '/api/public/shopee/watchdog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicShopeeSyncProdutosRoute =
   ApiPublicShopeeSyncProdutosRouteImport.update({
     id: '/api/public/shopee/sync-produtos',
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
+  '/api/public/shopee/watchdog': typeof ApiPublicShopeeWatchdogRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -227,6 +234,7 @@ export interface FileRoutesByTo {
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
+  '/api/public/shopee/watchdog': typeof ApiPublicShopeeWatchdogRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
 }
 export interface FileRoutesById {
@@ -254,6 +262,7 @@ export interface FileRoutesById {
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
+  '/api/public/shopee/watchdog': typeof ApiPublicShopeeWatchdogRoute
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
 }
 export interface FileRouteTypes {
@@ -281,6 +290,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
+    | '/api/public/shopee/watchdog'
     | '/api/public/shopee/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
+    | '/api/public/shopee/watchdog'
     | '/api/public/shopee/webhook'
   id:
     | '__root__'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
+    | '/api/public/shopee/watchdog'
     | '/api/public/shopee/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -351,6 +363,7 @@ export interface RootRouteChildren {
   ApiPublicShopeeSyncCarteiraRoute: typeof ApiPublicShopeeSyncCarteiraRoute
   ApiPublicShopeeSyncEscrowRoute: typeof ApiPublicShopeeSyncEscrowRoute
   ApiPublicShopeeSyncProdutosRoute: typeof ApiPublicShopeeSyncProdutosRoute
+  ApiPublicShopeeWatchdogRoute: typeof ApiPublicShopeeWatchdogRoute
   ApiPublicShopeeWebhookRoute: typeof ApiPublicShopeeWebhookRoute
 }
 
@@ -452,6 +465,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/shopee/webhook'
       fullPath: '/api/public/shopee/webhook'
       preLoaderRoute: typeof ApiPublicShopeeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/watchdog': {
+      id: '/api/public/shopee/watchdog'
+      path: '/api/public/shopee/watchdog'
+      fullPath: '/api/public/shopee/watchdog'
+      preLoaderRoute: typeof ApiPublicShopeeWatchdogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/shopee/sync-produtos': {
@@ -568,8 +588,19 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShopeeSyncCarteiraRoute: ApiPublicShopeeSyncCarteiraRoute,
   ApiPublicShopeeSyncEscrowRoute: ApiPublicShopeeSyncEscrowRoute,
   ApiPublicShopeeSyncProdutosRoute: ApiPublicShopeeSyncProdutosRoute,
+  ApiPublicShopeeWatchdogRoute: ApiPublicShopeeWatchdogRoute,
   ApiPublicShopeeWebhookRoute: ApiPublicShopeeWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
