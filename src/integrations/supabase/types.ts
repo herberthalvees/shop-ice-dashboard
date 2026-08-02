@@ -317,6 +317,95 @@ export type Database = {
         }
         Relationships: []
       }
+      ia_conversas: {
+        Row: {
+          created_at: string
+          id: string
+          titulo: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          titulo?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ia_memoria: {
+        Row: {
+          chave: string
+          conteudo: string
+          created_at: string
+          id: string
+          peso: number
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          chave: string
+          conteudo: string
+          created_at?: string
+          id?: string
+          peso?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          chave?: string
+          conteudo?: string
+          created_at?: string
+          id?: string
+          peso?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      ia_mensagens: {
+        Row: {
+          conversa_id: string
+          created_at: string
+          id: string
+          msg_id: string | null
+          parts: Json
+          role: string
+        }
+        Insert: {
+          conversa_id: string
+          created_at?: string
+          id?: string
+          msg_id?: string | null
+          parts?: Json
+          role: string
+        }
+        Update: {
+          conversa_id?: string
+          created_at?: string
+          id?: string
+          msg_id?: string | null
+          parts?: Json
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ia_mensagens_conversa_id_fkey"
+            columns: ["conversa_id"]
+            isOneToOne: false
+            referencedRelation: "ia_conversas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pedido_itens: {
         Row: {
           created_at: string
@@ -1045,6 +1134,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      ia_schema: { Args: never; Returns: Json }
+      ia_sql: { Args: { consulta: string; limite?: number }; Returns: Json }
       pedidos_detalhe: {
         Args: {
           p_ate: string
