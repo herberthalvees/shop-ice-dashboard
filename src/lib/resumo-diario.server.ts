@@ -143,20 +143,35 @@ export async function enviarResumoDiario(opts?: {
 
   let enviado = false;
   let erro: string | null = null;
+  let respostaWebhook: { status?: number; corpo?: string } = {};
   try {
     const res = await fetch(webhook, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ tipo: "resumo_diario", mensagem, data: dataRef }),
+      body: JSON.stringify({
+        evento: "resumo_diario",
+        tipo: "resumo_diario",
+        mensagem,
+        data: dataRef,
+        data_referencia: dataRef,
+      }),
     });
+    const corpo = (await res.text()).slice(0, 2_000);
+    respostaWebhook = { status: res.status, corpo };
     enviado = res.ok;
-    if (!res.ok) erro = `HTTP ${res.status}`;
+    if (!res.ok) erro = `Webhook respondeu HTTP ${res.status}${corpo ? `: ${corpo}` : ""}`;
   } catch (e) {
     erro = (e as Error).message;
   }
 
   await (supabaseAdmin.from("alertas_enviados") as any).upsert(
-    { tipo: "resumo_diario", chave: dataRef, enviado, erro, detalhe: { mensagem } },
+    {
+      tipo: "resumo_diario",
+      chave: dataRef,
+      enviado,
+      erro,
+      detalhe: { mensagem, webhook: respostaWebhook },
+    },
     { onConflict: "tipo,chave" },
   );
 
