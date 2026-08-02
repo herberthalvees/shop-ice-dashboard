@@ -1,11 +1,12 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Snowflake, Calculator, Wallet, FileSpreadsheet, Bot } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Calculator, Wallet, FileSpreadsheet, Bot } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -16,18 +17,42 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import logoAsset from "@/assets/dreamice-logo.png.asset.json";
+import markUrl from "@/assets/dreamice-mark.png";
 
-const items = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "DreamAI", url: "/ia", icon: Bot },
-  { title: "Pedidos", url: "/pedidos", icon: ShoppingBag },
-  { title: "Financeiro", url: "/financeiro", icon: Wallet },
-  { title: "DRE", url: "/dre", icon: FileSpreadsheet },
-  { title: "Produtos", url: "/produtos", icon: Package },
-  { title: "Precificação", url: "/precificacao", icon: Calculator },
-  { title: "Notificações", url: "/notificacoes", icon: Bell },
-  { title: "Configurações", url: "/configuracoes", icon: Settings },
+const grupos = [
+  {
+    label: "Visão geral",
+    items: [
+      { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+      { title: "DreamAI", url: "/ia", icon: Bot },
+    ],
+  },
+  {
+    label: "Operação",
+    items: [
+      { title: "Pedidos", url: "/pedidos", icon: ShoppingBag },
+      { title: "Produtos", url: "/produtos", icon: Package },
+      { title: "Precificação", url: "/precificacao", icon: Calculator },
+    ],
+  },
+  {
+    label: "Financeiro",
+    items: [
+      { title: "Financeiro", url: "/financeiro", icon: Wallet },
+      { title: "DRE", url: "/dre", icon: FileSpreadsheet },
+    ],
+  },
+  {
+    label: "Sistema",
+    items: [
+      { title: "Notificações", url: "/notificacoes", icon: Bell },
+      { title: "Configurações", url: "/configuracoes", icon: Settings },
+    ],
+  },
 ] as const;
+
+const tile3d =
+  "relative flex size-7 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-gradient-to-br from-white/12 to-black/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_2px_5px_rgba(0,0,0,0.45)] transition-all duration-200 group-hover/menu-item:-translate-y-[1px]";
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -45,49 +70,91 @@ export function AppSidebar() {
   }
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b">
-        <div className="flex items-center gap-2 px-2 py-1.5">
-          {collapsed ? (
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/15 text-primary">
-              <Snowflake className="h-4 w-4" />
-            </div>
-          ) : (
+    <Sidebar
+      collapsible="icon"
+      className="[&_[data-sidebar=sidebar]]:bg-gradient-to-b [&_[data-sidebar=sidebar]]:from-sidebar [&_[data-sidebar=sidebar]]:to-background"
+    >
+      <SidebarHeader className="border-b border-sidebar-border/60">
+        <Link
+          to="/dashboard"
+          className="flex items-center gap-2.5 px-1 py-1.5 transition-opacity hover:opacity-90"
+        >
+          <span className="relative flex size-9 shrink-0 items-center justify-center rounded-xl border border-primary/25 bg-gradient-to-br from-primary/25 via-background to-black/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_6px_14px_-6px_rgba(0,0,0,0.9)]">
+            <img
+              src={markUrl}
+              alt="Dream Ice"
+              width={36}
+              height={36}
+              className="size-6 object-contain drop-shadow-[0_0_6px_rgba(255,140,40,0.55)]"
+            />
+          </span>
+          {!collapsed && (
             <img
               src={logoAsset.url}
               alt="Dream Ice Shop"
-              className="h-9 w-auto object-contain"
+              className="h-8 w-auto object-contain"
             />
           )}
-        </div>
+        </Link>
       </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => {
-                const active = pathname === item.url || pathname.startsWith(item.url + "/");
-                return (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
-                      <Link to={item.url} className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <SidebarContent className="gap-0">
+        {grupos.map((grupo) => (
+          <SidebarGroup key={grupo.label}>
+            <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/45">
+              {grupo.label}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {grupo.items.map((item) => {
+                  const active = pathname === item.url || pathname.startsWith(item.url + "/");
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={active}
+                        tooltip={item.title}
+                        className="h-9 gap-2.5 rounded-lg data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/20 data-[active=true]:to-transparent data-[active=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+                      >
+                        <Link to={item.url}>
+                          <span
+                            className={
+                              tile3d +
+                              (active
+                                ? " border-primary/40 from-primary/35 to-primary/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.3),0_3px_8px_rgba(0,0,0,0.5)]"
+                                : "")
+                            }
+                          >
+                            <item.icon
+                              className={
+                                "size-4 " +
+                                (active
+                                  ? "text-primary drop-shadow-[0_0_5px_rgba(255,140,40,0.7)]"
+                                  : "text-sidebar-foreground/70")
+                              }
+                            />
+                          </span>
+                          <span className="truncate font-medium">{item.title}</span>
+                          {active && (
+                            <span className="ml-auto h-4 w-1 rounded-full bg-primary shadow-[0_0_8px_rgba(255,140,40,0.8)] group-data-[collapsible=icon]:hidden" />
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
-      <SidebarFooter className="border-t">
+      <SidebarFooter className="border-t border-sidebar-border/60">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={handleSignOut} tooltip="Sair">
-              <LogOut className="h-4 w-4" />
-              <span>Sair</span>
+            <SidebarMenuButton onClick={handleSignOut} tooltip="Sair" className="h-9 gap-2.5">
+              <span className={tile3d}>
+                <LogOut className="size-4 text-sidebar-foreground/70" />
+              </span>
+              <span className="font-medium">Sair</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
