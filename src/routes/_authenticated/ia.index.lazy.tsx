@@ -10,7 +10,7 @@ function IaIndex() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-2xl font-semibold">Analista IA</h1>
+        <h1 className="text-2xl font-semibold">Dream IA</h1>
         <p className="text-sm text-muted-foreground">
           Pergunte em português e a IA consulta o banco do painel para responder com números reais.
         </p>
