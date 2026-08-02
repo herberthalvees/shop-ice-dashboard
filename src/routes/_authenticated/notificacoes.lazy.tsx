@@ -25,6 +25,7 @@ const TIPOS = [
   { key: "pedido_enviado", label: "Pedido enviado" },
   { key: "estoque_baixo", label: "Estoque baixo" },
   { key: "resumo_diario", label: "Resumo diário (01:00)" },
+  { key: "resumo_parcial", label: "Parciais do dia (09h, 14h, 19h, 23h)" },
 ] as const;
 
 function NotifPage() {
@@ -57,7 +58,8 @@ function NotifPage() {
   useEffect(() => {
     if (!cfg) return;
     setUrl(cfg.webhook_whatsapp_url ?? "");
-    setAtivos((cfg.eventos as any) ?? {});
+    const ev = ((cfg.eventos as any) ?? {}) as Record<string, boolean>;
+    setAtivos({ resumo_parcial: ev.resumo_parcial !== false, ...ev });
     setLimite(cfg.limite_estoque_baixo ?? 5);
     setAtivas(!!cfg.notificacoes_ativas);
   }, [cfg]);

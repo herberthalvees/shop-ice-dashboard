@@ -39,6 +39,15 @@ function dataExtenso(iso: string): string {
   return `${semana}, ${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}`;
 }
 
+export function horaSaoPaulo(): string {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: TZ,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date());
+}
+
 export type ResultadoResumo = {
   ok: boolean;
   data_referencia: string;
@@ -50,8 +59,10 @@ export type ResultadoResumo = {
 export async function enviarResumoDiario(opts?: {
   dataRef?: string;
   ignorarToggle?: boolean;
+  parcial?: boolean;
 }): Promise<ResultadoResumo> {
-  const dataRef = opts?.dataRef ?? ontemSaoPaulo();
+  const parcial = !!opts?.parcial;
+  const dataRef = opts?.dataRef ?? (parcial ? hojeSaoPaulo() : ontemSaoPaulo());
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   const { data: cfg } = await supabaseAdmin
@@ -67,7 +78,8 @@ export async function enviarResumoDiario(opts?: {
 
   if (!opts?.ignorarToggle) {
     const eventos = (cfg?.eventos ?? {}) as Record<string, unknown>;
-    if (eventos["resumo_diario"] === false) {
+    const chaveEvento = parcial ? "resumo_parcial" : "resumo_diario";
+    if (eventos[chaveEvento] === false) {
       return { ok: false, data_referencia: dataRef, enviado: false, erro: "resumo diario desativado" };
     }
   }
@@ -117,8 +129,11 @@ export async function enviarResumoDiario(opts?: {
     carteira = null;
   }
 
+  const hora = horaSaoPaulo();
   const linhas = [
-    `📊 *Resumo Dream Ice — ${dataExtenso(dataRef)}*`,
+    parcial
+      ? `⏱️ *Parcial Dream Ice — ${dataExtenso(dataRef)} às ${hora}*`
+      : `📊 *Resumo Dream Ice — ${dataExtenso(dataRef)}*`,
     "",
     `💰 Faturamento: R$ ${brl(k["faturamento"])}`,
     `📦 Vendas: ${Number(k["pedidos_validos"] ?? 0)} pedidos (${Number(k["unidades"] ?? 0)} unidades)`,
@@ -151,6 +166,7 @@ export async function enviarResumoDiario(opts?: {
       body: JSON.stringify({
         evento: "resumo_diario",
         tipo: "resumo_diario",
+        parcial,
         mensagem,
         data: dataRef,
         data_referencia: dataRef,
@@ -166,8 +182,8 @@ export async function enviarResumoDiario(opts?: {
 
   await (supabaseAdmin.from("alertas_enviados") as any).upsert(
     {
-      tipo: "resumo_diario",
-      chave: dataRef,
+      tipo: parcial ? "resumo_parcial" : "resumo_diario",
+      chave: parcial ? `${dataRef} ${hora}` : dataRef,
       enviado,
       erro,
       detalhe: { mensagem, webhook: respostaWebhook },
