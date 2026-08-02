@@ -33,6 +33,7 @@ const grupos = [
       { title: "Pedidos", url: "/pedidos", icon: ShoppingBag },
       { title: "Produtos", url: "/produtos", icon: Package },
       { title: "Precificação", url: "/precificacao", icon: Calculator },
+      { title: "Calculadora", url: "/calculadora", icon: Percent },
     ],
   },
   {
