@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Calculator, Wallet, FileSpreadsheet, Bot } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Calculator, Wallet, FileSpreadsheet, Bot, Percent } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,

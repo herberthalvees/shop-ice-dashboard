@@ -127,7 +127,9 @@ const AuthenticatedCalculadoraRoute =
     id: '/calculadora',
     path: '/calculadora',
     getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
+  } as any).lazy(() =>
+    import('./routes/_authenticated/calculadora.lazy').then((d) => d.Route),
+  )
 const AuthenticatedIaIndexRoute = AuthenticatedIaIndexRouteImport.update({
   id: '/ia/',
   path: '/ia/',
