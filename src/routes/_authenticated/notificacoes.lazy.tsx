@@ -58,7 +58,8 @@ function NotifPage() {
   useEffect(() => {
     if (!cfg) return;
     setUrl(cfg.webhook_whatsapp_url ?? "");
-    setAtivos((cfg.eventos as any) ?? {});
+    const ev = ((cfg.eventos as any) ?? {}) as Record<string, boolean>;
+    setAtivos({ resumo_parcial: ev.resumo_parcial !== false, ...ev });
     setLimite(cfg.limite_estoque_baixo ?? 5);
     setAtivas(!!cfg.notificacoes_ativas);
   }, [cfg]);
