@@ -166,6 +166,7 @@ export async function enviarResumoDiario(opts?: {
       body: JSON.stringify({
         evento: "resumo_diario",
         tipo: "resumo_diario",
+        parcial,
         mensagem,
         data: dataRef,
         data_referencia: dataRef,
