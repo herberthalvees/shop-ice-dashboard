@@ -26,9 +26,11 @@ export function ListaConversas({ ativa }: { ativa?: string }) {
   const criar = useMutation({
     mutationFn: async () => {
       const { data: sessao } = await supabase.auth.getUser();
+      const userId = sessao.user?.id;
+      if (!userId) throw new Error("Sessão expirada, entre novamente.");
       const { data, error } = await supabase
         .from("ia_conversas")
-        .insert({ titulo: "Nova conversa", user_id: sessao.user?.id ?? null })
+        .insert({ titulo: "Nova conversa", user_id: userId })
         .select("id")
         .single();
       if (error) throw error;
