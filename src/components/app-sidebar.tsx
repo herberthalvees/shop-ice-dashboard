@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Snowflake, Calculator, Wallet, FileSpreadsheet } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Snowflake, Calculator, Wallet, FileSpreadsheet, Bot } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -19,6 +19,7 @@ import logoAsset from "@/assets/dreamice-logo.png.asset.json";
 
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
+  { title: "Analista IA", url: "/ia", icon: Bot },
   { title: "Pedidos", url: "/pedidos", icon: ShoppingBag },
   { title: "Financeiro", url: "/financeiro", icon: Wallet },
   { title: "DRE", url: "/dre", icon: FileSpreadsheet },

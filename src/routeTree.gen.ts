@@ -13,6 +13,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
 import { Route as AuthenticatedPrecificacaoRouteImport } from './routes/_authenticated/precificacao'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
@@ -21,7 +22,9 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDreRouteImport } from './routes/_authenticated/dre'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedIaIndexRouteImport } from './routes/_authenticated/ia.index'
 import { Route as ApiShopeeAuthUrlRouteImport } from './routes/api/shopee/auth-url'
+import { Route as AuthenticatedIaConversaIdRouteImport } from './routes/_authenticated/ia.$conversaId'
 import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/shopee/webhook'
 import { Route as ApiPublicShopeeWatchdogRouteImport } from './routes/api/public/shopee/watchdog'
 import { Route as ApiPublicShopeeSyncProdutosRouteImport } from './routes/api/public/shopee/sync-produtos'
@@ -52,6 +55,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
@@ -113,11 +121,26 @@ const AuthenticatedConfiguracoesRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/configuracoes.lazy').then((d) => d.Route),
   )
+const AuthenticatedIaIndexRoute = AuthenticatedIaIndexRouteImport.update({
+  id: '/ia/',
+  path: '/ia/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/ia.index.lazy').then((d) => d.Route),
+)
 const ApiShopeeAuthUrlRoute = ApiShopeeAuthUrlRouteImport.update({
   id: '/api/shopee/auth-url',
   path: '/api/shopee/auth-url',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedIaConversaIdRoute =
+  AuthenticatedIaConversaIdRouteImport.update({
+    id: '/ia/$conversaId',
+    path: '/ia/$conversaId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/ia.$conversaId.lazy').then((d) => d.Route),
+  )
 const ApiPublicShopeeWebhookRoute = ApiPublicShopeeWebhookRouteImport.update({
   id: '/api/public/shopee/webhook',
   path: '/api/public/shopee/webhook',
@@ -197,7 +220,10 @@ export interface FileRoutesByFullPath {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
+  '/api/chat': typeof ApiChatRoute
+  '/ia/$conversaId': typeof AuthenticatedIaConversaIdRoute
   '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
+  '/ia/': typeof AuthenticatedIaIndexRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
@@ -223,7 +249,10 @@ export interface FileRoutesByTo {
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
+  '/api/chat': typeof ApiChatRoute
+  '/ia/$conversaId': typeof AuthenticatedIaConversaIdRoute
   '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
+  '/ia': typeof AuthenticatedIaIndexRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
@@ -251,7 +280,10 @@ export interface FileRoutesById {
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
+  '/api/chat': typeof ApiChatRoute
+  '/_authenticated/ia/$conversaId': typeof AuthenticatedIaConversaIdRoute
   '/api/shopee/auth-url': typeof ApiShopeeAuthUrlRoute
+  '/_authenticated/ia/': typeof AuthenticatedIaIndexRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
@@ -279,7 +311,10 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/precificacao'
     | '/produtos'
+    | '/api/chat'
+    | '/ia/$conversaId'
     | '/api/shopee/auth-url'
+    | '/ia/'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
     | '/api/public/shopee/refresh'
@@ -305,7 +340,10 @@ export interface FileRouteTypes {
     | '/pedidos'
     | '/precificacao'
     | '/produtos'
+    | '/api/chat'
+    | '/ia/$conversaId'
     | '/api/shopee/auth-url'
+    | '/ia'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
     | '/api/public/shopee/refresh'
@@ -332,7 +370,10 @@ export interface FileRouteTypes {
     | '/_authenticated/pedidos'
     | '/_authenticated/precificacao'
     | '/_authenticated/produtos'
+    | '/api/chat'
+    | '/_authenticated/ia/$conversaId'
     | '/api/shopee/auth-url'
+    | '/_authenticated/ia/'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
     | '/api/public/shopee/refresh'
@@ -352,6 +393,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiShopeeAuthUrlRoute: typeof ApiShopeeAuthUrlRoute
   ApiPublicShopeeCallbackRoute: typeof ApiPublicShopeeCallbackRoute
   ApiPublicShopeeCallbackAdsRoute: typeof ApiPublicShopeeCallbackAdsRoute
@@ -395,6 +437,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/produtos': {
@@ -453,12 +502,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ia/': {
+      id: '/_authenticated/ia/'
+      path: '/ia'
+      fullPath: '/ia/'
+      preLoaderRoute: typeof AuthenticatedIaIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/shopee/auth-url': {
       id: '/api/shopee/auth-url'
       path: '/api/shopee/auth-url'
       fullPath: '/api/shopee/auth-url'
       preLoaderRoute: typeof ApiShopeeAuthUrlRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/ia/$conversaId': {
+      id: '/_authenticated/ia/$conversaId'
+      path: '/ia/$conversaId'
+      fullPath: '/ia/$conversaId'
+      preLoaderRoute: typeof AuthenticatedIaConversaIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/shopee/webhook': {
       id: '/api/public/shopee/webhook'
@@ -556,6 +619,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedPrecificacaoRoute: typeof AuthenticatedPrecificacaoRoute
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
+  AuthenticatedIaConversaIdRoute: typeof AuthenticatedIaConversaIdRoute
+  AuthenticatedIaIndexRoute: typeof AuthenticatedIaIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -567,6 +632,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedPrecificacaoRoute: AuthenticatedPrecificacaoRoute,
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
+  AuthenticatedIaConversaIdRoute: AuthenticatedIaConversaIdRoute,
+  AuthenticatedIaIndexRoute: AuthenticatedIaIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -577,6 +644,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiShopeeAuthUrlRoute: ApiShopeeAuthUrlRoute,
   ApiPublicShopeeCallbackRoute: ApiPublicShopeeCallbackRoute,
   ApiPublicShopeeCallbackAdsRoute: ApiPublicShopeeCallbackAdsRoute,
