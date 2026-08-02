@@ -16,9 +16,10 @@ async function executar(request: Request) {
   const url = new URL(request.url);
   const dataParam = url.searchParams.get("data") ?? undefined;
   const forcar = url.searchParams.get("forcar") === "1";
+  const parcial = url.searchParams.get("parcial") === "1";
 
   try {
-    const r = await enviarResumoDiario({ dataRef: dataParam, ignorarToggle: forcar });
+    const r = await enviarResumoDiario({ dataRef: dataParam, ignorarToggle: forcar, parcial });
     const { mensagem: _omitida, ...resto } = r;
     console.log("resumo diario processado", {
       data_referencia: r.data_referencia,
