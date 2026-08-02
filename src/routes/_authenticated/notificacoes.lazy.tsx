@@ -25,6 +25,7 @@ const TIPOS = [
   { key: "pedido_enviado", label: "Pedido enviado" },
   { key: "estoque_baixo", label: "Estoque baixo" },
   { key: "resumo_diario", label: "Resumo diário (01:00)" },
+  { key: "resumo_parcial", label: "Parciais do dia (09h, 14h, 19h, 23h)" },
 ] as const;
 
 function NotifPage() {
