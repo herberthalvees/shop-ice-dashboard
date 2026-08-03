@@ -38,6 +38,7 @@ import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/sho
 import { Route as ApiPublicShopeeResumoDiarioRouteImport } from './routes/api/public/shopee/resumo-diario'
 import { Route as ApiPublicShopeeRefreshTokenRouteImport } from './routes/api/public/shopee/refresh-token'
 import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
+import { Route as ApiPublicShopeeDbgChatRouteImport } from './routes/api/public/shopee/dbg-chat'
 import { Route as ApiPublicShopeeCallbackAdsRouteImport } from './routes/api/public/shopee/callback-ads'
 import { Route as ApiPublicShopeeCallbackRouteImport } from './routes/api/public/shopee/callback'
 
@@ -219,6 +220,11 @@ const ApiPublicShopeeRefreshRoute = ApiPublicShopeeRefreshRouteImport.update({
   path: '/api/public/shopee/refresh',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicShopeeDbgChatRoute = ApiPublicShopeeDbgChatRouteImport.update({
+  id: '/api/public/shopee/dbg-chat',
+  path: '/api/public/shopee/dbg-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicShopeeCallbackAdsRoute =
   ApiPublicShopeeCallbackAdsRouteImport.update({
     id: '/api/public/shopee/callback-ads',
@@ -251,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/ia/': typeof AuthenticatedIaIndexRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
+  '/api/public/shopee/dbg-chat': typeof ApiPublicShopeeDbgChatRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
@@ -283,6 +290,7 @@ export interface FileRoutesByTo {
   '/ia': typeof AuthenticatedIaIndexRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
+  '/api/public/shopee/dbg-chat': typeof ApiPublicShopeeDbgChatRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/_authenticated/ia/': typeof AuthenticatedIaIndexRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
+  '/api/public/shopee/dbg-chat': typeof ApiPublicShopeeDbgChatRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
@@ -351,6 +360,7 @@ export interface FileRouteTypes {
     | '/ia/'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
+    | '/api/public/shopee/dbg-chat'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/resumo-diario'
@@ -383,6 +393,7 @@ export interface FileRouteTypes {
     | '/ia'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
+    | '/api/public/shopee/dbg-chat'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/resumo-diario'
@@ -416,6 +427,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ia/'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
+    | '/api/public/shopee/dbg-chat'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/resumo-diario'
@@ -438,6 +450,7 @@ export interface RootRouteChildren {
   ApiShopeeAuthUrlRoute: typeof ApiShopeeAuthUrlRoute
   ApiPublicShopeeCallbackRoute: typeof ApiPublicShopeeCallbackRoute
   ApiPublicShopeeCallbackAdsRoute: typeof ApiPublicShopeeCallbackAdsRoute
+  ApiPublicShopeeDbgChatRoute: typeof ApiPublicShopeeDbgChatRoute
   ApiPublicShopeeRefreshRoute: typeof ApiPublicShopeeRefreshRoute
   ApiPublicShopeeRefreshTokenRoute: typeof ApiPublicShopeeRefreshTokenRoute
   ApiPublicShopeeResumoDiarioRoute: typeof ApiPublicShopeeResumoDiarioRoute
@@ -656,6 +669,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeRefreshRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/shopee/dbg-chat': {
+      id: '/api/public/shopee/dbg-chat'
+      path: '/api/public/shopee/dbg-chat'
+      fullPath: '/api/public/shopee/dbg-chat'
+      preLoaderRoute: typeof ApiPublicShopeeDbgChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shopee/callback-ads': {
       id: '/api/public/shopee/callback-ads'
       path: '/api/public/shopee/callback-ads'
@@ -715,6 +735,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiShopeeAuthUrlRoute: ApiShopeeAuthUrlRoute,
   ApiPublicShopeeCallbackRoute: ApiPublicShopeeCallbackRoute,
   ApiPublicShopeeCallbackAdsRoute: ApiPublicShopeeCallbackAdsRoute,
+  ApiPublicShopeeDbgChatRoute: ApiPublicShopeeDbgChatRoute,
   ApiPublicShopeeRefreshRoute: ApiPublicShopeeRefreshRoute,
   ApiPublicShopeeRefreshTokenRoute: ApiPublicShopeeRefreshTokenRoute,
   ApiPublicShopeeResumoDiarioRoute: ApiPublicShopeeResumoDiarioRoute,
@@ -730,3 +751,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
