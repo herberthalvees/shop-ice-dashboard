@@ -212,13 +212,3 @@ export async function sendChatMessage(
   });
   return await res.json();
 }
-
-function originFromRequestLegacy(): string {
-  const forwardedProto = getRequestHeader("x-forwarded-proto");
-  const forwardedHost = getRequestHeader("x-forwarded-host");
-  const host = getRequestHeader("host");
-  const proto = forwardedProto ?? "https";
-  const h = forwardedHost ?? host;
-  if (!h) throw new Error("Não foi possível determinar a origem da requisição");
-  return `${proto}://${h}`;
-}
