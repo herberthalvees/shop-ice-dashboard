@@ -1122,6 +1122,26 @@ export type Database = {
           pedidos: number
         }[]
       }
+      dashboard_serie_horaria: {
+        Args: { p_ate: string; p_de: string }
+        Returns: {
+          ads_investimento: number
+          faturamento: number
+          hora: number
+          pedidos: number
+          rotulo: string
+        }[]
+      }
+      dashboard_serie_horaria_impl: {
+        Args: { p_ate: string; p_de: string }
+        Returns: {
+          ads_investimento: number
+          faturamento: number
+          hora: number
+          pedidos: number
+          rotulo: string
+        }[]
+      }
       dashboard_serie_periodo: {
         Args: { p_ate: string; p_de: string }
         Returns: {

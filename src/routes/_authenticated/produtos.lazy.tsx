@@ -71,6 +71,7 @@ function ProdutosPage() {
   const [busca, setBusca] = useState(search.q ?? "");
   useEffect(() => { if (search.q) setBusca(search.q); }, [search.q]);
   const [somenteRisco, setSomenteRisco] = useState(false);
+  const [somenteVendidos, setSomenteVendidos] = useState(false);
   const { preset, custom, setPreset, setCustom } = usePeriodo();
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
@@ -137,6 +138,9 @@ function ProdutosPage() {
     if (somenteRisco) {
       base = base.filter((l) => l.dias_de_estoque != null && l.dias_de_estoque < 15);
     }
+    if (somenteVendidos) {
+      base = base.filter((l) => (l.vendidos_periodo ?? 0) > 0);
+    }
     const dir = sortDir === "asc" ? 1 : -1;
     const cmpStr = (a: string | null, b: string | null) => {
       if (a == null && b == null) return 0;
@@ -189,7 +193,7 @@ function ProdutosPage() {
       sorted.sort((a, b) => dir * cmpNum(a.margem_pct, b.margem_pct));
     }
     return sorted;
-  }, [data, busca, somenteRisco, sortKey, sortDir]);
+  }, [data, busca, somenteRisco, somenteVendidos, sortKey, sortDir]);
 
   const totaisRodape = useMemo(() => {
     const total = data?.length ?? 0;
@@ -291,6 +295,10 @@ function ProdutosPage() {
             <div className="flex items-center gap-2">
               <Switch id="risco" checked={somenteRisco} onCheckedChange={setSomenteRisco} />
               <Label htmlFor="risco" className="cursor-pointer">Risco de ruptura (&lt; 15 dias)</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="vendidos" checked={somenteVendidos} onCheckedChange={setSomenteVendidos} />
+              <Label htmlFor="vendidos" className="cursor-pointer">Somente vendidos no período</Label>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-2">
