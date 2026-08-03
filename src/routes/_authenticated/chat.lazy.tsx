@@ -83,9 +83,10 @@ function ChatPage() {
   const atual = useMemo(() => lista.find((c) => c.conversation_id === selecionada) ?? null, [lista, selecionada]);
 
   const mensagens = useQuery({
-    queryKey: ["chat-mensagens", selecionada],
+    queryKey: ["chat-mensagens", selecionada, atual?.to_id ?? null],
     enabled: !!selecionada,
-    queryFn: () => mensagensFn({ data: { conversationId: selecionada! } }),
+    queryFn: () =>
+      mensagensFn({ data: { conversationId: selecionada!, buyerId: atual?.to_id } }),
     refetchInterval: 30_000,
   });
 
@@ -256,21 +257,30 @@ function ChatPage() {
                         <div
                           key={m.id}
                           className={
-                            "max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap break-words " +
-                            (m.de_loja
-                              ? "ml-auto bg-primary text-primary-foreground"
-                              : "bg-muted text-foreground")
+                            "flex w-full flex-col " + (m.de_loja ? "items-end" : "items-start")
                           }
                         >
-                          {m.texto}
-                          <span
+                          <span className="mb-0.5 px-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            {m.de_loja ? "Você" : (atual?.to_name ?? "Comprador")}
+                          </span>
+                          <div
                             className={
-                              "mt-1 block text-[10px] " +
-                              (m.de_loja ? "text-primary-foreground/70" : "text-muted-foreground")
+                              "max-w-[85%] px-3 py-2 text-sm whitespace-pre-wrap break-words " +
+                              (m.de_loja
+                                ? "rounded-2xl rounded-br-sm bg-primary text-primary-foreground"
+                                : "rounded-2xl rounded-bl-sm border border-border bg-muted text-foreground")
                             }
                           >
-                            {horaCurta(m.em)}
-                          </span>
+                            {m.texto}
+                            <span
+                              className={
+                                "mt-1 block text-[10px] " +
+                                (m.de_loja ? "text-primary-foreground/70" : "text-muted-foreground")
+                              }
+                            >
+                              {horaCurta(m.em)}
+                            </span>
+                          </div>
                         </div>
                       ))}
                       <div ref={fimRef} />

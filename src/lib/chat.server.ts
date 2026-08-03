@@ -96,14 +96,25 @@ export type Mensagem = {
   em: string | null;
 };
 
-export async function listarMensagens(conversationId: string) {
-  const r = await comRetry((c) => getChatMessages(c.access_token, c.shop_id, conversationId, 40));
+export async function listarMensagens(conversationId: string, buyerId?: string) {
+  let shopId = 0;
+  const r = await comRetry((c) => {
+    shopId = c.shop_id;
+    return getChatMessages(c.access_token, c.shop_id, conversationId, 40);
+  });
   if (!r.ok) return r;
   const brutas = ((r.data as any)?.response?.messages ?? []) as any[];
+  const comprador = String(buyerId ?? "").trim();
+  const ehDoComprador = (m: any) => {
+    const from = String(m.from_id ?? "");
+    if (comprador && from) return from === comprador;
+    // Sem o id do comprador: cai para o remetente diferente da loja.
+    return !(from && Number(from) === shopId);
+  };
   const mensagens: Mensagem[] = brutas
     .map((m) => ({
       id: String(m.message_id ?? ""),
-      de_loja: m.from_shop_id != null && Number(m.from_shop_id) > 0,
+      de_loja: !ehDoComprador(m),
       texto:
         typeof m.content?.text === "string"
           ? m.content.text

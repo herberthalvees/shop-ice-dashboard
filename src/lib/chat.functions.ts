@@ -10,14 +10,15 @@ export const listarConversasShopee = createServerFn({ method: "GET" })
 
 export const listarMensagensShopee = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { conversationId: string }) => {
+  .inputValidator((data: { conversationId: string; buyerId?: string }) => {
     const id = String(data?.conversationId ?? "").trim();
     if (!/^\d{1,32}$/.test(id)) throw new Error("conversa inválida");
-    return { conversationId: id };
+    const buyerId = String(data?.buyerId ?? "").trim();
+    return { conversationId: id, buyerId: /^\d{1,32}$/.test(buyerId) ? buyerId : undefined };
   })
   .handler(async ({ data }) => {
     const { listarMensagens } = await import("./chat.server");
-    return await listarMensagens(data.conversationId);
+    return await listarMensagens(data.conversationId, data.buyerId);
   });
 
 export const enviarMensagemShopee = createServerFn({ method: "POST" })
