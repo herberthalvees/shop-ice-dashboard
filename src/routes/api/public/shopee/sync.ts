@@ -248,6 +248,17 @@ async function handler({ request }: { request: Request }) {
       );
 
       if (linhas.length > 0) {
+        const { data: jaExistentes } = await supabaseAdmin
+          .from('pedidos')
+          .select('order_sn')
+          .in(
+            'order_sn',
+            linhas.map((l: { order_sn: unknown }) => String(l.order_sn)),
+          );
+        const conhecidos = new Set(
+          (jaExistentes ?? []).map((p: { order_sn: string }) => p.order_sn),
+        );
+
         const { error: erroUpsert } = await supabaseAdmin
           .from('pedidos')
           .upsert(linhas as any, { onConflict: 'order_sn' });
@@ -256,6 +267,24 @@ async function handler({ request }: { request: Request }) {
           erros.push(`upsert: ${erroUpsert.message}`);
         } else {
           gravados += linhas.length;
+
+          const novos = linhas.filter(
+            (l: { order_sn: unknown }) => !conhecidos.has(String(l.order_sn)),
+          );
+          if (novos.length > 0) {
+            try {
+              const { notificarNovaVenda } = await import('@/lib/push.server');
+              for (const novo of novos) {
+                await notificarNovaVenda({
+                  order_sn: String(novo.order_sn),
+                  valor_total: Number(novo.valor_total ?? 0),
+                  itens: novo.itens ?? [],
+                });
+              }
+            } catch (pushErro) {
+              erros.push(`push_nova_venda: ${String(pushErro)}`);
+            }
+          }
         }
       }
     }
