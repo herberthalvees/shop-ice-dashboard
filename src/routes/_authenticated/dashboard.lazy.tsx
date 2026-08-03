@@ -274,13 +274,13 @@ function DashboardPage() {
     : `${fmtBR(de)} a ${fmtBR(ate)}`;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+    <div className="min-w-0 space-y-5 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Visão geral da sua loja Shopee</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Sheet>
             <SheetTrigger asChild>
               <button
@@ -338,7 +338,7 @@ function DashboardPage() {
               if (p === "custom") setCustomOpen(true);
             }}
           >
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full min-w-36 flex-1 sm:w-40 sm:flex-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -356,16 +356,16 @@ function DashboardPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className={preset === "custom" ? "" : "hidden"}
+                className={preset === "custom" ? "w-full sm:w-auto" : "hidden"}
               >
                 <CalendarIcon className="h-4 w-4 mr-1.5" />
                 {custom?.from ? rangeLabel : "Escolher datas"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 pointer-events-auto" align="end">
+            <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-auto p-0 pointer-events-auto" align="end">
               <Calendar
                 mode="range"
-                numberOfMonths={2}
+                numberOfMonths={1}
                 selected={custom}
                 onSelect={setCustom}
                 locale={ptBR}
