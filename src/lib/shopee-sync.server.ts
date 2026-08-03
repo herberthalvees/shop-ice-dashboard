@@ -58,6 +58,11 @@ export async function runSync() {
       const det = (await getOrderDetail(conn.access_token, shopId, chunk)) as any;
       const orders = det?.response?.order_list ?? [];
       for (const o of orders) {
+        const { data: existente } = await supabaseAdmin
+          .from("pedidos")
+          .select("order_sn")
+          .eq("order_sn", o.order_sn)
+          .maybeSingle();
         await supabaseAdmin.from("pedidos").upsert(
           {
             order_sn: o.order_sn,
@@ -71,6 +76,18 @@ export async function runSync() {
           { onConflict: "order_sn" },
         );
         ordersImported++;
+        if (!existente) {
+          try {
+            const { notificarNovaVenda } = await import("./push.server");
+            await notificarNovaVenda({
+              order_sn: o.order_sn,
+              valor_total: Number(o.total_amount ?? 0),
+              itens: o.item_list ?? [],
+            });
+          } catch (e) {
+            console.error("[sync] push nova venda", e);
+          }
+        }
       }
     }
   } catch (e) {

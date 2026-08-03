@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Store, RefreshCw, Loader2, ExternalLink, Lock, AlertTriangle, Percent } from "lucide-react";
 import { getShopeeAuthUrl, runShopeeSync } from "@/lib/shopee.functions";
 import { CustosIA } from "@/components/ia/custos-ia";
+import { PushNotificacoes } from "@/components/push/push-notificacoes";
 
 export const Route = createLazyFileRoute("/_authenticated/configuracoes")({
   component: ConfigPage,
@@ -246,6 +247,8 @@ function ConfigPage() {
           </form>
         </CardContent>
       </Card>
+
+      <PushNotificacoes />
 
       <CustosIA />
     </div>

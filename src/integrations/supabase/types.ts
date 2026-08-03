@@ -656,6 +656,81 @@ export type Database = {
         }
         Relationships: []
       }
+      push_dispositivos: {
+        Row: {
+          apelido: string | null
+          ativo: boolean
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          ultimo_envio_em: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          apelido?: string | null
+          ativo?: boolean
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          ultimo_envio_em?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          apelido?: string | null
+          ativo?: boolean
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          ultimo_envio_em?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      push_envios: {
+        Row: {
+          corpo: string | null
+          created_at: string
+          dispositivos: number
+          erro: string | null
+          id: string
+          referencia: string | null
+          sucesso: number
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          corpo?: string | null
+          created_at?: string
+          dispositivos?: number
+          erro?: string | null
+          id?: string
+          referencia?: string | null
+          sucesso?: number
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          corpo?: string | null
+          created_at?: string
+          dispositivos?: number
+          erro?: string | null
+          id?: string
+          referencia?: string | null
+          sucesso?: number
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: []
+      }
       shopee_connection: {
         Row: {
           access_token: string | null
