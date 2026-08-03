@@ -676,6 +676,49 @@ function DashboardPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle className="text-base">Vendas por faixa de hora</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            {rangeLabel} · horário de Brasília · investimento em Ads rateado por hora (a Shopee informa Ads só por dia)
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80">
+            {loadHora ? (
+              <Skeleton className="h-full w-full" />
+            ) : (serieHora ?? []).length === 0 || semDadosHora ? (
+              <EmptyMini msg="Sem vendas no período." />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={serieHora ?? []} margin={{ top: 12, right: 16, left: 4, bottom: 5 }}>
+                  <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
+                  <XAxis dataKey="rotulo" interval={1} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
+                  <YAxis yAxisId="right" orientation="right" allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <Tooltip content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null;
+                    const p = payload[0].payload as any;
+                    return (
+                      <div className="rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
+                        <div className="font-medium">{String(label)}</div>
+                        <div className="mt-1">Vendido: <span className="tabular-nums font-medium">{brl(p.faturamento)}</span></div>
+                        <div>Pedidos: <span className="tabular-nums font-medium">{p.pedidos}</span></div>
+                        <div>Ads (estimado): <span className="tabular-nums font-medium">{brl(p.ads)}</span></div>
+                      </div>
+                    );
+                  }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Line yAxisId="left" type="monotone" dataKey="faturamento" name="Vendido" stroke="var(--color-chart-1)" strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 4 }} />
+                  <Line yAxisId="right" type="monotone" dataKey="pedidos" name="Pedidos" stroke="var(--color-chart-2)" strokeWidth={1.5} dot={{ r: 2 }} activeDot={{ r: 4 }} />
+                  <Line yAxisId="left" type="monotone" dataKey="ads" name="Ads (rateio)" stroke="var(--color-chart-3)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle className="text-base">Pedidos recentes</CardTitle>
         </CardHeader>
         <CardContent>
