@@ -341,6 +341,7 @@ function DashboardPage() {
           <span className="hidden text-xs text-muted-foreground md:inline tabular-nums">
             {rangeLabel}
           </span>
+          <FiltroMarketplace />
           <Select
             value={preset}
             onValueChange={(v) => {
