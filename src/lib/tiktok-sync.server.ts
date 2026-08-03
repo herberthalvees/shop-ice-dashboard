@@ -87,10 +87,11 @@ async function conexaoPronta(): Promise<
         updated_at: new Date().toISOString(),
       })
       .eq("id", 1);
-    conn = { ...conn, shop_id: String(loja.id ?? ""), shop_cipher: loja.cipher };
+    conn = { ...conn, shop_id: String(loja.id ?? ""), shop_cipher: String(loja.cipher) };
   }
 
-  return { ok: true, accessToken: conn.access_token, shopCipher: conn.shop_cipher! };
+  if (!conn.shop_cipher) return { ok: false, erro: "shop_cipher indisponível" };
+  return { ok: true, accessToken: conn.access_token, shopCipher: conn.shop_cipher };
 }
 
 function num(v: unknown): number {
