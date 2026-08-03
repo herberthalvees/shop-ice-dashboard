@@ -328,15 +328,24 @@ function LinhaSKU({ linha }: { linha: LinhaMargem }) {
 function CalculadoraAvulsa() {
   const [custo, setCusto] = useState<string>("");
   const [margemDesejada, setMargemDesejada] = useState<string>("15");
+  const [base, setBase] = useState<"custo" | "preco">("custo");
   const custoNum = Number(custo.replace(",", "."));
   const margemNum = Number(margemDesejada.replace(",", "."));
   const valido = !Number.isNaN(custoNum) && custoNum > 0 && !Number.isNaN(margemNum);
-  // preco = (custo + lucro + 4,00) / 0,80  onde lucro = preco * (margem/100)
-  // => preco * 0.80 - preco * (m/100) = custo + 4
-  // => preco = (custo + 4) / (0.80 - m/100)
-  const denom = 0.8 - margemNum / 100;
-  const preco = valido && denom > 0 ? (custoNum + 4) / denom : null;
-  const lucro = preco != null ? preco * (margemNum / 100) : null;
+  // Taxa Shopee: 20% do preço + R$ 4 por pedido
+  // base = "custo"  → lucro = custo * m%           → preco = (custo + lucro + 4) / 0,80
+  // base = "preco"  → lucro = preco * m%           → preco = (custo + 4) / (0,80 - m/100)
+  const denom = base === "preco" ? 0.8 - margemNum / 100 : 0.8;
+  const preco = !valido
+    ? null
+    : base === "custo"
+      ? (custoNum * (1 + margemNum / 100) + 4) / 0.8
+      : denom > 0
+        ? (custoNum + 4) / denom
+        : null;
+  const lucro =
+    preco == null ? null : base === "custo" ? custoNum * (margemNum / 100) : preco * (margemNum / 100);
+  const margemSobrePreco = preco && preco > 0 && lucro != null ? (lucro / preco) * 100 : null;
 
   return (
     <Card>
@@ -345,17 +354,37 @@ function CalculadoraAvulsa() {
           <Calculator className="h-4 w-4 text-primary" />
           <CardTitle className="text-base">Calculadora de preço</CardTitle>
         </div>
-        <p className="text-xs text-muted-foreground">Fórmula: preço = (custo + lucro + R$ 4,00) / 0,80 — taxa Shopee 20% + R$ 4 por pedido</p>
+        <p className="text-xs text-muted-foreground">
+          Fórmula: preço = (custo + lucro + R$ 4,00) / 0,80 — taxa Shopee 20% + R$ 4 por pedido
+        </p>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-5">
           <div className="space-y-1">
             <Label className="text-xs">Custo unitário (R$)</Label>
             <Input type="number" step="0.01" min="0" value={custo} onChange={(e) => setCusto(e.target.value)} placeholder="0,00" />
           </div>
           <div className="space-y-1">
+            <Label className="text-xs">Margem calculada sobre</Label>
+            <select
+              value={base}
+              onChange={(e) => setBase(e.target.value as "custo" | "preco")}
+              className="h-9 w-full rounded-md border bg-background px-3 text-sm"
+            >
+              <option value="custo">Custo (markup)</option>
+              <option value="preco">Preço de venda</option>
+            </select>
+          </div>
+          <div className="space-y-1">
             <Label className="text-xs">Margem desejada (%)</Label>
-            <Input type="number" step="0.1" min="0" max="80" value={margemDesejada} onChange={(e) => setMargemDesejada(e.target.value)} />
+            <Input
+              type="number"
+              step="0.1"
+              min="0"
+              max={base === "preco" ? 79 : undefined}
+              value={margemDesejada}
+              onChange={(e) => setMargemDesejada(e.target.value)}
+            />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Lucro por venda</Label>
@@ -370,8 +399,17 @@ function CalculadoraAvulsa() {
             </div>
           </div>
         </div>
-        {valido && denom <= 0 && (
-          <p className="mt-2 text-xs text-destructive">Margem desejada precisa ser menor que 80% (taxa Shopee).</p>
+        {valido && base === "preco" && denom <= 0 && (
+          <p className="mt-2 text-xs text-destructive">
+            Com margem sobre o preço de venda, o valor precisa ser menor que 80% (a Shopee já fica com 20%).
+          </p>
+        )}
+        {valido && preco != null && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            {base === "custo"
+              ? `Lucro = ${margemNum.toFixed(1)}% do custo. Isso equivale a ${margemSobrePreco!.toFixed(1)}% de margem sobre o preço de venda.`
+              : `Lucro = ${margemNum.toFixed(1)}% do preço de venda (equivale a ${((lucro! / custoNum) * 100).toFixed(1)}% sobre o custo).`}
+          </p>
         )}
       </CardContent>
     </Card>
