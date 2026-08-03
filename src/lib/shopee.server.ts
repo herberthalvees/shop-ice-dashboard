@@ -153,3 +153,62 @@ export function originFromRequest(): string {
   if (!h) throw new Error("Não foi possível determinar a origem da requisição");
   return `${proto}://${h}`;
 }
+
+// ---------- Seller Chat (sellerchat) ----------
+
+export async function getConversationList(
+  accessToken: string,
+  shopId: number,
+  opts: { tipo?: string; pageSize?: number } = {},
+) {
+  const path = "/api/v2/sellerchat/get_conversation_list";
+  const url = shopUrl(path, accessToken, shopId, {
+    type: opts.tipo ?? "all",
+    direction: "latest",
+    page_size: String(opts.pageSize ?? 25),
+  });
+  const res = await fetch(url);
+  return await res.json();
+}
+
+export async function getChatMessages(
+  accessToken: string,
+  shopId: number,
+  conversationId: string,
+  pageSize = 30,
+) {
+  const path = "/api/v2/sellerchat/get_message";
+  const url = shopUrl(path, accessToken, shopId, {
+    conversation_id: conversationId,
+    page_size: String(pageSize),
+  });
+  const res = await fetch(url);
+  return await res.json();
+}
+
+export async function getUnreadConversationCount(accessToken: string, shopId: number) {
+  const path = "/api/v2/sellerchat/get_unread_conversation_count";
+  const url = shopUrl(path, accessToken, shopId);
+  const res = await fetch(url);
+  return await res.json();
+}
+
+export async function sendChatMessage(
+  accessToken: string,
+  shopId: number,
+  toId: string,
+  texto: string,
+) {
+  const path = "/api/v2/sellerchat/send_message";
+  const url = shopUrl(path, accessToken, shopId);
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      to_id: Number(toId),
+      message_type: "text",
+      content: { text: texto },
+    }),
+  });
+  return await res.json();
+}

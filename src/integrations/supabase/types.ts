@@ -182,6 +182,69 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_envios: {
+        Row: {
+          comprador: string | null
+          conversation_id: string | null
+          created_at: string
+          erro: string | null
+          id: string
+          ok: boolean
+          texto: string
+          to_id: string | null
+        }
+        Insert: {
+          comprador?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          erro?: string | null
+          id?: string
+          ok?: boolean
+          texto: string
+          to_id?: string | null
+        }
+        Update: {
+          comprador?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          erro?: string | null
+          id?: string
+          ok?: boolean
+          texto?: string
+          to_id?: string | null
+        }
+        Relationships: []
+      }
+      chat_respostas_rapidas: {
+        Row: {
+          ativo: boolean
+          corpo: string
+          created_at: string
+          id: string
+          ordem: number
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          corpo: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          corpo?: string
+          created_at?: string
+          id?: string
+          ordem?: number
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       config: {
         Row: {
           aliquota_imposto: number
