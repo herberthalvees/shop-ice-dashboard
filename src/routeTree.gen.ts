@@ -127,7 +127,9 @@ const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
   id: '/chat',
   path: '/chat',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_authenticated/chat.lazy').then((d) => d.Route),
+)
 const AuthenticatedCalculadoraRoute =
   AuthenticatedCalculadoraRouteImport.update({
     id: '/calculadora',
