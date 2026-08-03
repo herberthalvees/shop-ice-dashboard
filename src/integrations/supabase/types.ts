@@ -1590,95 +1590,202 @@ export type Database = {
       }
       ia_schema: { Args: never; Returns: Json }
       ia_sql: { Args: { consulta: string; limite?: number }; Returns: Json }
-      pedidos_detalhe: {
-        Args: {
-          p_ate: string
-          p_busca: string
-          p_de: string
-          p_limite: number
-          p_offset: number
-          p_status: string
-        }
-        Returns: {
-          comprador: string
-          custo: number
-          data_pedido: string
-          frete_vendedor: number
-          imagem_url: string
-          imposto: number
-          lucro: number
-          margem_pct: number
-          order_sn: string
-          produto: string
-          quantidade: number
-          sku: string
-          status: string
-          tarifa: number
-          tem_escrow: boolean
-          total_linhas: number
-          valor: number
-        }[]
-      }
-      pedidos_detalhe_impl: {
-        Args: {
-          p_ate: string
-          p_busca?: string
-          p_de: string
-          p_limite?: number
-          p_offset?: number
-          p_status?: string
-        }
-        Returns: {
-          comprador: string
-          custo: number
-          data_pedido: string
-          frete_vendedor: number
-          imagem_url: string
-          imposto: number
-          lucro: number
-          margem_pct: number
-          order_sn: string
-          produto: string
-          quantidade: number
-          sku: string
-          status: string
-          tarifa: number
-          tem_escrow: boolean
-          total_linhas: number
-          valor: number
-        }[]
-      }
-      pedidos_detalhe_totais: {
-        Args: { p_ate: string; p_busca: string; p_de: string; p_status: string }
-        Returns: {
-          custo: number
-          frete_vendedor: number
-          imposto: number
-          linhas: number
-          linhas_estimadas: number
-          lucro: number
-          tarifa: number
-          valor: number
-        }[]
-      }
-      pedidos_detalhe_totais_impl: {
-        Args: {
-          p_ate: string
-          p_busca?: string
-          p_de: string
-          p_status?: string
-        }
-        Returns: {
-          custo: number
-          frete_vendedor: number
-          imposto: number
-          linhas: number
-          linhas_estimadas: number
-          lucro: number
-          tarifa: number
-          valor: number
-        }[]
-      }
+      pedidos_detalhe:
+        | {
+            Args: {
+              p_ate: string
+              p_busca: string
+              p_de: string
+              p_limite: number
+              p_offset: number
+              p_status: string
+            }
+            Returns: {
+              comprador: string
+              custo: number
+              data_pedido: string
+              frete_vendedor: number
+              imagem_url: string
+              imposto: number
+              lucro: number
+              margem_pct: number
+              order_sn: string
+              produto: string
+              quantidade: number
+              sku: string
+              status: string
+              tarifa: number
+              tem_escrow: boolean
+              total_linhas: number
+              valor: number
+            }[]
+          }
+        | {
+            Args: {
+              p_ate: string
+              p_busca: string
+              p_de: string
+              p_limite: number
+              p_marketplace?: string
+              p_offset: number
+              p_status: string
+            }
+            Returns: {
+              comprador: string
+              custo: number
+              data_pedido: string
+              frete_vendedor: number
+              imagem_url: string
+              imposto: number
+              lucro: number
+              margem_pct: number
+              order_sn: string
+              produto: string
+              quantidade: number
+              sku: string
+              status: string
+              tarifa: number
+              tem_escrow: boolean
+              total_linhas: number
+              valor: number
+            }[]
+          }
+      pedidos_detalhe_impl:
+        | {
+            Args: {
+              p_ate: string
+              p_busca?: string
+              p_de: string
+              p_limite?: number
+              p_offset?: number
+              p_status?: string
+            }
+            Returns: {
+              comprador: string
+              custo: number
+              data_pedido: string
+              frete_vendedor: number
+              imagem_url: string
+              imposto: number
+              lucro: number
+              margem_pct: number
+              order_sn: string
+              produto: string
+              quantidade: number
+              sku: string
+              status: string
+              tarifa: number
+              tem_escrow: boolean
+              total_linhas: number
+              valor: number
+            }[]
+          }
+        | {
+            Args: {
+              p_ate: string
+              p_busca?: string
+              p_de: string
+              p_limite?: number
+              p_marketplace?: string
+              p_offset?: number
+              p_status?: string
+            }
+            Returns: {
+              comprador: string
+              custo: number
+              data_pedido: string
+              frete_vendedor: number
+              imagem_url: string
+              imposto: number
+              lucro: number
+              margem_pct: number
+              order_sn: string
+              produto: string
+              quantidade: number
+              sku: string
+              status: string
+              tarifa: number
+              tem_escrow: boolean
+              total_linhas: number
+              valor: number
+            }[]
+          }
+      pedidos_detalhe_totais:
+        | {
+            Args: {
+              p_ate: string
+              p_busca: string
+              p_de: string
+              p_status: string
+            }
+            Returns: {
+              custo: number
+              frete_vendedor: number
+              imposto: number
+              linhas: number
+              linhas_estimadas: number
+              lucro: number
+              tarifa: number
+              valor: number
+            }[]
+          }
+        | {
+            Args: {
+              p_ate: string
+              p_busca: string
+              p_de: string
+              p_marketplace?: string
+              p_status: string
+            }
+            Returns: {
+              custo: number
+              frete_vendedor: number
+              imposto: number
+              linhas: number
+              linhas_estimadas: number
+              lucro: number
+              tarifa: number
+              valor: number
+            }[]
+          }
+      pedidos_detalhe_totais_impl:
+        | {
+            Args: {
+              p_ate: string
+              p_busca?: string
+              p_de: string
+              p_status?: string
+            }
+            Returns: {
+              custo: number
+              frete_vendedor: number
+              imposto: number
+              linhas: number
+              linhas_estimadas: number
+              lucro: number
+              tarifa: number
+              valor: number
+            }[]
+          }
+        | {
+            Args: {
+              p_ate: string
+              p_busca?: string
+              p_de: string
+              p_marketplace?: string
+              p_status?: string
+            }
+            Returns: {
+              custo: number
+              frete_vendedor: number
+              imposto: number
+              linhas: number
+              linhas_estimadas: number
+              lucro: number
+              tarifa: number
+              valor: number
+            }[]
+          }
       pedidos_escrow_pendentes: {
         Args: { p_limite?: number }
         Returns: {
@@ -1698,23 +1805,41 @@ export type Database = {
           roas: number
         }[]
       }
-      produtos_com_giro: {
-        Args: { p_ate: string; p_de: string }
-        Returns: {
-          dias_de_estoque: number
-          estoque_disponivel: number
-          imagem_url: string
-          item_id: number
-          media_diaria: number
-          model_id: number
-          preco_atual: number
-          produto: string
-          sku: string
-          status_item: string
-          variacao: string
-          vendidos_periodo: number
-        }[]
-      }
+      produtos_com_giro:
+        | {
+            Args: { p_ate: string; p_de: string }
+            Returns: {
+              dias_de_estoque: number
+              estoque_disponivel: number
+              imagem_url: string
+              item_id: number
+              media_diaria: number
+              model_id: number
+              preco_atual: number
+              produto: string
+              sku: string
+              status_item: string
+              variacao: string
+              vendidos_periodo: number
+            }[]
+          }
+        | {
+            Args: { p_ate: string; p_de: string; p_marketplace?: string }
+            Returns: {
+              dias_de_estoque: number
+              estoque_disponivel: number
+              imagem_url: string
+              item_id: number
+              media_diaria: number
+              model_id: number
+              preco_atual: number
+              produto: string
+              sku: string
+              status_item: string
+              variacao: string
+              vendidos_periodo: number
+            }[]
+          }
       produtos_com_giro_impl: {
         Args: { p_ate: string; p_de: string }
         Returns: {
