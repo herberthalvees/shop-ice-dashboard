@@ -96,7 +96,7 @@ export type Mensagem = {
   em: string | null;
 };
 
-export async function listarMensagens(conversationId: string) {
+export async function listarMensagens(conversationId: string, buyerId?: string) {
   let shopId = 0;
   const r = await comRetry((c) => {
     shopId = c.shop_id;
@@ -104,14 +104,17 @@ export async function listarMensagens(conversationId: string) {
   });
   if (!r.ok) return r;
   const brutas = ((r.data as any)?.response?.messages ?? []) as any[];
+  const comprador = String(buyerId ?? "").trim();
+  const ehDoComprador = (m: any) => {
+    const from = String(m.from_id ?? "");
+    if (comprador && from) return from === comprador;
+    // Sem o id do comprador: cai para o remetente diferente da loja.
+    return !(from && Number(from) === shopId);
+  };
   const mensagens: Mensagem[] = brutas
     .map((m) => ({
       id: String(m.message_id ?? ""),
-      // A Shopee marca o remetente em from_id: quando é igual ao shop_id, a mensagem é nossa.
-      de_loja:
-        m.source === "seller" ||
-        (m.from_id != null && Number(m.from_id) === shopId) ||
-        (m.from_shop_id != null && Number(m.from_shop_id) === shopId && Number(m.from_id ?? 0) === shopId),
+      de_loja: !ehDoComprador(m),
       texto:
         typeof m.content?.text === "string"
           ? m.content.text
