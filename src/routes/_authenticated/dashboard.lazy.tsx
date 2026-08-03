@@ -678,7 +678,7 @@ function DashboardPage() {
         <CardHeader>
           <CardTitle className="text-base">Vendas por faixa de hora</CardTitle>
           <p className="text-xs text-muted-foreground">
-            {rangeLabel} · horário de Brasília · investimento em Ads rateado por hora (a Shopee informa Ads só por dia)
+            {rangeLabel} · horário de Brasília · Ads medido pela variação do gasto entre as sincronizações (rateado por hora só se ainda não houver histórico)
           </p>
         </CardHeader>
         <CardContent>
@@ -702,14 +702,14 @@ function DashboardPage() {
                         <div className="font-medium">{String(label)}</div>
                         <div className="mt-1">Vendido: <span className="tabular-nums font-medium">{brl(p.faturamento)}</span></div>
                         <div>Pedidos: <span className="tabular-nums font-medium">{p.pedidos}</span></div>
-                        <div>Ads (estimado): <span className="tabular-nums font-medium">{brl(p.ads)}</span></div>
+                        <div>Ads: <span className="tabular-nums font-medium">{brl(p.ads)}</span></div>
                       </div>
                     );
                   }} />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
                   <Line yAxisId="left" type="monotone" dataKey="faturamento" name="Vendido" stroke="var(--color-chart-1)" strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 4 }} />
                   <Line yAxisId="right" type="monotone" dataKey="pedidos" name="Pedidos" stroke="var(--color-chart-2)" strokeWidth={1.5} dot={{ r: 2 }} activeDot={{ r: 4 }} />
-                  <Line yAxisId="left" type="monotone" dataKey="ads" name="Ads (rateio)" stroke="var(--color-chart-3)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                  <Line yAxisId="left" type="monotone" dataKey="ads" name="Ads" stroke="var(--color-chart-3)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
                 </ComposedChart>
               </ResponsiveContainer>
             )}
