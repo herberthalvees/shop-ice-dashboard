@@ -164,7 +164,7 @@ export async function getConversationList(
   const path = "/api/v2/sellerchat/get_conversation_list";
   const url = shopUrl(path, accessToken, shopId, {
     type: opts.tipo ?? "all",
-    direction: "latest",
+    direction: "older",
     page_size: String(opts.pageSize ?? 25),
   });
   const res = await fetch(url);
