@@ -95,7 +95,7 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-center justify-center">
-          <img src={logoAsset.url} alt="Dream Ice Shop" className="h-16 w-auto object-contain" />
+          <img src={markUrl} alt="Dream Ice" className="h-20 w-auto object-contain drop-shadow-[0_0_18px_rgba(255,140,40,0.45)]" />
         </div>
         <Card>
           <CardHeader>
