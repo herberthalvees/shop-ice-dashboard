@@ -89,7 +89,7 @@ export async function refreshAccessToken(refreshToken: string, shopId: number) {
   };
 }
 
-export function shopUrl(path: string, accessToken: string, shopId: number, extra: Record<string, string> = {}): string {
+function shopUrl(path: string, accessToken: string, shopId: number, extra: Record<string, string> = {}): string {
   const timestamp = Math.floor(Date.now() / 1000);
   const sign = signShop(path, timestamp, accessToken, shopId);
   const params = new URLSearchParams({
