@@ -127,6 +127,14 @@ export async function notificarNovaVenda(pedido: {
   valor_total: number;
   itens?: unknown;
 }) {
+  return await notificarVendaInterno(pedido);
+}
+
+async function notificarVendaInterno(pedido: {
+  order_sn: string;
+  valor_total: number;
+  itens?: unknown;
+}) {
   const titulo = "Nova venda na Shopee 🎉";
   const reservado = await reservarEnvio("venda", pedido.order_sn, titulo);
   if (!reservado) return { ok: false, error: "já notificado" };
