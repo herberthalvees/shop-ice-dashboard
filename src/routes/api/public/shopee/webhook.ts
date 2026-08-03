@@ -104,6 +104,40 @@ async function handlePush(request: Request) {
       });
     } else {
       console.log("push recebido", { code, shop_id: shopId });
+
+      // code 10 = webchat: notifica quando o comprador inicia/envia mensagem.
+      if (code === 10) {
+        try {
+          const d = (payload["data"] ?? {}) as Record<string, any>;
+          const conteudo = (d["content"] ?? {}) as Record<string, any>;
+          const deLoja =
+            Number(d["from_shop_id"] ?? conteudo["from_shop_id"] ?? 0) > 0 ||
+            String(d["from_id"] ?? "") === String(shopId ?? "");
+          if (!deLoja) {
+            const texto =
+              typeof conteudo["text"] === "string"
+                ? conteudo["text"]
+                : typeof d["content"] === "string"
+                  ? d["content"]
+                  : d["message_type"]
+                    ? `[${d["message_type"]}]`
+                    : "";
+            const referencia = String(
+              d["message_id"] ??
+                conteudo["message_id"] ??
+                `${d["conversation_id"] ?? d["from_id"] ?? "chat"}-${d["created_timestamp"] ?? Date.now()}`,
+            );
+            const { notificarNovoChat } = await import("@/lib/push.server");
+            await notificarNovoChat({
+              referencia,
+              comprador: d["from_user_name"] ?? d["from_name"] ?? null,
+              texto,
+            });
+          }
+        } catch (e) {
+          console.error("[webhook] push chat", String(e));
+        }
+      }
     }
 
     return ok();

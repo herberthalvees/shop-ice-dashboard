@@ -147,3 +147,29 @@ export async function notificarNovaVenda(pedido: {
     referencia: pedido.order_sn,
   });
 }
+
+/**
+ * Notifica uma nova mensagem recebida no chat da Shopee.
+ * `referencia` garante idempotência (não repete o mesmo evento).
+ */
+export async function notificarNovoChat(msg: {
+  referencia: string;
+  comprador?: string | null;
+  texto?: string | null;
+}) {
+  const titulo = `💬 ${msg.comprador?.trim() || "Comprador"} enviou uma mensagem`;
+  const reservado = await reservarEnvio("chat", msg.referencia, titulo);
+  if (!reservado) return { ok: false, error: "já notificado" };
+
+  const texto = (msg.texto ?? "").trim();
+  const corpo = texto ? (texto.length > 120 ? `${texto.slice(0, 117)}...` : texto) : "Nova mensagem no chat";
+
+  return await enviarPush({
+    titulo,
+    corpo,
+    url: "/chat",
+    tag: `chat-${msg.referencia}`,
+    tipo: "chat",
+    referencia: msg.referencia,
+  });
+}
