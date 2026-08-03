@@ -1008,6 +1008,7 @@ export type Database = {
           data_criacao_pedido: string | null
           id: number | null
           item_id: number | null
+          marketplace: string | null
           model_id: number | null
           order_sn: string | null
           preco_unitario: number | null
@@ -1153,30 +1154,66 @@ export type Database = {
         Args: { p_ate: string; p_de: string }
         Returns: number
       }
-      dashboard_curva_abc: {
-        Args: { p_ate: string; p_de: string; p_limite: number }
-        Returns: {
-          acumulado: number
-          classe: string
-          participacao: number
-          produto: string
-          receita: number
-          sku: string
-          unidades: number
-        }[]
-      }
-      dashboard_curva_abc_impl: {
-        Args: { p_ate: string; p_de: string; p_limite?: number }
-        Returns: {
-          acumulado: number
-          classe: string
-          participacao: number
-          produto: string
-          receita: number
-          sku: string
-          unidades: number
-        }[]
-      }
+      dashboard_curva_abc:
+        | {
+            Args: { p_ate: string; p_de: string; p_limite: number }
+            Returns: {
+              acumulado: number
+              classe: string
+              participacao: number
+              produto: string
+              receita: number
+              sku: string
+              unidades: number
+            }[]
+          }
+        | {
+            Args: {
+              p_ate: string
+              p_de: string
+              p_limite: number
+              p_marketplace?: string
+            }
+            Returns: {
+              acumulado: number
+              classe: string
+              participacao: number
+              produto: string
+              receita: number
+              sku: string
+              unidades: number
+            }[]
+          }
+      dashboard_curva_abc_impl:
+        | {
+            Args: { p_ate: string; p_de: string; p_limite?: number }
+            Returns: {
+              acumulado: number
+              classe: string
+              participacao: number
+              produto: string
+              receita: number
+              sku: string
+              unidades: number
+            }[]
+          }
+        | {
+            Args: {
+              p_ate: string
+              p_de: string
+              p_limite?: number
+              p_marketplace?: string
+            }
+            Returns: {
+              acumulado: number
+              classe: string
+              participacao: number
+              produto: string
+              receita: number
+              sku: string
+              unidades: number
+            }[]
+          }
       dashboard_kpis: {
         Args: never
         Returns: {
@@ -1197,62 +1234,120 @@ export type Database = {
           pedidos_mes: number
         }[]
       }
-      dashboard_kpis_periodo: {
-        Args: { p_ate: string; p_de: string }
-        Returns: {
-          ads_investimento: number
-          ads_pct: number
-          cobertura_custo: number
-          custo_pct: number
-          custo_total: number
-          faturamento: number
-          imposto: number
-          imposto_pct: number
-          lucro_com_ads: number
-          lucro_com_ads_pct: number
-          lucro_medio: number
-          lucro_sem_ads: number
-          lucro_sem_ads_pct: number
-          pedidos_cancelados: number
-          pedidos_devolvidos: number
-          pedidos_validos: number
-          taxas: number
-          taxas_pct: number
-          ticket_medio: number
-          unidades: number
-          valor_cancelado: number
-          valor_devolvido: number
-          valor_liquido: number
-        }[]
-      }
-      dashboard_kpis_periodo_impl: {
-        Args: { p_ate: string; p_de: string }
-        Returns: {
-          ads_investimento: number
-          ads_pct: number
-          cobertura_custo: number
-          custo_pct: number
-          custo_total: number
-          faturamento: number
-          imposto: number
-          imposto_pct: number
-          lucro_com_ads: number
-          lucro_com_ads_pct: number
-          lucro_medio: number
-          lucro_sem_ads: number
-          lucro_sem_ads_pct: number
-          pedidos_cancelados: number
-          pedidos_devolvidos: number
-          pedidos_validos: number
-          taxas: number
-          taxas_pct: number
-          ticket_medio: number
-          unidades: number
-          valor_cancelado: number
-          valor_devolvido: number
-          valor_liquido: number
-        }[]
-      }
+      dashboard_kpis_periodo:
+        | {
+            Args: { p_ate: string; p_de: string }
+            Returns: {
+              ads_investimento: number
+              ads_pct: number
+              cobertura_custo: number
+              custo_pct: number
+              custo_total: number
+              faturamento: number
+              imposto: number
+              imposto_pct: number
+              lucro_com_ads: number
+              lucro_com_ads_pct: number
+              lucro_medio: number
+              lucro_sem_ads: number
+              lucro_sem_ads_pct: number
+              pedidos_cancelados: number
+              pedidos_devolvidos: number
+              pedidos_validos: number
+              taxas: number
+              taxas_pct: number
+              ticket_medio: number
+              unidades: number
+              valor_cancelado: number
+              valor_devolvido: number
+              valor_liquido: number
+            }[]
+          }
+        | {
+            Args: { p_ate: string; p_de: string; p_marketplace?: string }
+            Returns: {
+              ads_investimento: number
+              ads_pct: number
+              cobertura_custo: number
+              custo_pct: number
+              custo_total: number
+              faturamento: number
+              imposto: number
+              imposto_pct: number
+              lucro_com_ads: number
+              lucro_com_ads_pct: number
+              lucro_medio: number
+              lucro_sem_ads: number
+              lucro_sem_ads_pct: number
+              pedidos_cancelados: number
+              pedidos_devolvidos: number
+              pedidos_validos: number
+              taxas: number
+              taxas_pct: number
+              ticket_medio: number
+              unidades: number
+              valor_cancelado: number
+              valor_devolvido: number
+              valor_liquido: number
+            }[]
+          }
+      dashboard_kpis_periodo_impl:
+        | {
+            Args: { p_ate: string; p_de: string }
+            Returns: {
+              ads_investimento: number
+              ads_pct: number
+              cobertura_custo: number
+              custo_pct: number
+              custo_total: number
+              faturamento: number
+              imposto: number
+              imposto_pct: number
+              lucro_com_ads: number
+              lucro_com_ads_pct: number
+              lucro_medio: number
+              lucro_sem_ads: number
+              lucro_sem_ads_pct: number
+              pedidos_cancelados: number
+              pedidos_devolvidos: number
+              pedidos_validos: number
+              taxas: number
+              taxas_pct: number
+              ticket_medio: number
+              unidades: number
+              valor_cancelado: number
+              valor_devolvido: number
+              valor_liquido: number
+            }[]
+          }
+        | {
+            Args: { p_ate: string; p_de: string; p_marketplace?: string }
+            Returns: {
+              ads_investimento: number
+              ads_pct: number
+              cobertura_custo: number
+              custo_pct: number
+              custo_total: number
+              faturamento: number
+              imposto: number
+              imposto_pct: number
+              lucro_com_ads: number
+              lucro_com_ads_pct: number
+              lucro_medio: number
+              lucro_sem_ads: number
+              lucro_sem_ads_pct: number
+              pedidos_cancelados: number
+              pedidos_devolvidos: number
+              pedidos_validos: number
+              taxas: number
+              taxas_pct: number
+              ticket_medio: number
+              unidades: number
+              valor_cancelado: number
+              valor_devolvido: number
+              valor_liquido: number
+            }[]
+          }
       dashboard_serie_diaria: {
         Args: { p_dias: number }
         Returns: {
@@ -1269,45 +1364,88 @@ export type Database = {
           pedidos: number
         }[]
       }
-      dashboard_serie_horaria: {
-        Args: { p_ate: string; p_de: string }
-        Returns: {
-          ads_investimento: number
-          faturamento: number
-          hora: number
-          pedidos: number
-          rotulo: string
-        }[]
-      }
-      dashboard_serie_horaria_impl: {
-        Args: { p_ate: string; p_de: string }
-        Returns: {
-          ads_investimento: number
-          faturamento: number
-          hora: number
-          pedidos: number
-          rotulo: string
-        }[]
-      }
-      dashboard_serie_periodo: {
-        Args: { p_ate: string; p_de: string }
-        Returns: {
-          faturamento: number
-          pedidos: number
-          periodo: string
-          rotulo: string
-        }[]
-      }
-      dashboard_serie_periodo_impl: {
-        Args: { p_ate: string; p_de: string }
-        Returns: {
-          faturamento: number
-          parcial: boolean
-          pedidos: number
-          periodo: string
-          rotulo: string
-        }[]
-      }
+      dashboard_serie_horaria:
+        | {
+            Args: { p_ate: string; p_de: string }
+            Returns: {
+              ads_investimento: number
+              faturamento: number
+              hora: number
+              pedidos: number
+              rotulo: string
+            }[]
+          }
+        | {
+            Args: { p_ate: string; p_de: string; p_marketplace?: string }
+            Returns: {
+              ads_investimento: number
+              faturamento: number
+              hora: number
+              pedidos: number
+              rotulo: string
+            }[]
+          }
+      dashboard_serie_horaria_impl:
+        | {
+            Args: { p_ate: string; p_de: string }
+            Returns: {
+              ads_investimento: number
+              faturamento: number
+              hora: number
+              pedidos: number
+              rotulo: string
+            }[]
+          }
+        | {
+            Args: { p_ate: string; p_de: string; p_marketplace?: string }
+            Returns: {
+              ads_investimento: number
+              faturamento: number
+              hora: number
+              pedidos: number
+              rotulo: string
+            }[]
+          }
+      dashboard_serie_periodo:
+        | {
+            Args: { p_ate: string; p_de: string }
+            Returns: {
+              faturamento: number
+              pedidos: number
+              periodo: string
+              rotulo: string
+            }[]
+          }
+        | {
+            Args: { p_ate: string; p_de: string; p_marketplace?: string }
+            Returns: {
+              faturamento: number
+              pedidos: number
+              periodo: string
+              rotulo: string
+            }[]
+          }
+      dashboard_serie_periodo_impl:
+        | {
+            Args: { p_ate: string; p_de: string }
+            Returns: {
+              faturamento: number
+              parcial: boolean
+              pedidos: number
+              periodo: string
+              rotulo: string
+            }[]
+          }
+        | {
+            Args: { p_ate: string; p_de: string; p_marketplace?: string }
+            Returns: {
+              faturamento: number
+              parcial: boolean
+              pedidos: number
+              periodo: string
+              rotulo: string
+            }[]
+          }
       dashboard_top_produtos: {
         Args: { p_dias: number; p_limite: number }
         Returns: {
@@ -1326,24 +1464,54 @@ export type Database = {
           sku: string
         }[]
       }
-      dashboard_top_produtos_periodo: {
-        Args: { p_ate: string; p_de: string; p_limite: number }
-        Returns: {
-          produto: string
-          quantidade: number
-          receita: number
-          sku: string
-        }[]
-      }
-      dashboard_top_produtos_periodo_impl: {
-        Args: { p_ate: string; p_de: string; p_limite?: number }
-        Returns: {
-          produto: string
-          quantidade: number
-          receita: number
-          sku: string
-        }[]
-      }
+      dashboard_top_produtos_periodo:
+        | {
+            Args: { p_ate: string; p_de: string; p_limite: number }
+            Returns: {
+              produto: string
+              quantidade: number
+              receita: number
+              sku: string
+            }[]
+          }
+        | {
+            Args: {
+              p_ate: string
+              p_de: string
+              p_limite: number
+              p_marketplace?: string
+            }
+            Returns: {
+              produto: string
+              quantidade: number
+              receita: number
+              sku: string
+            }[]
+          }
+      dashboard_top_produtos_periodo_impl:
+        | {
+            Args: { p_ate: string; p_de: string; p_limite?: number }
+            Returns: {
+              produto: string
+              quantidade: number
+              receita: number
+              sku: string
+            }[]
+          }
+        | {
+            Args: {
+              p_ate: string
+              p_de: string
+              p_limite?: number
+              p_marketplace?: string
+            }
+            Returns: {
+              produto: string
+              quantidade: number
+              receita: number
+              sku: string
+            }[]
+          }
       dre_mensal: {
         Args: { p_ano: number; p_mes: number }
         Returns: {
