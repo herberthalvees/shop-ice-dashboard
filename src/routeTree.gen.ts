@@ -27,6 +27,7 @@ import { Route as AuthenticatedCalculadoraRouteImport } from './routes/_authenti
 import { Route as AuthenticatedIaIndexRouteImport } from './routes/_authenticated/ia.index'
 import { Route as ApiShopeeAuthUrlRouteImport } from './routes/api/shopee/auth-url'
 import { Route as AuthenticatedIaConversaIdRouteImport } from './routes/_authenticated/ia.$conversaId'
+import { Route as ApiPublicTiktokSyncProdutosRouteImport } from './routes/api/public/tiktok/sync-produtos'
 import { Route as ApiPublicTiktokSyncRouteImport } from './routes/api/public/tiktok/sync'
 import { Route as ApiPublicTiktokCallbackRouteImport } from './routes/api/public/tiktok/callback'
 import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/shopee/webhook'
@@ -161,6 +162,12 @@ const AuthenticatedIaConversaIdRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/ia.$conversaId.lazy').then((d) => d.Route),
   )
+const ApiPublicTiktokSyncProdutosRoute =
+  ApiPublicTiktokSyncProdutosRouteImport.update({
+    id: '/api/public/tiktok/sync-produtos',
+    path: '/api/public/tiktok/sync-produtos',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicTiktokSyncRoute = ApiPublicTiktokSyncRouteImport.update({
   id: '/api/public/tiktok/sync',
   path: '/api/public/tiktok/sync',
@@ -276,6 +283,7 @@ export interface FileRoutesByFullPath {
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
   '/api/public/tiktok/callback': typeof ApiPublicTiktokCallbackRoute
   '/api/public/tiktok/sync': typeof ApiPublicTiktokSyncRoute
+  '/api/public/tiktok/sync-produtos': typeof ApiPublicTiktokSyncProdutosRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -310,6 +318,7 @@ export interface FileRoutesByTo {
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
   '/api/public/tiktok/callback': typeof ApiPublicTiktokCallbackRoute
   '/api/public/tiktok/sync': typeof ApiPublicTiktokSyncRoute
+  '/api/public/tiktok/sync-produtos': typeof ApiPublicTiktokSyncProdutosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -346,6 +355,7 @@ export interface FileRoutesById {
   '/api/public/shopee/webhook': typeof ApiPublicShopeeWebhookRoute
   '/api/public/tiktok/callback': typeof ApiPublicTiktokCallbackRoute
   '/api/public/tiktok/sync': typeof ApiPublicTiktokSyncRoute
+  '/api/public/tiktok/sync-produtos': typeof ApiPublicTiktokSyncProdutosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/webhook'
     | '/api/public/tiktok/callback'
     | '/api/public/tiktok/sync'
+    | '/api/public/tiktok/sync-produtos'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -416,6 +427,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/webhook'
     | '/api/public/tiktok/callback'
     | '/api/public/tiktok/sync'
+    | '/api/public/tiktok/sync-produtos'
   id:
     | '__root__'
     | '/'
@@ -451,6 +463,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/webhook'
     | '/api/public/tiktok/callback'
     | '/api/public/tiktok/sync'
+    | '/api/public/tiktok/sync-produtos'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -475,6 +488,7 @@ export interface RootRouteChildren {
   ApiPublicShopeeWebhookRoute: typeof ApiPublicShopeeWebhookRoute
   ApiPublicTiktokCallbackRoute: typeof ApiPublicTiktokCallbackRoute
   ApiPublicTiktokSyncRoute: typeof ApiPublicTiktokSyncRoute
+  ApiPublicTiktokSyncProdutosRoute: typeof ApiPublicTiktokSyncProdutosRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -604,6 +618,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/ia/$conversaId'
       preLoaderRoute: typeof AuthenticatedIaConversaIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/tiktok/sync-produtos': {
+      id: '/api/public/tiktok/sync-produtos'
+      path: '/api/public/tiktok/sync-produtos'
+      fullPath: '/api/public/tiktok/sync-produtos'
+      preLoaderRoute: typeof ApiPublicTiktokSyncProdutosRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/tiktok/sync': {
       id: '/api/public/tiktok/sync'
@@ -768,6 +789,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShopeeWebhookRoute: ApiPublicShopeeWebhookRoute,
   ApiPublicTiktokCallbackRoute: ApiPublicTiktokCallbackRoute,
   ApiPublicTiktokSyncRoute: ApiPublicTiktokSyncRoute,
+  ApiPublicTiktokSyncProdutosRoute: ApiPublicTiktokSyncProdutosRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
