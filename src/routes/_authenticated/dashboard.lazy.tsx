@@ -190,6 +190,40 @@ function DashboardPage() {
     staleTime: 60_000,
   });
 
+  const { data: serieHora, isLoading: loadHora } = useQuery({
+    queryKey: ["serie-horaria", p_de, p_ate],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("dashboard_serie_horaria" as any, { p_de, p_ate });
+      if (error) throw error;
+      return ((data as any[]) ?? []).map((r) => ({
+        rotulo: String(r.rotulo),
+        pedidos: Number(r.pedidos ?? 0),
+        faturamento: Number(r.faturamento ?? 0),
+        ads: Number(r.ads_investimento ?? 0),
+      }));
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+    retry: 2,
+  });
+
+  const semDadosHora = (serieHora ?? []).every((h) => h.pedidos === 0 && h.faturamento === 0);
+
+  const _unusedRecentes = useQuery({
+    queryKey: ["recentes"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pedidos")
+        .select("order_sn, status, valor_total, comprador_username, data_criacao_pedido")
+        .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
+        .limit(10);
+      if (error) throw error;
+      return data ?? [];
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+  });
+
   const { data: ads, isLoading: loadAds } = useQuery({
     queryKey: ["ads-resumo", p_de, p_ate],
     queryFn: async () => {
