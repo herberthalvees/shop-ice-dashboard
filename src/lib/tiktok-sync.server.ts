@@ -71,11 +71,13 @@ async function conexaoPronta(): Promise<
   const renovacao = await renovarSeNecessario();
   if (!renovacao.ok) return { ok: false, erro: renovacao.erro ?? "token inválido" };
 
-  let conn = await conexaoTiktok();
-  if (!conn?.access_token) return { ok: false, erro: "sem token de acesso do TikTok Shop" };
+  const conn = await conexaoTiktok();
+  const accessToken = conn?.access_token;
+  if (!conn || !accessToken) return { ok: false, erro: "sem token de acesso do TikTok Shop" };
+  let shopCipher = conn.shop_cipher;
 
-  if (!conn.shop_cipher) {
-    const lojas = await listarLojasAutorizadas(conn.access_token);
+  if (!shopCipher) {
+    const lojas = await listarLojasAutorizadas(accessToken);
     const loja = lojas?.data?.shops?.[0];
     if (!loja?.cipher) return { ok: false, erro: "não foi possível obter o shop_cipher da loja" };
     await supabaseAdmin
@@ -83,15 +85,14 @@ async function conexaoPronta(): Promise<
       .update({
         shop_id: String(loja.id ?? ""),
         shop_name: loja.name ?? null,
-        shop_cipher: loja.cipher,
+        shop_cipher: String(loja.cipher),
         updated_at: new Date().toISOString(),
       })
       .eq("id", 1);
-    conn = { ...conn, shop_id: String(loja.id ?? ""), shop_cipher: String(loja.cipher) };
+    shopCipher = String(loja.cipher);
   }
 
-  if (!conn.shop_cipher) return { ok: false, erro: "shop_cipher indisponível" };
-  return { ok: true, accessToken: conn.access_token, shopCipher: conn.shop_cipher };
+  return { ok: true, accessToken, shopCipher };
 }
 
 function num(v: unknown): number {
