@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import markUrl from "@/assets/dreamice-mark.png";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Entrar — Dream Ice" },
