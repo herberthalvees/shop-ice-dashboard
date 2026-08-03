@@ -28,6 +28,7 @@ import {
 import { Snowflake, ArrowRight, Sparkles, CalendarIcon, TrendingUp, AlertTriangle } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createLazyFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -49,6 +50,7 @@ const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
 type Preset = "hoje" | "ontem" | "7d" | "30d" | "mes" | "ano" | "custom";
 
 function DashboardPage() {
+  const isMobile = useIsMobile();
   const { preset, custom, setPreset, setCustom } = usePeriodo();
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
