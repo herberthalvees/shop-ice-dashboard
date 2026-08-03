@@ -732,8 +732,8 @@ function DashboardPage() {
           ) : (
             <div className="divide-y divide-border">
               {(recentes ?? []).map((p) => (
-                <div key={p.order_sn} className="flex items-center justify-between py-3 text-sm">
-                  <div className="min-w-0">
+                <div key={p.order_sn} className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">#{p.order_sn}</div>
                     <div className="text-xs text-muted-foreground truncate">
                       {p.comprador_username ?? "—"} ·{" "}
@@ -742,8 +742,8 @@ function DashboardPage() {
                         : "—"}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <Badge variant="secondary">{p.status ?? "—"}</Badge>
+                  <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+                    <Badge variant="secondary" className="max-w-[9rem] truncate text-[10px] sm:text-xs">{p.status ?? "—"}</Badge>
                     <span className="tabular-nums font-medium">{brl(Number(p.valor_total ?? 0))}</span>
                   </div>
                 </div>
