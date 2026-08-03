@@ -365,7 +365,7 @@ function DashboardPage() {
             <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-auto p-0 pointer-events-auto" align="end">
               <Calendar
                 mode="range"
-                numberOfMonths={1}
+                numberOfMonths={isMobile ? 1 : 2}
                 selected={custom}
                 onSelect={setCustom}
                 locale={ptBR}
