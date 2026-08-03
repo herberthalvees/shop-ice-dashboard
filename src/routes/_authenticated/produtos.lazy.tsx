@@ -15,6 +15,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { usePeriodo, computeRange } from "@/lib/periodo-store";
+import { FiltroMarketplace } from "@/components/filtro-marketplace";
+import { filtroMarketplace, useMarketplace } from "@/lib/marketplace-store";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown, Check, CalendarIcon, History } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -73,6 +75,9 @@ function ProdutosPage() {
   const [somenteRisco, setSomenteRisco] = useState(false);
   const [somenteVendidos, setSomenteVendidos] = useState(false);
   const { preset, custom, setPreset, setCustom } = usePeriodo();
+  const { marketplace } = useMarketplace();
+  const p_marketplace = filtroMarketplace(marketplace) ?? null;
+  const mkKey = p_marketplace ?? "todos";
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
   const p_de = toISO(de);
@@ -82,10 +87,10 @@ function ProdutosPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["produtos-giro", p_de, p_ate],
+    queryKey: ["produtos-giro", p_de, p_ate, mkKey],
     queryFn: async () => {
       const [{ data: giro, error: e1 }, { data: dim, error: e2 }] = await Promise.all([
-        supabase.rpc("produtos_com_giro" as any, { p_de, p_ate }),
+        supabase.rpc("produtos_com_giro" as any, { p_de, p_ate, p_marketplace }),
         supabase
           .from("produto_custos" as any)
           .select("item_id, model_id, custo_unitario")
@@ -253,6 +258,7 @@ function ProdutosPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <FiltroMarketplace className="w-[180px]" />
           <Select value={preset} onValueChange={(v) => { setPreset(v as any); if (v === "custom") setCustomOpen(true); }}>
             <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
             <SelectContent>
