@@ -156,6 +156,7 @@ function DashboardPage() {
   });
 
   const { data: topProdutos, isLoading: loadTop } = useQuery({
+
     queryKey: ["topProdutos", p_de, p_ate],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("dashboard_top_produtos_periodo" as any, { p_de, p_ate, p_limite: 10 });
