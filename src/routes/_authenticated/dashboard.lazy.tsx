@@ -433,13 +433,13 @@ function DashboardPage() {
       {/* BLOCO 1: Faixa de destaque */}
       <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-background">
         <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/20 blur-3xl" aria-hidden />
-        <CardContent className="relative flex flex-col gap-4 p-6 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-2">
+        <CardContent className="relative flex flex-col gap-4 p-5 sm:p-6 md:flex-row md:items-end md:justify-between">
+          <div className="min-w-0 space-y-2">
             <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Faturamento</span>
-            <div className="text-4xl md:text-5xl font-semibold tabular-nums leading-none">
-              {loadKpis ? <Skeleton className="h-12 w-64" /> : brl(kpis?.faturamento ?? 0)}
+            <div className="text-[clamp(1.75rem,8vw,2.25rem)] font-semibold tabular-nums leading-none break-words md:text-5xl">
+              {loadKpis ? <Skeleton className="h-10 w-48 sm:h-12 sm:w-64" /> : brl(kpis?.faturamento ?? 0)}
             </div>
-            <div className="flex flex-wrap items-center gap-3 pt-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-3 pt-1">
               {loadKpis ? <Skeleton className="h-6 w-40" /> : (kpis?.coberturaCusto ?? 0) === 0 ? (
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground">Lucro</span>
@@ -450,17 +450,17 @@ function DashboardPage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-baseline gap-2">
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                       <span className="text-sm text-muted-foreground">Lucro (sem Ads)</span>
-                      <span className={`text-2xl font-semibold tabular-nums ${((kpis?.lucroSemAds ?? 0) >= 0) ? "text-[color:var(--warning)]" : "text-destructive"}`}>
+                      <span className={`text-xl font-semibold tabular-nums sm:text-2xl ${((kpis?.lucroSemAds ?? 0) >= 0) ? "text-[color:var(--warning)]" : "text-destructive"}`}>
                         {brl(kpis?.lucroSemAds ?? 0)}
                       </span>
                       <span className={`text-sm tabular-nums ${((kpis?.lucroSemAdsPct ?? 0) >= 0) ? "text-[color:var(--warning)]" : "text-destructive"}`}>
                         ({(kpis?.lucroSemAdsPct ?? 0).toFixed(1).replace(".", ",")}%)
                       </span>
                     </div>
-                    <div className="flex items-baseline gap-2">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                       <span className="text-xs text-muted-foreground">Lucro (com Ads)</span>
                       <span className={`text-lg font-semibold tabular-nums ${((kpis?.lucroComAds ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
                         {brl(kpis?.lucroComAds ?? 0)}
@@ -474,7 +474,7 @@ function DashboardPage() {
               )}
             </div>
           </div>
-          <div className="flex flex-col items-end gap-3 text-right">
+          <div className="flex flex-col items-start gap-3 text-left md:items-end md:text-right">
             {!loadKpis && (kpis?.coberturaCusto ?? 1) < 1 && (kpis?.coberturaCusto ?? 0) > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 px-2 py-0.5 text-[11px] text-[color:var(--warning)]">
                 <AlertTriangle className="h-3 w-3" />
@@ -490,7 +490,7 @@ function DashboardPage() {
       </Card>
 
       {/* BLOCO 2: Cards de resultado */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
         <ResultCard
           label="Vendas"
           value={loadKpis ? null : String(kpis?.pedidosValidos ?? 0)}
@@ -530,7 +530,7 @@ function DashboardPage() {
       </div>
 
       {/* BLOCO 3: Composição de custos */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <CompCard label="Custos" valor={loadKpis ? null : brl(kpis?.custoTotal ?? 0)} pct={loadKpis ? null : `${(kpis?.custoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="danger" />
         <CompCard label="Tarifas" valor={loadKpis ? null : brl(kpis?.taxas ?? 0)} pct={loadKpis ? null : `${(kpis?.taxasPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="warning" />
         <CompCard label="Impostos" valor={loadKpis ? null : brl(kpis?.imposto ?? 0)} pct={loadKpis ? null : ((kpis?.impostoPct ?? 0) === 0 ? "defina em Configurações" : `${(kpis?.impostoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`)} tone="muted" />
@@ -549,7 +549,7 @@ function DashboardPage() {
           {!loadAds && (ads?.investimento ?? 0) === 0 && (ads?.receita ?? 0) === 0 ? (
             <p className="text-sm text-muted-foreground">Sem dados de Ads no período selecionado.</p>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-5">
               {[
                 { r: "Investimento", v: brl(ads?.investimento ?? 0) },
                 { r: "Receita", v: brl(ads?.receita ?? 0) },
@@ -557,12 +557,12 @@ function DashboardPage() {
                 { r: "ACOS", v: `${(ads?.acos ?? 0).toFixed(1).replace(".", ",")}%` },
                 { r: "TACOS", v: `${(ads?.tacos ?? 0).toFixed(1).replace(".", ",")}%` },
               ].map((item) => (
-                <div key={item.r} className="rounded-md border p-3">
+                <div key={item.r} className="min-w-0 rounded-md border p-3">
                   <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{item.r}</div>
                   {loadAds ? (
                     <Skeleton className="mt-1 h-6 w-24" />
                   ) : (
-                    <div className="mt-1 text-lg font-semibold">{item.v}</div>
+                    <div className="mt-1 break-words text-base font-semibold tabular-nums sm:text-lg">{item.v}</div>
                   )}
                 </div>
               ))}
@@ -571,13 +571,13 @@ function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader>
+          <CardHeader className="min-w-0">
             <Tabs defaultValue="fat">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <CardTitle className="text-base">Detalhamento</CardTitle>
-                <TabsList>
+                <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
                   <TabsTrigger value="fat">Faturamento</TabsTrigger>
                   <TabsTrigger value="abc">Curva ABC</TabsTrigger>
                   <TabsTrigger value="canc">Cancelados</TabsTrigger>
