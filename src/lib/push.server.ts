@@ -12,6 +12,34 @@ export function getVapidPublicKey() {
   return process.env["VAPID_PUBLIC_KEY"] ?? "";
 }
 
+type TextosPush = {
+  push_venda_titulo: string;
+  push_venda_corpo: string;
+  push_chat_titulo: string;
+  push_chat_corpo: string;
+};
+
+/** Lê os textos editáveis das notificações na tabela config. */
+async function lerTextos(): Promise<TextosPush> {
+  const { data } = await supabaseAdmin
+    .from("config")
+    .select("push_venda_titulo, push_venda_corpo, push_chat_titulo, push_chat_corpo")
+    .eq("id", 1)
+    .maybeSingle();
+  const c = (data ?? {}) as Partial<TextosPush>;
+  return {
+    push_venda_titulo: c.push_venda_titulo ?? "Nova venda na Shopee 🎉",
+    push_venda_corpo: c.push_venda_corpo ?? "{valor}{itens} · {pedido}",
+    push_chat_titulo: c.push_chat_titulo ?? "💬 {comprador} enviou uma mensagem",
+    push_chat_corpo: c.push_chat_corpo ?? "{mensagem}",
+  };
+}
+
+/** Substitui {variaveis} pelo valor correspondente. */
+function aplicarVars(modelo: string, vars: Record<string, string>) {
+  return modelo.replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? "").trim();
+}
+
 function vapidKeys() {
   return {
     subject: process.env["VAPID_SUBJECT"] ?? "mailto:contato@dreamice.shop",
