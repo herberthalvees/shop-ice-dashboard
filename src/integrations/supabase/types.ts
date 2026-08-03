@@ -252,6 +252,10 @@ export type Database = {
           id: number
           limite_estoque_baixo: number
           notificacoes_ativas: boolean
+          push_chat_corpo: string
+          push_chat_titulo: string
+          push_venda_corpo: string
+          push_venda_titulo: string
           updated_at: string
           webhook_whatsapp_url: string | null
         }
@@ -261,6 +265,10 @@ export type Database = {
           id?: number
           limite_estoque_baixo?: number
           notificacoes_ativas?: boolean
+          push_chat_corpo?: string
+          push_chat_titulo?: string
+          push_venda_corpo?: string
+          push_venda_titulo?: string
           updated_at?: string
           webhook_whatsapp_url?: string | null
         }
@@ -270,6 +278,10 @@ export type Database = {
           id?: number
           limite_estoque_baixo?: number
           notificacoes_ativas?: boolean
+          push_chat_corpo?: string
+          push_chat_titulo?: string
+          push_venda_corpo?: string
+          push_venda_titulo?: string
           updated_at?: string
           webhook_whatsapp_url?: string | null
         }

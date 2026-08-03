@@ -12,6 +12,34 @@ export function getVapidPublicKey() {
   return process.env["VAPID_PUBLIC_KEY"] ?? "";
 }
 
+type TextosPush = {
+  push_venda_titulo: string;
+  push_venda_corpo: string;
+  push_chat_titulo: string;
+  push_chat_corpo: string;
+};
+
+/** Lê os textos editáveis das notificações na tabela config. */
+async function lerTextos(): Promise<TextosPush> {
+  const { data } = await supabaseAdmin
+    .from("config")
+    .select("push_venda_titulo, push_venda_corpo, push_chat_titulo, push_chat_corpo")
+    .eq("id", 1)
+    .maybeSingle();
+  const c = (data ?? {}) as Partial<TextosPush>;
+  return {
+    push_venda_titulo: c.push_venda_titulo ?? "Nova venda na Shopee 🎉",
+    push_venda_corpo: c.push_venda_corpo ?? "{valor}{itens} · {pedido}",
+    push_chat_titulo: c.push_chat_titulo ?? "💬 {comprador} enviou uma mensagem",
+    push_chat_corpo: c.push_chat_corpo ?? "{mensagem}",
+  };
+}
+
+/** Substitui {variaveis} pelo valor correspondente. */
+function aplicarVars(modelo: string, vars: Record<string, string>) {
+  return modelo.replace(/\{(\w+)\}/g, (_, k: string) => vars[k] ?? "").trim();
+}
+
 function vapidKeys() {
   return {
     subject: process.env["VAPID_SUBJECT"] ?? "mailto:contato@dreamice.shop",
@@ -127,16 +155,23 @@ export async function notificarNovaVenda(pedido: {
   valor_total: number;
   itens?: unknown;
 }) {
-  const titulo = "Nova venda na Shopee 🎉";
-  const reservado = await reservarEnvio("venda", pedido.order_sn, titulo);
-  if (!reservado) return { ok: false, error: "já notificado" };
-
-  const valor = Number(pedido.valor_total ?? 0).toLocaleString("pt-BR", {
+  const textos = await lerTextos();
+  const valorFmt = Number(pedido.valor_total ?? 0).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
   });
   const qtd = Array.isArray(pedido.itens) ? pedido.itens.length : 0;
-  const corpo = `${valor}${qtd ? ` · ${qtd} ${qtd === 1 ? "item" : "itens"}` : ""} · ${pedido.order_sn}`;
+  const vars = {
+    valor: valorFmt,
+    itens: qtd ? ` · ${qtd} ${qtd === 1 ? "item" : "itens"}` : "",
+    qtd: String(qtd),
+    pedido: pedido.order_sn,
+  };
+  const titulo = aplicarVars(textos.push_venda_titulo || "Nova venda na Shopee 🎉", vars);
+  const reservado = await reservarEnvio("venda", pedido.order_sn, titulo);
+  if (!reservado) return { ok: false, error: "já notificado" };
+
+  const corpo = aplicarVars(textos.push_venda_corpo || "{valor}{itens} · {pedido}", vars);
 
   return await enviarPush({
     titulo,
@@ -157,12 +192,20 @@ export async function notificarNovoChat(msg: {
   comprador?: string | null;
   texto?: string | null;
 }) {
-  const titulo = `💬 ${msg.comprador?.trim() || "Comprador"} enviou uma mensagem`;
+  const textos = await lerTextos();
+  const bruto = (msg.texto ?? "").trim();
+  const vars = {
+    comprador: msg.comprador?.trim() || "Comprador",
+    mensagem: bruto ? (bruto.length > 120 ? `${bruto.slice(0, 117)}...` : bruto) : "Nova mensagem no chat",
+  };
+  const titulo = aplicarVars(
+    textos.push_chat_titulo || "💬 {comprador} enviou uma mensagem",
+    vars,
+  );
   const reservado = await reservarEnvio("chat", msg.referencia, titulo);
   if (!reservado) return { ok: false, error: "já notificado" };
 
-  const texto = (msg.texto ?? "").trim();
-  const corpo = texto ? (texto.length > 120 ? `${texto.slice(0, 117)}...` : texto) : "Nova mensagem no chat";
+  const corpo = aplicarVars(textos.push_chat_corpo || "{mensagem}", vars);
 
   return await enviarPush({
     titulo,

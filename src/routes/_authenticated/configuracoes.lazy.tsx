@@ -6,10 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Store, RefreshCw, Loader2, ExternalLink, Lock, AlertTriangle, Percent } from "lucide-react";
+import { Store, RefreshCw, Loader2, ExternalLink, Lock, AlertTriangle, Percent, BellRing } from "lucide-react";
 import { getShopeeAuthUrl, runShopeeSync } from "@/lib/shopee.functions";
 import { CustosIA } from "@/components/ia/custos-ia";
 import { PushNotificacoes } from "@/components/push/push-notificacoes";
@@ -250,8 +251,142 @@ function ConfigPage() {
 
       <PushNotificacoes />
 
+      <TextosPush />
+
       <CustosIA />
     </div>
+  );
+}
+
+type TextosPushCfg = {
+  push_venda_titulo: string;
+  push_venda_corpo: string;
+  push_chat_titulo: string;
+  push_chat_corpo: string;
+};
+
+const PADRAO_TEXTOS: TextosPushCfg = {
+  push_venda_titulo: "Nova venda na Shopee 🎉",
+  push_venda_corpo: "{valor}{itens} · {pedido}",
+  push_chat_titulo: "💬 {comprador} enviou uma mensagem",
+  push_chat_corpo: "{mensagem}",
+};
+
+function TextosPush() {
+  const qc = useQueryClient();
+  const [form, setForm] = useState<TextosPushCfg | null>(null);
+  const [salvando, setSalvando] = useState(false);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["config-push-textos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("config")
+        .select("push_venda_titulo, push_venda_corpo, push_chat_titulo, push_chat_corpo")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) throw error;
+      return { ...PADRAO_TEXTOS, ...((data ?? {}) as Partial<TextosPushCfg>) } as TextosPushCfg;
+    },
+  });
+
+  useEffect(() => {
+    if (data && !form) setForm(data);
+  }, [data, form]);
+
+  async function salvar(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form) return;
+    if (!form.push_venda_titulo.trim() || !form.push_chat_titulo.trim()) {
+      return toast.error("Os títulos não podem ficar vazios");
+    }
+    setSalvando(true);
+    const { error } = await supabase.from("config").update(form).eq("id", 1);
+    setSalvando(false);
+    if (error) toast.error("Erro", { description: error.message });
+    else {
+      toast.success("Textos das notificações atualizados");
+      qc.invalidateQueries({ queryKey: ["config-push-textos"] });
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <BellRing className="h-4 w-4" /> Textos das notificações
+        </CardTitle>
+        <CardDescription>
+          Personalize o título e a mensagem dos avisos que chegam no celular.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading || !form ? (
+          <Skeleton className="h-64 w-full" />
+        ) : (
+          <form onSubmit={salvar} className="space-y-6">
+            <div className="space-y-3">
+              <p className="text-sm font-medium">Nova venda</p>
+              <div className="space-y-2">
+                <Label htmlFor="pvt">Título</Label>
+                <Input
+                  id="pvt"
+                  value={form.push_venda_titulo}
+                  onChange={(e) => setForm({ ...form, push_venda_titulo: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pvc">Mensagem</Label>
+                <Textarea
+                  id="pvc"
+                  rows={2}
+                  value={form.push_venda_corpo}
+                  onChange={(e) => setForm({ ...form, push_venda_corpo: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Variáveis: <code>{"{valor}"}</code> <code>{"{itens}"}</code>{" "}
+                  <code>{"{qtd}"}</code> <code>{"{pedido}"}</code>
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <p className="text-sm font-medium">Nova mensagem no chat</p>
+              <div className="space-y-2">
+                <Label htmlFor="pct">Título</Label>
+                <Input
+                  id="pct"
+                  value={form.push_chat_titulo}
+                  onChange={(e) => setForm({ ...form, push_chat_titulo: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pcc">Mensagem</Label>
+                <Textarea
+                  id="pcc"
+                  rows={2}
+                  value={form.push_chat_corpo}
+                  onChange={(e) => setForm({ ...form, push_chat_corpo: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Variáveis: <code>{"{comprador}"}</code> <code>{"{mensagem}"}</code>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button type="submit" disabled={salvando}>
+                {salvando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Salvar textos
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setForm(PADRAO_TEXTOS)}>
+                Restaurar padrão
+              </Button>
+            </div>
+          </form>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
