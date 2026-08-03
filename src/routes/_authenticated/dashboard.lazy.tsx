@@ -764,13 +764,13 @@ function ResultCard({ label, value, hint, tone }: {
     tone === "success" ? "text-[color:var(--success)]" :
     tone === "warning" ? "text-[color:var(--warning)]" : "";
   return (
-    <Card>
-      <CardContent className="p-5 space-y-1.5">
-        <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
-        <div className={`text-2xl font-semibold tabular-nums leading-tight ${valColor}`}>
+    <Card className="min-w-0">
+      <CardContent className="min-w-0 space-y-1.5 p-4 sm:p-5">
+        <span className="block text-[10px] font-medium uppercase leading-tight tracking-[0.08em] text-muted-foreground sm:text-[11px]">{label}</span>
+        <div className={`break-words text-xl font-semibold tabular-nums leading-tight sm:text-2xl ${valColor}`}>
           {value === null ? <Skeleton className="h-7 w-24" /> : value}
         </div>
-        {hint && <div className="text-[11px] text-muted-foreground tabular-nums">{hint}</div>}
+        {hint && <div className="break-words text-[11px] text-muted-foreground tabular-nums">{hint}</div>}
       </CardContent>
     </Card>
   );
@@ -785,13 +785,13 @@ function CompCard({ label, valor, pct: pctText, tone }: {
     tone === "warning" ? "text-[color:var(--warning)]" :
     tone === "primary" ? "text-primary" : "text-muted-foreground";
   return (
-    <Card>
-      <CardContent className="p-5 space-y-1.5">
-        <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
-        <div className="text-2xl font-semibold tabular-nums leading-tight">
+    <Card className="min-w-0">
+      <CardContent className="min-w-0 space-y-1.5 p-4 sm:p-5">
+        <span className="block text-[10px] font-medium uppercase leading-tight tracking-[0.08em] text-muted-foreground sm:text-[11px]">{label}</span>
+        <div className="break-words text-xl font-semibold tabular-nums leading-tight sm:text-2xl">
           {valor === null ? <Skeleton className="h-7 w-24" /> : valor}
         </div>
-        {pctText !== null && <div className={`text-[11px] tabular-nums ${pctColor}`}>{pctText}</div>}
+        {pctText !== null && <div className={`break-words text-[11px] tabular-nums ${pctColor}`}>{pctText}</div>}
       </CardContent>
     </Card>
   );
@@ -812,7 +812,7 @@ function CurvaAbcTable({ data, loading }: { data: Array<{ produto: string; sku: 
         <span className="font-medium text-foreground">{classA.length} produtos classe A</span> representam {somaA.toFixed(1).replace(".", ",")}% da receita
       </p>
       <div className="max-h-96 overflow-auto rounded-md border">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[600px] text-sm">
           <thead className="sticky top-0 bg-muted/50 text-xs uppercase text-muted-foreground">
             <tr>
               <th className="px-3 py-2 text-left">Produto</th>
@@ -827,7 +827,7 @@ function CurvaAbcTable({ data, loading }: { data: Array<{ produto: string; sku: 
           <tbody>
             {data.map((r, i) => (
               <tr key={r.sku + i} className="border-t hover:bg-muted/30">
-                <td className="px-3 py-2 max-w-[240px] truncate" title={r.produto}>{r.produto}</td>
+                <td className="max-w-[200px] truncate px-3 py-2 sm:max-w-[240px]" title={r.produto}>{r.produto}</td>
                 <td className="px-3 py-2 text-muted-foreground">{r.sku}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{r.unidades}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{brl(r.receita)}</td>
