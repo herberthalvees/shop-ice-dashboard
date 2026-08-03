@@ -391,10 +391,10 @@ function DashboardPage() {
       </div>
 
       {notConnected && (
-        <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background">
+      <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background">
           <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" aria-hidden />
-          <CardContent className="relative flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-start gap-4">
+          <CardContent className="relative flex flex-col gap-4 p-5 sm:p-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex min-w-0 items-start gap-3 sm:gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                 <Snowflake className="h-5 w-5" />
               </div>
