@@ -167,6 +167,7 @@ function PedidosPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <FiltroMarketplace className="w-[180px]" />
             <Select value={preset} onValueChange={(v) => { setPreset(v as any); if (v === "custom") setCustomOpen(true); }}>
               <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
               <SelectContent>
