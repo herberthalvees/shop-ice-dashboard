@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Store, RefreshCw, Loader2, ExternalLink, Lock, AlertTriangle, Percent, BellRing } from "lucide-react";
 import { getShopeeAuthUrl, runShopeeSync } from "@/lib/shopee.functions";
+import { CardTiktok } from "@/components/card-tiktok";
 import { CustosIA } from "@/components/ia/custos-ia";
 import { PushNotificacoes } from "@/components/push/push-notificacoes";
 
@@ -193,6 +194,7 @@ function ConfigPage() {
             conectando={authMut.isPending}
             onConectar={() => authMut.mutate("ads")}
           />
+          <CardTiktok />
         </div>
       )}
 
