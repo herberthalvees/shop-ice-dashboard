@@ -31,6 +31,7 @@ import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/
 import { Route as ApiPublicShopeeWatchdogRouteImport } from './routes/api/public/shopee/watchdog'
 import { Route as ApiPublicShopeeSyncProdutosRouteImport } from './routes/api/public/shopee/sync-produtos'
 import { Route as ApiPublicShopeeSyncEscrowRouteImport } from './routes/api/public/shopee/sync-escrow'
+import { Route as ApiPublicShopeeSyncChatRouteImport } from './routes/api/public/shopee/sync-chat'
 import { Route as ApiPublicShopeeSyncCarteiraRouteImport } from './routes/api/public/shopee/sync-carteira'
 import { Route as ApiPublicShopeeSyncAdsRouteImport } from './routes/api/public/shopee/sync-ads'
 import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
@@ -180,6 +181,11 @@ const ApiPublicShopeeSyncEscrowRoute =
     path: '/api/public/shopee/sync-escrow',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicShopeeSyncChatRoute = ApiPublicShopeeSyncChatRouteImport.update({
+  id: '/api/public/shopee/sync-chat',
+  path: '/api/public/shopee/sync-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicShopeeSyncCarteiraRoute =
   ApiPublicShopeeSyncCarteiraRouteImport.update({
     id: '/api/public/shopee/sync-carteira',
@@ -251,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-ads': typeof ApiPublicShopeeSyncAdsRoute
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
+  '/api/public/shopee/sync-chat': typeof ApiPublicShopeeSyncChatRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
   '/api/public/shopee/watchdog': typeof ApiPublicShopeeWatchdogRoute
@@ -282,6 +289,7 @@ export interface FileRoutesByTo {
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-ads': typeof ApiPublicShopeeSyncAdsRoute
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
+  '/api/public/shopee/sync-chat': typeof ApiPublicShopeeSyncChatRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
   '/api/public/shopee/watchdog': typeof ApiPublicShopeeWatchdogRoute
@@ -315,6 +323,7 @@ export interface FileRoutesById {
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-ads': typeof ApiPublicShopeeSyncAdsRoute
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
+  '/api/public/shopee/sync-chat': typeof ApiPublicShopeeSyncChatRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
   '/api/public/shopee/sync-produtos': typeof ApiPublicShopeeSyncProdutosRoute
   '/api/public/shopee/watchdog': typeof ApiPublicShopeeWatchdogRoute
@@ -348,6 +357,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-ads'
     | '/api/public/shopee/sync-carteira'
+    | '/api/public/shopee/sync-chat'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
     | '/api/public/shopee/watchdog'
@@ -379,6 +389,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-ads'
     | '/api/public/shopee/sync-carteira'
+    | '/api/public/shopee/sync-chat'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
     | '/api/public/shopee/watchdog'
@@ -411,6 +422,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-ads'
     | '/api/public/shopee/sync-carteira'
+    | '/api/public/shopee/sync-chat'
     | '/api/public/shopee/sync-escrow'
     | '/api/public/shopee/sync-produtos'
     | '/api/public/shopee/watchdog'
@@ -432,6 +444,7 @@ export interface RootRouteChildren {
   ApiPublicShopeeSyncRoute: typeof ApiPublicShopeeSyncRoute
   ApiPublicShopeeSyncAdsRoute: typeof ApiPublicShopeeSyncAdsRoute
   ApiPublicShopeeSyncCarteiraRoute: typeof ApiPublicShopeeSyncCarteiraRoute
+  ApiPublicShopeeSyncChatRoute: typeof ApiPublicShopeeSyncChatRoute
   ApiPublicShopeeSyncEscrowRoute: typeof ApiPublicShopeeSyncEscrowRoute
   ApiPublicShopeeSyncProdutosRoute: typeof ApiPublicShopeeSyncProdutosRoute
   ApiPublicShopeeWatchdogRoute: typeof ApiPublicShopeeWatchdogRoute
@@ -594,6 +607,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeSyncEscrowRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/shopee/sync-chat': {
+      id: '/api/public/shopee/sync-chat'
+      path: '/api/public/shopee/sync-chat'
+      fullPath: '/api/public/shopee/sync-chat'
+      preLoaderRoute: typeof ApiPublicShopeeSyncChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shopee/sync-carteira': {
       id: '/api/public/shopee/sync-carteira'
       path: '/api/public/shopee/sync-carteira'
@@ -701,6 +721,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShopeeSyncRoute: ApiPublicShopeeSyncRoute,
   ApiPublicShopeeSyncAdsRoute: ApiPublicShopeeSyncAdsRoute,
   ApiPublicShopeeSyncCarteiraRoute: ApiPublicShopeeSyncCarteiraRoute,
+  ApiPublicShopeeSyncChatRoute: ApiPublicShopeeSyncChatRoute,
   ApiPublicShopeeSyncEscrowRoute: ApiPublicShopeeSyncEscrowRoute,
   ApiPublicShopeeSyncProdutosRoute: ApiPublicShopeeSyncProdutosRoute,
   ApiPublicShopeeWatchdogRoute: ApiPublicShopeeWatchdogRoute,
@@ -709,3 +730,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
