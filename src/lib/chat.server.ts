@@ -97,13 +97,21 @@ export type Mensagem = {
 };
 
 export async function listarMensagens(conversationId: string) {
-  const r = await comRetry((c) => getChatMessages(c.access_token, c.shop_id, conversationId, 40));
+  let shopId = 0;
+  const r = await comRetry((c) => {
+    shopId = c.shop_id;
+    return getChatMessages(c.access_token, c.shop_id, conversationId, 40);
+  });
   if (!r.ok) return r;
   const brutas = ((r.data as any)?.response?.messages ?? []) as any[];
   const mensagens: Mensagem[] = brutas
     .map((m) => ({
       id: String(m.message_id ?? ""),
-      de_loja: m.from_shop_id != null && Number(m.from_shop_id) > 0,
+      // A Shopee marca o remetente em from_id: quando é igual ao shop_id, a mensagem é nossa.
+      de_loja:
+        m.source === "seller" ||
+        (m.from_id != null && Number(m.from_id) === shopId) ||
+        (m.from_shop_id != null && Number(m.from_shop_id) === shopId && Number(m.from_id ?? 0) === shopId),
       texto:
         typeof m.content?.text === "string"
           ? m.content.text
