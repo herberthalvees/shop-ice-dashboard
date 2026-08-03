@@ -592,11 +592,11 @@ function DashboardPage() {
                     <EmptyMini msg="Sem dados no período." />
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={serie ?? []} margin={{ top: 12, right: 16, left: 4, bottom: 5 }}>
+                      <ComposedChart data={serie ?? []} margin={{ top: 12, right: isMobile ? 0 : 16, left: isMobile ? -12 : 4, bottom: 5 }}>
                         <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
-                        <XAxis dataKey="rotulo" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                        <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
-                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                        <XAxis dataKey="rotulo" minTickGap={isMobile ? 24 : 5} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                        <YAxis yAxisId="left" width={isMobile ? 46 : 60} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
+                        <YAxis yAxisId="right" orientation="right" width={isMobile ? 32 : 60} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
                         <Tooltip content={({ active, payload }) => {
                           if (!active || !payload?.length) return null;
                           const p = payload[0].payload as any;
