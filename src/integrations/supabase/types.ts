@@ -552,6 +552,7 @@ export type Database = {
           data_criacao_pedido: string | null
           id: number
           item_id: number
+          marketplace: string
           model_id: number
           order_sn: string
           preco_unitario: number | null
@@ -566,6 +567,7 @@ export type Database = {
           data_criacao_pedido?: string | null
           id?: number
           item_id?: number
+          marketplace?: string
           model_id?: number
           order_sn: string
           preco_unitario?: number | null
@@ -580,6 +582,7 @@ export type Database = {
           data_criacao_pedido?: string | null
           id?: number
           item_id?: number
+          marketplace?: string
           model_id?: number
           order_sn?: string
           preco_unitario?: number | null
@@ -611,6 +614,7 @@ export type Database = {
           frete_real: number | null
           id: string
           itens: Json | null
+          marketplace: string
           moeda: string | null
           order_sn: string
           payload: Json | null
@@ -634,6 +638,7 @@ export type Database = {
           frete_real?: number | null
           id?: string
           itens?: Json | null
+          marketplace?: string
           moeda?: string | null
           order_sn: string
           payload?: Json | null
@@ -657,6 +662,7 @@ export type Database = {
           frete_real?: number | null
           id?: string
           itens?: Json | null
+          marketplace?: string
           moeda?: string | null
           order_sn?: string
           payload?: Json | null
@@ -712,6 +718,7 @@ export type Database = {
           id: number
           imagem_url: string | null
           item_id: number
+          marketplace: string
           model_id: number
           preco_atual: number | null
           preco_original: number | null
@@ -727,6 +734,7 @@ export type Database = {
           id?: number
           imagem_url?: string | null
           item_id: number
+          marketplace?: string
           model_id?: number
           preco_atual?: number | null
           preco_original?: number | null
@@ -742,6 +750,7 @@ export type Database = {
           id?: number
           imagem_url?: string | null
           item_id?: number
+          marketplace?: string
           model_id?: number
           preco_atual?: number | null
           preco_original?: number | null
@@ -902,6 +911,48 @@ export type Database = {
           gravados?: number | null
           id?: string
           ok?: boolean
+        }
+        Relationships: []
+      }
+      tiktok_connection: {
+        Row: {
+          access_token: string | null
+          id: number
+          refresh_expires_at: string | null
+          refresh_token: string | null
+          seller_name: string | null
+          shop_cipher: string | null
+          shop_id: string | null
+          shop_name: string | null
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          id?: number
+          refresh_expires_at?: string | null
+          refresh_token?: string | null
+          seller_name?: string | null
+          shop_cipher?: string | null
+          shop_id?: string | null
+          shop_name?: string | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          id?: number
+          refresh_expires_at?: string | null
+          refresh_token?: string | null
+          seller_name?: string | null
+          shop_cipher?: string | null
+          shop_id?: string | null
+          shop_name?: string | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
