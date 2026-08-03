@@ -677,25 +677,26 @@ function DashboardPage() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="min-w-0">
           <CardTitle className="text-base">Vendas por faixa de hora</CardTitle>
           <p className="text-xs text-muted-foreground">
-            {rangeLabel} · horário de Brasília · Ads medido pela variação do gasto entre as sincronizações (rateado por hora só se ainda não houver histórico)
+            {rangeLabel} · horário de Brasília
+            <span className="hidden sm:inline"> · Ads medido pela variação do gasto entre as sincronizações (rateado por hora só se ainda não houver histórico)</span>
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="h-80">
+        <CardContent className="min-w-0 px-2 sm:px-6">
+          <div className="h-72 sm:h-80">
             {loadHora ? (
               <Skeleton className="h-full w-full" />
             ) : (serieHora ?? []).length === 0 || semDadosHora ? (
               <EmptyMini msg="Sem vendas no período." />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={serieHora ?? []} margin={{ top: 12, right: 16, left: 4, bottom: 5 }}>
+                <ComposedChart data={serieHora ?? []} margin={{ top: 12, right: isMobile ? 0 : 16, left: isMobile ? -12 : 4, bottom: 5 }}>
                   <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
-                  <XAxis dataKey="rotulo" interval={1} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
-                  <YAxis yAxisId="right" orientation="right" allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <XAxis dataKey="rotulo" interval={isMobile ? 3 : 1} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <YAxis yAxisId="left" width={isMobile ? 46 : 60} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
+                  <YAxis yAxisId="right" orientation="right" width={isMobile ? 32 : 60} allowDecimals={false} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
                   <Tooltip content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
                     const p = payload[0].payload as any;
