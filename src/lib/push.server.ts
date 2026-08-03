@@ -77,7 +77,7 @@ export async function enviarPush(opts: {
     };
     try {
       const payload = await buildPushPayload(message, subscription, vapid);
-      const res = await fetch(dev.endpoint, payload);
+      const res = await fetch(dev.endpoint, payload as unknown as RequestInit);
       if (res.status >= 200 && res.status < 300) {
         sucesso++;
         await supabaseAdmin
