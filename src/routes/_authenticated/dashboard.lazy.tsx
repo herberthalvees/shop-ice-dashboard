@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { FiltroMarketplace } from "@/components/filtro-marketplace";
+import { filtroMarketplace, useMarketplace } from "@/lib/marketplace-store";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
