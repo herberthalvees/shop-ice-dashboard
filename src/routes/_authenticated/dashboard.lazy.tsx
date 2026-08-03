@@ -209,21 +209,6 @@ function DashboardPage() {
 
   const semDadosHora = (serieHora ?? []).every((h) => h.pedidos === 0 && h.faturamento === 0);
 
-  const _unusedRecentes = useQuery({
-    queryKey: ["recentes"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("pedidos")
-        .select("order_sn, status, valor_total, comprador_username, data_criacao_pedido")
-        .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
-        .limit(10);
-      if (error) throw error;
-      return data ?? [];
-    },
-    placeholderData: (prev) => prev,
-    staleTime: 60_000,
-  });
-
   const { data: ads, isLoading: loadAds } = useQuery({
     queryKey: ["ads-resumo", p_de, p_ate],
     queryFn: async () => {
