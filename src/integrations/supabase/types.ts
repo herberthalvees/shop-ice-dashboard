@@ -68,6 +68,27 @@ export type Database = {
         }
         Relationships: []
       }
+      ads_gasto_horario: {
+        Row: {
+          atualizado_em: string
+          data: string
+          hora: number
+          investimento: number
+        }
+        Insert: {
+          atualizado_em?: string
+          data: string
+          hora: number
+          investimento?: number
+        }
+        Update: {
+          atualizado_em?: string
+          data?: string
+          hora?: number
+          investimento?: number
+        }
+        Relationships: []
+      }
       alertas_enviados: {
         Row: {
           chave: string
