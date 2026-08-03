@@ -164,7 +164,9 @@ export async function getConversationList(
   const path = "/api/v2/sellerchat/get_conversation_list";
   const url = shopUrl(path, accessToken, shopId, {
     type: opts.tipo ?? "all",
-    direction: "latest",
+    // "older" = da mais recente para as antigas. Com "latest" a Shopee devolve
+    // as conversas mais ANTIGAS primeiro (de 2025), escondendo as de hoje.
+    direction: "older",
     page_size: String(opts.pageSize ?? 25),
   });
   const res = await fetch(url);
