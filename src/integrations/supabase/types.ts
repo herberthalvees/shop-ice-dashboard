@@ -1061,6 +1061,39 @@ export type Database = {
         }
         Relationships: []
       }
+      tiktok_connection_status: {
+        Row: {
+          id: number | null
+          refresh_expires_at: string | null
+          seller_name: string | null
+          shop_id: string | null
+          shop_name: string | null
+          status: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number | null
+          refresh_expires_at?: string | null
+          seller_name?: string | null
+          shop_id?: string | null
+          shop_name?: string | null
+          status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number | null
+          refresh_expires_at?: string | null
+          seller_name?: string | null
+          shop_id?: string | null
+          shop_name?: string | null
+          status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       ads_resumo: {
