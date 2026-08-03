@@ -28,6 +28,7 @@ import {
 import { Snowflake, ArrowRight, Sparkles, CalendarIcon, TrendingUp, AlertTriangle } from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export const Route = createLazyFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
@@ -49,6 +50,7 @@ const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
 type Preset = "hoje" | "ontem" | "7d" | "30d" | "mes" | "ano" | "custom";
 
 function DashboardPage() {
+  const isMobile = useIsMobile();
   const { preset, custom, setPreset, setCustom } = usePeriodo();
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
@@ -274,13 +276,13 @@ function DashboardPage() {
     : `${fmtBR(de)} a ${fmtBR(ate)}`;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+    <div className="min-w-0 space-y-5 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-semibold tracking-tight sm:text-2xl">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Visão geral da sua loja Shopee</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Sheet>
             <SheetTrigger asChild>
               <button
@@ -338,7 +340,7 @@ function DashboardPage() {
               if (p === "custom") setCustomOpen(true);
             }}
           >
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full min-w-36 flex-1 sm:w-40 sm:flex-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -356,16 +358,16 @@ function DashboardPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className={preset === "custom" ? "" : "hidden"}
+                className={preset === "custom" ? "w-full sm:w-auto" : "hidden"}
               >
                 <CalendarIcon className="h-4 w-4 mr-1.5" />
                 {custom?.from ? rangeLabel : "Escolher datas"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 pointer-events-auto" align="end">
+            <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-auto p-0 pointer-events-auto" align="end">
               <Calendar
                 mode="range"
-                numberOfMonths={2}
+                numberOfMonths={isMobile ? 1 : 2}
                 selected={custom}
                 onSelect={setCustom}
                 locale={ptBR}
@@ -389,10 +391,10 @@ function DashboardPage() {
       </div>
 
       {notConnected && (
-        <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background">
+      <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background">
           <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" aria-hidden />
-          <CardContent className="relative flex flex-col gap-4 p-6 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-start gap-4">
+          <CardContent className="relative flex flex-col gap-4 p-5 sm:p-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex min-w-0 items-start gap-3 sm:gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
                 <Snowflake className="h-5 w-5" />
               </div>
@@ -431,13 +433,13 @@ function DashboardPage() {
       {/* BLOCO 1: Faixa de destaque */}
       <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-background">
         <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/20 blur-3xl" aria-hidden />
-        <CardContent className="relative flex flex-col gap-4 p-6 md:flex-row md:items-end md:justify-between">
-          <div className="space-y-2">
+        <CardContent className="relative flex flex-col gap-4 p-5 sm:p-6 md:flex-row md:items-end md:justify-between">
+          <div className="min-w-0 space-y-2">
             <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Faturamento</span>
-            <div className="text-4xl md:text-5xl font-semibold tabular-nums leading-none">
-              {loadKpis ? <Skeleton className="h-12 w-64" /> : brl(kpis?.faturamento ?? 0)}
+            <div className="text-[clamp(1.75rem,8vw,2.25rem)] font-semibold tabular-nums leading-none break-words md:text-5xl">
+              {loadKpis ? <Skeleton className="h-10 w-48 sm:h-12 sm:w-64" /> : brl(kpis?.faturamento ?? 0)}
             </div>
-            <div className="flex flex-wrap items-center gap-3 pt-1">
+            <div className="flex min-w-0 flex-wrap items-center gap-3 pt-1">
               {loadKpis ? <Skeleton className="h-6 w-40" /> : (kpis?.coberturaCusto ?? 0) === 0 ? (
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground">Lucro</span>
@@ -448,17 +450,17 @@ function DashboardPage() {
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-baseline gap-2">
+                  <div className="flex min-w-0 flex-col gap-1.5">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                       <span className="text-sm text-muted-foreground">Lucro (sem Ads)</span>
-                      <span className={`text-2xl font-semibold tabular-nums ${((kpis?.lucroSemAds ?? 0) >= 0) ? "text-[color:var(--warning)]" : "text-destructive"}`}>
+                      <span className={`text-xl font-semibold tabular-nums sm:text-2xl ${((kpis?.lucroSemAds ?? 0) >= 0) ? "text-[color:var(--warning)]" : "text-destructive"}`}>
                         {brl(kpis?.lucroSemAds ?? 0)}
                       </span>
                       <span className={`text-sm tabular-nums ${((kpis?.lucroSemAdsPct ?? 0) >= 0) ? "text-[color:var(--warning)]" : "text-destructive"}`}>
                         ({(kpis?.lucroSemAdsPct ?? 0).toFixed(1).replace(".", ",")}%)
                       </span>
                     </div>
-                    <div className="flex items-baseline gap-2">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                       <span className="text-xs text-muted-foreground">Lucro (com Ads)</span>
                       <span className={`text-lg font-semibold tabular-nums ${((kpis?.lucroComAds ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
                         {brl(kpis?.lucroComAds ?? 0)}
@@ -472,7 +474,7 @@ function DashboardPage() {
               )}
             </div>
           </div>
-          <div className="flex flex-col items-end gap-3 text-right">
+          <div className="flex flex-col items-start gap-3 text-left md:items-end md:text-right">
             {!loadKpis && (kpis?.coberturaCusto ?? 1) < 1 && (kpis?.coberturaCusto ?? 0) > 0 && (
               <span className="inline-flex items-center gap-1 rounded-full border border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10 px-2 py-0.5 text-[11px] text-[color:var(--warning)]">
                 <AlertTriangle className="h-3 w-3" />
@@ -488,7 +490,7 @@ function DashboardPage() {
       </Card>
 
       {/* BLOCO 2: Cards de resultado */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-6">
         <ResultCard
           label="Vendas"
           value={loadKpis ? null : String(kpis?.pedidosValidos ?? 0)}
@@ -528,7 +530,7 @@ function DashboardPage() {
       </div>
 
       {/* BLOCO 3: Composição de custos */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <CompCard label="Custos" valor={loadKpis ? null : brl(kpis?.custoTotal ?? 0)} pct={loadKpis ? null : `${(kpis?.custoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="danger" />
         <CompCard label="Tarifas" valor={loadKpis ? null : brl(kpis?.taxas ?? 0)} pct={loadKpis ? null : `${(kpis?.taxasPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="warning" />
         <CompCard label="Impostos" valor={loadKpis ? null : brl(kpis?.imposto ?? 0)} pct={loadKpis ? null : ((kpis?.impostoPct ?? 0) === 0 ? "defina em Configurações" : `${(kpis?.impostoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`)} tone="muted" />
@@ -547,7 +549,7 @@ function DashboardPage() {
           {!loadAds && (ads?.investimento ?? 0) === 0 && (ads?.receita ?? 0) === 0 ? (
             <p className="text-sm text-muted-foreground">Sem dados de Ads no período selecionado.</p>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-5">
               {[
                 { r: "Investimento", v: brl(ads?.investimento ?? 0) },
                 { r: "Receita", v: brl(ads?.receita ?? 0) },
@@ -555,12 +557,12 @@ function DashboardPage() {
                 { r: "ACOS", v: `${(ads?.acos ?? 0).toFixed(1).replace(".", ",")}%` },
                 { r: "TACOS", v: `${(ads?.tacos ?? 0).toFixed(1).replace(".", ",")}%` },
               ].map((item) => (
-                <div key={item.r} className="rounded-md border p-3">
+                <div key={item.r} className="min-w-0 rounded-md border p-3">
                   <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{item.r}</div>
                   {loadAds ? (
                     <Skeleton className="mt-1 h-6 w-24" />
                   ) : (
-                    <div className="mt-1 text-lg font-semibold">{item.v}</div>
+                    <div className="mt-1 break-words text-base font-semibold tabular-nums sm:text-lg">{item.v}</div>
                   )}
                 </div>
               ))}
@@ -569,13 +571,13 @@ function DashboardPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-2">
         <Card>
-          <CardHeader>
+          <CardHeader className="min-w-0">
             <Tabs defaultValue="fat">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
                 <CardTitle className="text-base">Detalhamento</CardTitle>
-                <TabsList>
+                <TabsList className="w-full justify-start overflow-x-auto sm:w-auto">
                   <TabsTrigger value="fat">Faturamento</TabsTrigger>
                   <TabsTrigger value="abc">Curva ABC</TabsTrigger>
                   <TabsTrigger value="canc">Cancelados</TabsTrigger>
@@ -590,11 +592,11 @@ function DashboardPage() {
                     <EmptyMini msg="Sem dados no período." />
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={serie ?? []} margin={{ top: 12, right: 16, left: 4, bottom: 5 }}>
+                      <ComposedChart data={serie ?? []} margin={{ top: 12, right: isMobile ? 0 : 16, left: isMobile ? -12 : 4, bottom: 5 }}>
                         <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
-                        <XAxis dataKey="rotulo" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                        <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
-                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                        <XAxis dataKey="rotulo" minTickGap={isMobile ? 24 : 5} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                        <YAxis yAxisId="left" width={isMobile ? 46 : 60} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
+                        <YAxis yAxisId="right" orientation="right" width={isMobile ? 32 : 60} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
                         <Tooltip content={({ active, payload }) => {
                           if (!active || !payload?.length) return null;
                           const p = payload[0].payload as any;
@@ -675,25 +677,26 @@ function DashboardPage() {
       </div>
 
       <Card>
-        <CardHeader>
+        <CardHeader className="min-w-0">
           <CardTitle className="text-base">Vendas por faixa de hora</CardTitle>
           <p className="text-xs text-muted-foreground">
-            {rangeLabel} · horário de Brasília · Ads medido pela variação do gasto entre as sincronizações (rateado por hora só se ainda não houver histórico)
+            {rangeLabel} · horário de Brasília
+            <span className="hidden sm:inline"> · Ads medido pela variação do gasto entre as sincronizações (rateado por hora só se ainda não houver histórico)</span>
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="h-80">
+        <CardContent className="min-w-0 px-2 sm:px-6">
+          <div className="h-72 sm:h-80">
             {loadHora ? (
               <Skeleton className="h-full w-full" />
             ) : (serieHora ?? []).length === 0 || semDadosHora ? (
               <EmptyMini msg="Sem vendas no período." />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={serieHora ?? []} margin={{ top: 12, right: 16, left: 4, bottom: 5 }}>
+                <ComposedChart data={serieHora ?? []} margin={{ top: 12, right: isMobile ? 0 : 16, left: isMobile ? -12 : 4, bottom: 5 }}>
                   <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
-                  <XAxis dataKey="rotulo" interval={1} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                  <YAxis yAxisId="left" tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
-                  <YAxis yAxisId="right" orientation="right" allowDecimals={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <XAxis dataKey="rotulo" interval={isMobile ? 3 : 1} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
+                  <YAxis yAxisId="left" width={isMobile ? 46 : 60} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
+                  <YAxis yAxisId="right" orientation="right" width={isMobile ? 32 : 60} allowDecimals={false} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
                   <Tooltip content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
                     const p = payload[0].payload as any;
@@ -729,8 +732,8 @@ function DashboardPage() {
           ) : (
             <div className="divide-y divide-border">
               {(recentes ?? []).map((p) => (
-                <div key={p.order_sn} className="flex items-center justify-between py-3 text-sm">
-                  <div className="min-w-0">
+                <div key={p.order_sn} className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">#{p.order_sn}</div>
                     <div className="text-xs text-muted-foreground truncate">
                       {p.comprador_username ?? "—"} ·{" "}
@@ -739,8 +742,8 @@ function DashboardPage() {
                         : "—"}
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <Badge variant="secondary">{p.status ?? "—"}</Badge>
+                  <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+                    <Badge variant="secondary" className="max-w-[9rem] truncate text-[10px] sm:text-xs">{p.status ?? "—"}</Badge>
                     <span className="tabular-nums font-medium">{brl(Number(p.valor_total ?? 0))}</span>
                   </div>
                 </div>
@@ -762,13 +765,13 @@ function ResultCard({ label, value, hint, tone }: {
     tone === "success" ? "text-[color:var(--success)]" :
     tone === "warning" ? "text-[color:var(--warning)]" : "";
   return (
-    <Card>
-      <CardContent className="p-5 space-y-1.5">
-        <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
-        <div className={`text-2xl font-semibold tabular-nums leading-tight ${valColor}`}>
+    <Card className="min-w-0">
+      <CardContent className="min-w-0 space-y-1.5 p-4 sm:p-5">
+        <span className="block text-[10px] font-medium uppercase leading-tight tracking-[0.08em] text-muted-foreground sm:text-[11px]">{label}</span>
+        <div className={`break-words text-xl font-semibold tabular-nums leading-tight sm:text-2xl ${valColor}`}>
           {value === null ? <Skeleton className="h-7 w-24" /> : value}
         </div>
-        {hint && <div className="text-[11px] text-muted-foreground tabular-nums">{hint}</div>}
+        {hint && <div className="break-words text-[11px] text-muted-foreground tabular-nums">{hint}</div>}
       </CardContent>
     </Card>
   );
@@ -783,13 +786,13 @@ function CompCard({ label, valor, pct: pctText, tone }: {
     tone === "warning" ? "text-[color:var(--warning)]" :
     tone === "primary" ? "text-primary" : "text-muted-foreground";
   return (
-    <Card>
-      <CardContent className="p-5 space-y-1.5">
-        <span className="block text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">{label}</span>
-        <div className="text-2xl font-semibold tabular-nums leading-tight">
+    <Card className="min-w-0">
+      <CardContent className="min-w-0 space-y-1.5 p-4 sm:p-5">
+        <span className="block text-[10px] font-medium uppercase leading-tight tracking-[0.08em] text-muted-foreground sm:text-[11px]">{label}</span>
+        <div className="break-words text-xl font-semibold tabular-nums leading-tight sm:text-2xl">
           {valor === null ? <Skeleton className="h-7 w-24" /> : valor}
         </div>
-        {pctText !== null && <div className={`text-[11px] tabular-nums ${pctColor}`}>{pctText}</div>}
+        {pctText !== null && <div className={`break-words text-[11px] tabular-nums ${pctColor}`}>{pctText}</div>}
       </CardContent>
     </Card>
   );
@@ -810,7 +813,7 @@ function CurvaAbcTable({ data, loading }: { data: Array<{ produto: string; sku: 
         <span className="font-medium text-foreground">{classA.length} produtos classe A</span> representam {somaA.toFixed(1).replace(".", ",")}% da receita
       </p>
       <div className="max-h-96 overflow-auto rounded-md border">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[600px] text-sm">
           <thead className="sticky top-0 bg-muted/50 text-xs uppercase text-muted-foreground">
             <tr>
               <th className="px-3 py-2 text-left">Produto</th>
@@ -825,7 +828,7 @@ function CurvaAbcTable({ data, loading }: { data: Array<{ produto: string; sku: 
           <tbody>
             {data.map((r, i) => (
               <tr key={r.sku + i} className="border-t hover:bg-muted/30">
-                <td className="px-3 py-2 max-w-[240px] truncate" title={r.produto}>{r.produto}</td>
+                <td className="max-w-[200px] truncate px-3 py-2 sm:max-w-[240px]" title={r.produto}>{r.produto}</td>
                 <td className="px-3 py-2 text-muted-foreground">{r.sku}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{r.unidades}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{brl(r.receita)}</td>
