@@ -41,7 +41,8 @@ async function handler({ request }: { request: Request }) {
     return responder({ ok: true, conversas: r.conversas.length, notificadas });
   } catch (erro) {
     console.error("erro no sync-chat", String(erro));
-    return responder({ ok: false, erro: "erro interno" }, 500);
+    const detalhe = erro instanceof Error ? `${erro.name}: ${erro.message}` : String(erro);
+    return responder({ ok: false, erro: "erro interno", detalhe: detalhe.slice(0, 400) }, 500);
   }
 }
 
