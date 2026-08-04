@@ -1187,66 +1187,40 @@ export type Database = {
         Args: { p_ate: string; p_de: string }
         Returns: number
       }
-      dashboard_curva_abc:
-        | {
-            Args: { p_ate: string; p_de: string; p_limite: number }
-            Returns: {
-              acumulado: number
-              classe: string
-              participacao: number
-              produto: string
-              receita: number
-              sku: string
-              unidades: number
-            }[]
-          }
-        | {
-            Args: {
-              p_ate: string
-              p_de: string
-              p_limite: number
-              p_marketplace?: string
-            }
-            Returns: {
-              acumulado: number
-              classe: string
-              participacao: number
-              produto: string
-              receita: number
-              sku: string
-              unidades: number
-            }[]
-          }
-      dashboard_curva_abc_impl:
-        | {
-            Args: { p_ate: string; p_de: string; p_limite?: number }
-            Returns: {
-              acumulado: number
-              classe: string
-              participacao: number
-              produto: string
-              receita: number
-              sku: string
-              unidades: number
-            }[]
-          }
-        | {
-            Args: {
-              p_ate: string
-              p_de: string
-              p_limite?: number
-              p_marketplace?: string
-            }
-            Returns: {
-              acumulado: number
-              classe: string
-              participacao: number
-              produto: string
-              receita: number
-              sku: string
-              unidades: number
-            }[]
-          }
+      dashboard_curva_abc: {
+        Args: {
+          p_ate: string
+          p_de: string
+          p_limite: number
+          p_marketplace?: string
+        }
+        Returns: {
+          acumulado: number
+          classe: string
+          participacao: number
+          produto: string
+          receita: number
+          sku: string
+          unidades: number
+        }[]
+      }
+      dashboard_curva_abc_impl: {
+        Args: {
+          p_ate: string
+          p_de: string
+          p_limite?: number
+          p_marketplace?: string
+        }
+        Returns: {
+          acumulado: number
+          classe: string
+          participacao: number
+          produto: string
+          receita: number
+          sku: string
+          unidades: number
+        }[]
+      }
       dashboard_kpis: {
         Args: never
         Returns: {
@@ -1267,120 +1241,62 @@ export type Database = {
           pedidos_mes: number
         }[]
       }
-      dashboard_kpis_periodo:
-        | {
-            Args: { p_ate: string; p_de: string }
-            Returns: {
-              ads_investimento: number
-              ads_pct: number
-              cobertura_custo: number
-              custo_pct: number
-              custo_total: number
-              faturamento: number
-              imposto: number
-              imposto_pct: number
-              lucro_com_ads: number
-              lucro_com_ads_pct: number
-              lucro_medio: number
-              lucro_sem_ads: number
-              lucro_sem_ads_pct: number
-              pedidos_cancelados: number
-              pedidos_devolvidos: number
-              pedidos_validos: number
-              taxas: number
-              taxas_pct: number
-              ticket_medio: number
-              unidades: number
-              valor_cancelado: number
-              valor_devolvido: number
-              valor_liquido: number
-            }[]
-          }
-        | {
-            Args: { p_ate: string; p_de: string; p_marketplace?: string }
-            Returns: {
-              ads_investimento: number
-              ads_pct: number
-              cobertura_custo: number
-              custo_pct: number
-              custo_total: number
-              faturamento: number
-              imposto: number
-              imposto_pct: number
-              lucro_com_ads: number
-              lucro_com_ads_pct: number
-              lucro_medio: number
-              lucro_sem_ads: number
-              lucro_sem_ads_pct: number
-              pedidos_cancelados: number
-              pedidos_devolvidos: number
-              pedidos_validos: number
-              taxas: number
-              taxas_pct: number
-              ticket_medio: number
-              unidades: number
-              valor_cancelado: number
-              valor_devolvido: number
-              valor_liquido: number
-            }[]
-          }
-      dashboard_kpis_periodo_impl:
-        | {
-            Args: { p_ate: string; p_de: string }
-            Returns: {
-              ads_investimento: number
-              ads_pct: number
-              cobertura_custo: number
-              custo_pct: number
-              custo_total: number
-              faturamento: number
-              imposto: number
-              imposto_pct: number
-              lucro_com_ads: number
-              lucro_com_ads_pct: number
-              lucro_medio: number
-              lucro_sem_ads: number
-              lucro_sem_ads_pct: number
-              pedidos_cancelados: number
-              pedidos_devolvidos: number
-              pedidos_validos: number
-              taxas: number
-              taxas_pct: number
-              ticket_medio: number
-              unidades: number
-              valor_cancelado: number
-              valor_devolvido: number
-              valor_liquido: number
-            }[]
-          }
-        | {
-            Args: { p_ate: string; p_de: string; p_marketplace?: string }
-            Returns: {
-              ads_investimento: number
-              ads_pct: number
-              cobertura_custo: number
-              custo_pct: number
-              custo_total: number
-              faturamento: number
-              imposto: number
-              imposto_pct: number
-              lucro_com_ads: number
-              lucro_com_ads_pct: number
-              lucro_medio: number
-              lucro_sem_ads: number
-              lucro_sem_ads_pct: number
-              pedidos_cancelados: number
-              pedidos_devolvidos: number
-              pedidos_validos: number
-              taxas: number
-              taxas_pct: number
-              ticket_medio: number
-              unidades: number
-              valor_cancelado: number
-              valor_devolvido: number
-              valor_liquido: number
-            }[]
-          }
+      dashboard_kpis_periodo: {
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Returns: {
+          ads_investimento: number
+          ads_pct: number
+          cobertura_custo: number
+          custo_pct: number
+          custo_total: number
+          faturamento: number
+          imposto: number
+          imposto_pct: number
+          lucro_com_ads: number
+          lucro_com_ads_pct: number
+          lucro_medio: number
+          lucro_sem_ads: number
+          lucro_sem_ads_pct: number
+          pedidos_cancelados: number
+          pedidos_devolvidos: number
+          pedidos_validos: number
+          taxas: number
+          taxas_pct: number
+          ticket_medio: number
+          unidades: number
+          valor_cancelado: number
+          valor_devolvido: number
+          valor_liquido: number
+        }[]
+      }
+      dashboard_kpis_periodo_impl: {
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Returns: {
+          ads_investimento: number
+          ads_pct: number
+          cobertura_custo: number
+          custo_pct: number
+          custo_total: number
+          faturamento: number
+          imposto: number
+          imposto_pct: number
+          lucro_com_ads: number
+          lucro_com_ads_pct: number
+          lucro_medio: number
+          lucro_sem_ads: number
+          lucro_sem_ads_pct: number
+          pedidos_cancelados: number
+          pedidos_devolvidos: number
+          pedidos_validos: number
+          taxas: number
+          taxas_pct: number
+          ticket_medio: number
+          unidades: number
+          valor_cancelado: number
+          valor_devolvido: number
+          valor_liquido: number
+        }[]
+      }
       dashboard_serie_diaria: {
         Args: { p_dias: number }
         Returns: {
@@ -1397,88 +1313,45 @@ export type Database = {
           pedidos: number
         }[]
       }
-      dashboard_serie_horaria:
-        | {
-            Args: { p_ate: string; p_de: string }
-            Returns: {
-              ads_investimento: number
-              faturamento: number
-              hora: number
-              pedidos: number
-              rotulo: string
-            }[]
-          }
-        | {
-            Args: { p_ate: string; p_de: string; p_marketplace?: string }
-            Returns: {
-              ads_investimento: number
-              faturamento: number
-              hora: number
-              pedidos: number
-              rotulo: string
-            }[]
-          }
-      dashboard_serie_horaria_impl:
-        | {
-            Args: { p_ate: string; p_de: string }
-            Returns: {
-              ads_investimento: number
-              faturamento: number
-              hora: number
-              pedidos: number
-              rotulo: string
-            }[]
-          }
-        | {
-            Args: { p_ate: string; p_de: string; p_marketplace?: string }
-            Returns: {
-              ads_investimento: number
-              faturamento: number
-              hora: number
-              pedidos: number
-              rotulo: string
-            }[]
-          }
-      dashboard_serie_periodo:
-        | {
-            Args: { p_ate: string; p_de: string }
-            Returns: {
-              faturamento: number
-              pedidos: number
-              periodo: string
-              rotulo: string
-            }[]
-          }
-        | {
-            Args: { p_ate: string; p_de: string; p_marketplace?: string }
-            Returns: {
-              faturamento: number
-              pedidos: number
-              periodo: string
-              rotulo: string
-            }[]
-          }
-      dashboard_serie_periodo_impl:
-        | {
-            Args: { p_ate: string; p_de: string }
-            Returns: {
-              faturamento: number
-              parcial: boolean
-              pedidos: number
-              periodo: string
-              rotulo: string
-            }[]
-          }
-        | {
-            Args: { p_ate: string; p_de: string; p_marketplace?: string }
-            Returns: {
-              faturamento: number
-              parcial: boolean
-              pedidos: number
-              periodo: string
-              rotulo: string
-            }[]
-          }
+      dashboard_serie_horaria: {
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Returns: {
+          ads_investimento: number
+          faturamento: number
+          hora: number
+          pedidos: number
+          rotulo: string
+        }[]
+      }
+      dashboard_serie_horaria_impl: {
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Returns: {
+          ads_investimento: number
+          faturamento: number
+          hora: number
+          pedidos: number
+          rotulo: string
+        }[]
+      }
+      dashboard_serie_periodo: {
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Returns: {
+          faturamento: number
+          pedidos: number
+          periodo: string
+          rotulo: string
+        }[]
+      }
+      dashboard_serie_periodo_impl: {
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Returns: {
+          faturamento: number
+          parcial: boolean
+          pedidos: number
+          periodo: string
+          rotulo: string
+        }[]
+      }
       dashboard_top_produtos: {
         Args: { p_dias: number; p_limite: number }
         Returns: {
@@ -1497,54 +1370,34 @@ export type Database = {
           sku: string
         }[]
       }
-      dashboard_top_produtos_periodo:
-        | {
-            Args: { p_ate: string; p_de: string; p_limite: number }
-            Returns: {
-              produto: string
-              quantidade: number
-              receita: number
-              sku: string
-            }[]
-          }
-        | {
-            Args: {
-              p_ate: string
-              p_de: string
-              p_limite: number
-              p_marketplace?: string
-            }
-            Returns: {
-              produto: string
-              quantidade: number
-              receita: number
-              sku: string
-            }[]
-          }
-      dashboard_top_produtos_periodo_impl:
-        | {
-            Args: { p_ate: string; p_de: string; p_limite?: number }
-            Returns: {
-              produto: string
-              quantidade: number
-              receita: number
-              sku: string
-            }[]
-          }
-        | {
-            Args: {
-              p_ate: string
-              p_de: string
-              p_limite?: number
-              p_marketplace?: string
-            }
-            Returns: {
-              produto: string
-              quantidade: number
-              receita: number
-              sku: string
-            }[]
-          }
+      dashboard_top_produtos_periodo: {
+        Args: {
+          p_ate: string
+          p_de: string
+          p_limite: number
+          p_marketplace?: string
+        }
+        Returns: {
+          produto: string
+          quantidade: number
+          receita: number
+          sku: string
+        }[]
+      }
+      dashboard_top_produtos_periodo_impl: {
+        Args: {
+          p_ate: string
+          p_de: string
+          p_limite?: number
+          p_marketplace?: string
+        }
+        Returns: {
+          produto: string
+          quantidade: number
+          receita: number
+          sku: string
+        }[]
+      }
       dre_mensal: {
         Args: { p_ano: number; p_mes: number }
         Returns: {
@@ -1623,202 +1476,104 @@ export type Database = {
       }
       ia_schema: { Args: never; Returns: Json }
       ia_sql: { Args: { consulta: string; limite?: number }; Returns: Json }
-      pedidos_detalhe:
-        | {
-            Args: {
-              p_ate: string
-              p_busca: string
-              p_de: string
-              p_limite: number
-              p_offset: number
-              p_status: string
-            }
-            Returns: {
-              comprador: string
-              custo: number
-              data_pedido: string
-              frete_vendedor: number
-              imagem_url: string
-              imposto: number
-              lucro: number
-              margem_pct: number
-              order_sn: string
-              produto: string
-              quantidade: number
-              sku: string
-              status: string
-              tarifa: number
-              tem_escrow: boolean
-              total_linhas: number
-              valor: number
-            }[]
-          }
-        | {
-            Args: {
-              p_ate: string
-              p_busca: string
-              p_de: string
-              p_limite: number
-              p_marketplace?: string
-              p_offset: number
-              p_status: string
-            }
-            Returns: {
-              comprador: string
-              custo: number
-              data_pedido: string
-              frete_vendedor: number
-              imagem_url: string
-              imposto: number
-              lucro: number
-              margem_pct: number
-              order_sn: string
-              produto: string
-              quantidade: number
-              sku: string
-              status: string
-              tarifa: number
-              tem_escrow: boolean
-              total_linhas: number
-              valor: number
-            }[]
-          }
-      pedidos_detalhe_impl:
-        | {
-            Args: {
-              p_ate: string
-              p_busca?: string
-              p_de: string
-              p_limite?: number
-              p_offset?: number
-              p_status?: string
-            }
-            Returns: {
-              comprador: string
-              custo: number
-              data_pedido: string
-              frete_vendedor: number
-              imagem_url: string
-              imposto: number
-              lucro: number
-              margem_pct: number
-              order_sn: string
-              produto: string
-              quantidade: number
-              sku: string
-              status: string
-              tarifa: number
-              tem_escrow: boolean
-              total_linhas: number
-              valor: number
-            }[]
-          }
-        | {
-            Args: {
-              p_ate: string
-              p_busca?: string
-              p_de: string
-              p_limite?: number
-              p_marketplace?: string
-              p_offset?: number
-              p_status?: string
-            }
-            Returns: {
-              comprador: string
-              custo: number
-              data_pedido: string
-              frete_vendedor: number
-              imagem_url: string
-              imposto: number
-              lucro: number
-              margem_pct: number
-              order_sn: string
-              produto: string
-              quantidade: number
-              sku: string
-              status: string
-              tarifa: number
-              tem_escrow: boolean
-              total_linhas: number
-              valor: number
-            }[]
-          }
-      pedidos_detalhe_totais:
-        | {
-            Args: {
-              p_ate: string
-              p_busca: string
-              p_de: string
-              p_status: string
-            }
-            Returns: {
-              custo: number
-              frete_vendedor: number
-              imposto: number
-              linhas: number
-              linhas_estimadas: number
-              lucro: number
-              tarifa: number
-              valor: number
-            }[]
-          }
-        | {
-            Args: {
-              p_ate: string
-              p_busca: string
-              p_de: string
-              p_marketplace?: string
-              p_status: string
-            }
-            Returns: {
-              custo: number
-              frete_vendedor: number
-              imposto: number
-              linhas: number
-              linhas_estimadas: number
-              lucro: number
-              tarifa: number
-              valor: number
-            }[]
-          }
-      pedidos_detalhe_totais_impl:
-        | {
-            Args: {
-              p_ate: string
-              p_busca?: string
-              p_de: string
-              p_status?: string
-            }
-            Returns: {
-              custo: number
-              frete_vendedor: number
-              imposto: number
-              linhas: number
-              linhas_estimadas: number
-              lucro: number
-              tarifa: number
-              valor: number
-            }[]
-          }
-        | {
-            Args: {
-              p_ate: string
-              p_busca?: string
-              p_de: string
-              p_marketplace?: string
-              p_status?: string
-            }
-            Returns: {
-              custo: number
-              frete_vendedor: number
-              imposto: number
-              linhas: number
-              linhas_estimadas: number
-              lucro: number
-              tarifa: number
-              valor: number
-            }[]
-          }
+      pedidos_detalhe: {
+        Args: {
+          p_ate: string
+          p_busca: string
+          p_de: string
+          p_limite: number
+          p_marketplace?: string
+          p_offset: number
+          p_status: string
+        }
+        Returns: {
+          comprador: string
+          custo: number
+          data_pedido: string
+          frete_vendedor: number
+          imagem_url: string
+          imposto: number
+          lucro: number
+          margem_pct: number
+          order_sn: string
+          produto: string
+          quantidade: number
+          sku: string
+          status: string
+          tarifa: number
+          tem_escrow: boolean
+          total_linhas: number
+          valor: number
+        }[]
+      }
+      pedidos_detalhe_impl: {
+        Args: {
+          p_ate: string
+          p_busca?: string
+          p_de: string
+          p_limite?: number
+          p_marketplace?: string
+          p_offset?: number
+          p_status?: string
+        }
+        Returns: {
+          comprador: string
+          custo: number
+          data_pedido: string
+          frete_vendedor: number
+          imagem_url: string
+          imposto: number
+          lucro: number
+          margem_pct: number
+          order_sn: string
+          produto: string
+          quantidade: number
+          sku: string
+          status: string
+          tarifa: number
+          tem_escrow: boolean
+          total_linhas: number
+          valor: number
+        }[]
+      }
+      pedidos_detalhe_totais: {
+        Args: {
+          p_ate: string
+          p_busca: string
+          p_de: string
+          p_marketplace?: string
+          p_status: string
+        }
+        Returns: {
+          custo: number
+          frete_vendedor: number
+          imposto: number
+          linhas: number
+          linhas_estimadas: number
+          lucro: number
+          tarifa: number
+          valor: number
+        }[]
+      }
+      pedidos_detalhe_totais_impl: {
+        Args: {
+          p_ate: string
+          p_busca?: string
+          p_de: string
+          p_marketplace?: string
+          p_status?: string
+        }
+        Returns: {
+          custo: number
+          frete_vendedor: number
+          imposto: number
+          linhas: number
+          linhas_estimadas: number
+          lucro: number
+          tarifa: number
+          valor: number
+        }[]
+      }
       pedidos_escrow_pendentes: {
         Args: { p_limite?: number }
         Returns: {
@@ -1838,41 +1593,23 @@ export type Database = {
           roas: number
         }[]
       }
-      produtos_com_giro:
-        | {
-            Args: { p_ate: string; p_de: string }
-            Returns: {
-              dias_de_estoque: number
-              estoque_disponivel: number
-              imagem_url: string
-              item_id: number
-              media_diaria: number
-              model_id: number
-              preco_atual: number
-              produto: string
-              sku: string
-              status_item: string
-              variacao: string
-              vendidos_periodo: number
-            }[]
-          }
-        | {
-            Args: { p_ate: string; p_de: string; p_marketplace?: string }
-            Returns: {
-              dias_de_estoque: number
-              estoque_disponivel: number
-              imagem_url: string
-              item_id: number
-              media_diaria: number
-              model_id: number
-              preco_atual: number
-              produto: string
-              sku: string
-              status_item: string
-              variacao: string
-              vendidos_periodo: number
-            }[]
-          }
+      produtos_com_giro: {
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Returns: {
+          dias_de_estoque: number
+          estoque_disponivel: number
+          imagem_url: string
+          item_id: number
+          media_diaria: number
+          model_id: number
+          preco_atual: number
+          produto: string
+          sku: string
+          status_item: string
+          variacao: string
+          vendidos_periodo: number
+        }[]
+      }
       produtos_com_giro_impl: {
         Args: { p_ate: string; p_de: string }
         Returns: {
