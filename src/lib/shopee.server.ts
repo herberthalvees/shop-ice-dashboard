@@ -1,7 +1,7 @@
 // Server-only helpers para a API Shopee Open Platform.
-import { createHmac, timingSafeEqual } from "node:crypto";
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { credenciais } from "./shopee-credenciais.server";
+import { comparacaoSegura, hmacSha256Hex } from "./hmac-sha256";
 
 export const SHOPEE_BASE = "https://partner.shopeemobile.com";
 
@@ -17,7 +17,7 @@ function partnerKey(appTipo: string = "principal"): string {
 }
 
 function hmacHex(key: string, message: string): string {
-  return createHmac("sha256", key).update(message).digest("hex");
+  return hmacSha256Hex(key, message);
 }
 
 export function signPublic(path: string, timestamp: number, appTipo: string = "principal"): string {
@@ -45,10 +45,7 @@ export function buildAuthUrl(origin: string, appTipo: string = "principal"): str
 export function verifyWebhookSignature(url: string, body: string, header: string | null): boolean {
   if (!header) return false;
   const expected = hmacHex(partnerKey(), `${url}|${body}`);
-  const a = Buffer.from(header.trim().toLowerCase(), "utf8");
-  const b = Buffer.from(expected.toLowerCase(), "utf8");
-  if (a.length !== b.length) return false;
-  try { return timingSafeEqual(a, b); } catch { return false; }
+  return comparacaoSegura(header.trim().toLowerCase(), expected.toLowerCase());
 }
 
 export async function exchangeCodeForToken(code: string, shopId: number) {
