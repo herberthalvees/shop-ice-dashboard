@@ -4,8 +4,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 export const listarConversasShopee = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
-    const { listarConversas } = await import("./chat.server");
-    return await listarConversas();
+    try {
+      const { listarConversas } = await import("./chat.server");
+      return await listarConversas();
+    } catch (e) {
+      return { ok: false as const, error: e instanceof Error ? e.message : String(e) };
+    }
   });
 
 export const listarMensagensShopee = createServerFn({ method: "GET" })
