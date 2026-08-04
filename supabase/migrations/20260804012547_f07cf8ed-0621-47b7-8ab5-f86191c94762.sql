@@ -1,0 +1,1 @@
+ALTER VIEW public.pedido_itens_custeado SET (security_invoker = on);
