@@ -914,48 +914,6 @@ export type Database = {
         }
         Relationships: []
       }
-      tiktok_connection: {
-        Row: {
-          access_token: string | null
-          id: number
-          refresh_expires_at: string | null
-          refresh_token: string | null
-          seller_name: string | null
-          shop_cipher: string | null
-          shop_id: string | null
-          shop_name: string | null
-          status: string
-          token_expires_at: string | null
-          updated_at: string
-        }
-        Insert: {
-          access_token?: string | null
-          id?: number
-          refresh_expires_at?: string | null
-          refresh_token?: string | null
-          seller_name?: string | null
-          shop_cipher?: string | null
-          shop_id?: string | null
-          shop_name?: string | null
-          status?: string
-          token_expires_at?: string | null
-          updated_at?: string
-        }
-        Update: {
-          access_token?: string | null
-          id?: number
-          refresh_expires_at?: string | null
-          refresh_token?: string | null
-          seller_name?: string | null
-          shop_cipher?: string | null
-          shop_id?: string | null
-          shop_name?: string | null
-          status?: string
-          token_expires_at?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -1054,39 +1012,6 @@ export type Database = {
           id?: number | null
           partner_id?: number | null
           shop_id?: number | null
-          shop_name?: string | null
-          status?: string | null
-          token_expires_at?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      tiktok_connection_status: {
-        Row: {
-          id: number | null
-          refresh_expires_at: string | null
-          seller_name: string | null
-          shop_id: string | null
-          shop_name: string | null
-          status: string | null
-          token_expires_at: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          id?: number | null
-          refresh_expires_at?: string | null
-          seller_name?: string | null
-          shop_id?: string | null
-          shop_name?: string | null
-          status?: string | null
-          token_expires_at?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          id?: number | null
-          refresh_expires_at?: string | null
-          seller_name?: string | null
-          shop_id?: string | null
           shop_name?: string | null
           status?: string | null
           token_expires_at?: string | null
