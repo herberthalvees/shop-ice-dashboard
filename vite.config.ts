@@ -12,4 +12,12 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // A partir de 2026-08-04 o Cloudflare tornou nodejs_compat padrão;
+  // especificá-lo explicitamente gera erro 502 no deploy. Desabilitamos
+  // a flag para o nitro não incluí-la no wrangler.json gerado.
+  nitro: {
+    cloudflare: {
+      nodeCompat: false,
+    },
+  },
 });
