@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Send, Loader2, CheckCircle2, XCircle, CalendarClock } from "lucide-react";
 import { sendTestNotification, enviarResumoAgora } from "@/lib/shopee.functions";
+import { PushNotificacoes } from "@/components/push/push-notificacoes";
 
 export const Route = createLazyFileRoute("/_authenticated/notificacoes")({
   component: NotifPage,
@@ -182,6 +183,8 @@ function NotifPage() {
           )}
         </CardContent>
       </Card>
+
+      <PushNotificacoes />
 
       <Card>
         <CardHeader>
