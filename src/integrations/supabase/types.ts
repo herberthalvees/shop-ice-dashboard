@@ -552,6 +552,7 @@ export type Database = {
           data_criacao_pedido: string | null
           id: number
           item_id: number
+          marketplace: string
           model_id: number
           order_sn: string
           preco_unitario: number | null
@@ -566,6 +567,7 @@ export type Database = {
           data_criacao_pedido?: string | null
           id?: number
           item_id?: number
+          marketplace?: string
           model_id?: number
           order_sn: string
           preco_unitario?: number | null
@@ -580,6 +582,7 @@ export type Database = {
           data_criacao_pedido?: string | null
           id?: number
           item_id?: number
+          marketplace?: string
           model_id?: number
           order_sn?: string
           preco_unitario?: number | null
@@ -611,6 +614,7 @@ export type Database = {
           frete_real: number | null
           id: string
           itens: Json | null
+          marketplace: string
           moeda: string | null
           order_sn: string
           payload: Json | null
@@ -634,6 +638,7 @@ export type Database = {
           frete_real?: number | null
           id?: string
           itens?: Json | null
+          marketplace?: string
           moeda?: string | null
           order_sn: string
           payload?: Json | null
@@ -657,6 +662,7 @@ export type Database = {
           frete_real?: number | null
           id?: string
           itens?: Json | null
+          marketplace?: string
           moeda?: string | null
           order_sn?: string
           payload?: Json | null
@@ -712,6 +718,7 @@ export type Database = {
           id: number
           imagem_url: string | null
           item_id: number
+          marketplace: string
           model_id: number
           preco_atual: number | null
           preco_original: number | null
@@ -727,6 +734,7 @@ export type Database = {
           id?: number
           imagem_url?: string | null
           item_id: number
+          marketplace?: string
           model_id?: number
           preco_atual?: number | null
           preco_original?: number | null
@@ -742,6 +750,7 @@ export type Database = {
           id?: number
           imagem_url?: string | null
           item_id?: number
+          marketplace?: string
           model_id?: number
           preco_atual?: number | null
           preco_original?: number | null
@@ -905,6 +914,48 @@ export type Database = {
         }
         Relationships: []
       }
+      tiktok_connection: {
+        Row: {
+          access_token: string | null
+          id: number
+          refresh_expires_at: string | null
+          refresh_token: string | null
+          seller_name: string | null
+          shop_cipher: string | null
+          shop_id: string | null
+          shop_name: string | null
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          id?: number
+          refresh_expires_at?: string | null
+          refresh_token?: string | null
+          seller_name?: string | null
+          shop_cipher?: string | null
+          shop_id?: string | null
+          shop_name?: string | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          id?: number
+          refresh_expires_at?: string | null
+          refresh_token?: string | null
+          seller_name?: string | null
+          shop_cipher?: string | null
+          shop_id?: string | null
+          shop_name?: string | null
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -957,6 +1008,7 @@ export type Database = {
           data_criacao_pedido: string | null
           id: number | null
           item_id: number | null
+          marketplace: string | null
           model_id: number | null
           order_sn: string | null
           preco_unitario: number | null
@@ -1002,6 +1054,39 @@ export type Database = {
           id?: number | null
           partner_id?: number | null
           shop_id?: number | null
+          shop_name?: string | null
+          status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      tiktok_connection_status: {
+        Row: {
+          id: number | null
+          refresh_expires_at: string | null
+          seller_name: string | null
+          shop_id: string | null
+          shop_name: string | null
+          status: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: number | null
+          refresh_expires_at?: string | null
+          seller_name?: string | null
+          shop_id?: string | null
+          shop_name?: string | null
+          status?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: number | null
+          refresh_expires_at?: string | null
+          seller_name?: string | null
+          shop_id?: string | null
           shop_name?: string | null
           status?: string | null
           token_expires_at?: string | null
@@ -1103,7 +1188,12 @@ export type Database = {
         Returns: number
       }
       dashboard_curva_abc: {
-        Args: { p_ate: string; p_de: string; p_limite: number }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_limite: number
+          p_marketplace?: string
+        }
         Returns: {
           acumulado: number
           classe: string
@@ -1115,7 +1205,12 @@ export type Database = {
         }[]
       }
       dashboard_curva_abc_impl: {
-        Args: { p_ate: string; p_de: string; p_limite?: number }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_limite?: number
+          p_marketplace?: string
+        }
         Returns: {
           acumulado: number
           classe: string
@@ -1147,7 +1242,7 @@ export type Database = {
         }[]
       }
       dashboard_kpis_periodo: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
         Returns: {
           ads_investimento: number
           ads_pct: number
@@ -1175,7 +1270,7 @@ export type Database = {
         }[]
       }
       dashboard_kpis_periodo_impl: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
         Returns: {
           ads_investimento: number
           ads_pct: number
@@ -1219,7 +1314,7 @@ export type Database = {
         }[]
       }
       dashboard_serie_horaria: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
         Returns: {
           ads_investimento: number
           faturamento: number
@@ -1229,7 +1324,7 @@ export type Database = {
         }[]
       }
       dashboard_serie_horaria_impl: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
         Returns: {
           ads_investimento: number
           faturamento: number
@@ -1239,7 +1334,7 @@ export type Database = {
         }[]
       }
       dashboard_serie_periodo: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
         Returns: {
           faturamento: number
           pedidos: number
@@ -1248,7 +1343,7 @@ export type Database = {
         }[]
       }
       dashboard_serie_periodo_impl: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
         Returns: {
           faturamento: number
           parcial: boolean
@@ -1276,7 +1371,12 @@ export type Database = {
         }[]
       }
       dashboard_top_produtos_periodo: {
-        Args: { p_ate: string; p_de: string; p_limite: number }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_limite: number
+          p_marketplace?: string
+        }
         Returns: {
           produto: string
           quantidade: number
@@ -1285,7 +1385,12 @@ export type Database = {
         }[]
       }
       dashboard_top_produtos_periodo_impl: {
-        Args: { p_ate: string; p_de: string; p_limite?: number }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_limite?: number
+          p_marketplace?: string
+        }
         Returns: {
           produto: string
           quantidade: number
@@ -1377,6 +1482,7 @@ export type Database = {
           p_busca: string
           p_de: string
           p_limite: number
+          p_marketplace?: string
           p_offset: number
           p_status: string
         }
@@ -1406,6 +1512,7 @@ export type Database = {
           p_busca?: string
           p_de: string
           p_limite?: number
+          p_marketplace?: string
           p_offset?: number
           p_status?: string
         }
@@ -1430,7 +1537,13 @@ export type Database = {
         }[]
       }
       pedidos_detalhe_totais: {
-        Args: { p_ate: string; p_busca: string; p_de: string; p_status: string }
+        Args: {
+          p_ate: string
+          p_busca: string
+          p_de: string
+          p_marketplace?: string
+          p_status: string
+        }
         Returns: {
           custo: number
           frete_vendedor: number
@@ -1447,6 +1560,7 @@ export type Database = {
           p_ate: string
           p_busca?: string
           p_de: string
+          p_marketplace?: string
           p_status?: string
         }
         Returns: {
@@ -1480,7 +1594,7 @@ export type Database = {
         }[]
       }
       produtos_com_giro: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_marketplace?: string }
         Returns: {
           dias_de_estoque: number
           estoque_disponivel: number
