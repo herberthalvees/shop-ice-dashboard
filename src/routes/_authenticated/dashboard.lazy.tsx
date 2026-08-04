@@ -11,8 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { FiltroMarketplace } from "@/components/filtro-marketplace";
-import { filtroMarketplace, useMarketplace } from "@/lib/marketplace-store";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
@@ -54,9 +52,6 @@ type Preset = "hoje" | "ontem" | "7d" | "30d" | "mes" | "ano" | "custom";
 function DashboardPage() {
   const isMobile = useIsMobile();
   const { preset, custom, setPreset, setCustom } = usePeriodo();
-  const { marketplace } = useMarketplace();
-  const p_marketplace = filtroMarketplace(marketplace) ?? null;
-  const mkKey = p_marketplace ?? "todos";
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
   const p_de = toISO(de);
@@ -110,9 +105,9 @@ function DashboardPage() {
   const notConnected = !loadConn && (!conn || !conn.shop_id);
 
   const { data: kpis, isLoading: loadKpis, error: erroKpis } = useQuery({
-    queryKey: ["kpis", p_de, p_ate, mkKey],
+    queryKey: ["kpis", p_de, p_ate],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de, p_ate, p_marketplace });
+      const { data, error } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de, p_ate });
       if (error) throw error;
       const r = ((data as any)?.[0] ?? {}) as any;
       return {
@@ -145,9 +140,9 @@ function DashboardPage() {
   });
 
   const { data: serie, isLoading: loadSerie } = useQuery({
-    queryKey: ["serie", p_de, p_ate, mkKey],
+    queryKey: ["serie", p_de, p_ate],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_serie_periodo" as any, { p_de, p_ate, p_marketplace });
+      const { data, error } = await supabase.rpc("dashboard_serie_periodo" as any, { p_de, p_ate });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         periodo: String(r.periodo),
@@ -163,9 +158,9 @@ function DashboardPage() {
   });
 
   const { data: topProdutos, isLoading: loadTop } = useQuery({
-    queryKey: ["topProdutos", p_de, p_ate, mkKey],
+    queryKey: ["topProdutos", p_de, p_ate],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_top_produtos_periodo" as any, { p_de, p_ate, p_limite: 10, p_marketplace });
+      const { data, error } = await supabase.rpc("dashboard_top_produtos_periodo" as any, { p_de, p_ate, p_limite: 10 });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         nomeCompleto: String(r.produto ?? r.sku ?? ""),
@@ -183,15 +178,13 @@ function DashboardPage() {
   });
 
   const { data: recentes, isLoading: loadRec } = useQuery({
-    queryKey: ["recentes", mkKey],
+    queryKey: ["recentes"],
     queryFn: async () => {
-      let q = supabase
+      const { data, error } = await supabase
         .from("pedidos")
         .select("order_sn, status, valor_total, comprador_username, data_criacao_pedido")
         .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
         .limit(10);
-      if (p_marketplace) q = q.eq("marketplace", p_marketplace);
-      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
@@ -200,9 +193,9 @@ function DashboardPage() {
   });
 
   const { data: serieHora, isLoading: loadHora } = useQuery({
-    queryKey: ["serie-horaria", p_de, p_ate, mkKey],
+    queryKey: ["serie-horaria", p_de, p_ate],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_serie_horaria" as any, { p_de, p_ate, p_marketplace });
+      const { data, error } = await supabase.rpc("dashboard_serie_horaria" as any, { p_de, p_ate });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         rotulo: String(r.rotulo),
@@ -239,11 +232,11 @@ function DashboardPage() {
   });
 
   const { data: cancelados, isLoading: loadCanc } = useQuery({
-    queryKey: ["cancelados", p_de, p_ate, mkKey],
+    queryKey: ["cancelados", p_de, p_ate],
     queryFn: async () => {
       const desde = new Date(p_de + "T00:00:00-03:00").toISOString();
       const ate2 = new Date(p_ate + "T23:59:59-03:00").toISOString();
-      let q = supabase
+      const { data, error } = await supabase
         .from("pedidos")
         .select("order_sn, valor_total, comprador_username, data_criacao_pedido")
         .eq("status", "CANCELLED")
@@ -251,8 +244,6 @@ function DashboardPage() {
         .lte("data_criacao_pedido", ate2)
         .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
         .limit(50);
-      if (p_marketplace) q = q.eq("marketplace", p_marketplace);
-      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
@@ -261,9 +252,9 @@ function DashboardPage() {
   });
 
   const { data: abc, isLoading: loadAbc } = useQuery({
-    queryKey: ["abc", p_de, p_ate, mkKey],
+    queryKey: ["abc", p_de, p_ate],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_curva_abc" as any, { p_de, p_ate, p_limite: 50, p_marketplace });
+      const { data, error } = await supabase.rpc("dashboard_curva_abc" as any, { p_de, p_ate, p_limite: 50 });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         produto: String(r.produto ?? r.sku ?? ""),
@@ -341,7 +332,6 @@ function DashboardPage() {
           <span className="hidden text-xs text-muted-foreground md:inline tabular-nums">
             {rangeLabel}
           </span>
-          <FiltroMarketplace />
           <Select
             value={preset}
             onValueChange={(v) => {

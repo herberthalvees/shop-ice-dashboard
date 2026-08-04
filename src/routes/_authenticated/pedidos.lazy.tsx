@@ -17,8 +17,6 @@ import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { CalendarIcon, Download, Search, ChevronLeft, ChevronRight, Info, ImageOff } from "lucide-react";
 import { usePeriodo, computeRange } from "@/lib/periodo-store";
-import { FiltroMarketplace } from "@/components/filtro-marketplace";
-import { filtroMarketplace, useMarketplace } from "@/lib/marketplace-store";
 
 export const Route = createLazyFileRoute("/_authenticated/pedidos")({
   component: PedidosPage,
@@ -68,9 +66,6 @@ type Linha = {
 
 function PedidosPage() {
   const { preset, custom, setPreset, setCustom } = usePeriodo();
-  const { marketplace } = useMarketplace();
-  const p_marketplace = filtroMarketplace(marketplace) ?? null;
-  const mkKey = p_marketplace ?? "todos";
   const [customOpen, setCustomOpen] = useState(false);
   const [buscaInput, setBuscaInput] = useState("");
   const [busca, setBusca] = useState("");
@@ -84,7 +79,7 @@ function PedidosPage() {
   const p_busca = busca.trim() ? busca.trim() : null;
   const p_status = status === "todos" ? null : status;
 
-  useEffect(() => { setPagina(0); }, [p_de, p_ate, busca, status, mkKey]);
+  useEffect(() => { setPagina(0); }, [p_de, p_ate, busca, status]);
 
   const { data: statusOpcoes } = useQuery({
     queryKey: ["status-disponiveis"],
@@ -97,10 +92,10 @@ function PedidosPage() {
   });
 
   const { data, isLoading } = useQuery({
-    queryKey: ["pedidos-detalhe", p_de, p_ate, p_busca, p_status, pagina, mkKey],
+    queryKey: ["pedidos-detalhe", p_de, p_ate, p_busca, p_status, pagina],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("pedidos_detalhe" as any, {
-        p_de, p_ate, p_offset: pagina * PAGE_SIZE, p_limite: PAGE_SIZE, p_busca, p_status, p_marketplace,
+        p_de, p_ate, p_offset: pagina * PAGE_SIZE, p_limite: PAGE_SIZE, p_busca, p_status,
       });
       if (error) throw error;
       const linhas = ((data as unknown) as Linha[]) ?? [];
@@ -109,10 +104,10 @@ function PedidosPage() {
   });
 
   const { data: totais, isLoading: loadTotais } = useQuery({
-    queryKey: ["pedidos-detalhe-totais", p_de, p_ate, p_busca, p_status, mkKey],
+    queryKey: ["pedidos-detalhe-totais", p_de, p_ate, p_busca, p_status],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("pedidos_detalhe_totais" as any, {
-        p_de, p_ate, p_busca, p_status, p_marketplace,
+        p_de, p_ate, p_busca, p_status,
       });
       if (error) throw error;
       const r = (Array.isArray(data) ? data[0] : data) as any;
@@ -134,7 +129,7 @@ function PedidosPage() {
 
   async function exportarCSV() {
     const { data: full } = await supabase.rpc("pedidos_detalhe" as any, {
-      p_de, p_ate, p_offset: 0, p_limite: 5000, p_busca, p_status, p_marketplace,
+      p_de, p_ate, p_offset: 0, p_limite: 5000, p_busca, p_status,
     });
     const rows = ((full as unknown) as Linha[]) ?? [];
     const header = ["pedido", "data", "status", "produto", "sku", "qtde", "valor", "tarifa", "frete", "custo", "imposto", "lucro", "margem_pct", "comprador"];
@@ -167,7 +162,6 @@ function PedidosPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <FiltroMarketplace className="w-[180px]" />
             <Select value={preset} onValueChange={(v) => { setPreset(v as any); if (v === "custom") setCustomOpen(true); }}>
               <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
               <SelectContent>
