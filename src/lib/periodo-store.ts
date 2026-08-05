@@ -94,3 +94,54 @@ export function computeRange(preset: Preset, custom?: DateRange): { de: Date; at
   const ate = custom?.to ?? custom?.from ?? hoje;
   return { de, ate };
 }
+
+export function computePreviousRange(preset: Preset, custom?: DateRange): { de: Date; ate: Date; label: string } {
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  if (preset === "hoje") {
+    const ontem = new Date(hoje);
+    ontem.setDate(ontem.getDate() - 1);
+    return { de: ontem, ate: ontem, label: "Ontem" };
+  }
+  if (preset === "ontem") {
+    const ante = new Date(hoje);
+    ante.setDate(ante.getDate() - 2);
+    return { de: ante, ate: ante, label: "Anteontem" };
+  }
+  if (preset === "7d") {
+    const ate = new Date(hoje);
+    ate.setDate(ate.getDate() - 7);
+    const de = new Date(hoje);
+    de.setDate(de.getDate() - 13);
+    return { de, ate, label: "7 dias anteriores" };
+  }
+  if (preset === "30d") {
+    const ate = new Date(hoje);
+    ate.setDate(ate.getDate() - 30);
+    const de = new Date(hoje);
+    de.setDate(de.getDate() - 59);
+    return { de, ate, label: "30 dias anteriores" };
+  }
+  if (preset === "mes") {
+    const primeiroAtual = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    const ultimoAnterior = new Date(primeiroAtual);
+    ultimoAnterior.setDate(ultimoAnterior.getDate() - 1);
+    const primeiroAnterior = new Date(ultimoAnterior.getFullYear(), ultimoAnterior.getMonth(), 1);
+    return { de: primeiroAnterior, ate: ultimoAnterior, label: "mês anterior" };
+  }
+  if (preset === "ano") {
+    const ate = new Date(hoje);
+    ate.setDate(ate.getDate() - 365);
+    const de = new Date(hoje);
+    de.setDate(de.getDate() - 730);
+    return { de, ate, label: "ano anterior" };
+  }
+  const from = custom?.from ?? hoje;
+  const to = custom?.to ?? from;
+  const diff = Math.max(0, Math.round((to.getTime() - from.getTime()) / 86_400_000));
+  const ate = new Date(from);
+  ate.setDate(ate.getDate() - 1);
+  const de = new Date(ate);
+  de.setDate(de.getDate() - diff);
+  return { de, ate, label: "período anterior" };
+}
