@@ -380,6 +380,142 @@ export type Database = {
         }
         Relationships: []
       }
+      estoque_itens: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          estoque_minimo: number
+          id: string
+          imagem_url: string | null
+          nome: string
+          saldo: number
+          unidade: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estoque_minimo?: number
+          id?: string
+          imagem_url?: string | null
+          nome: string
+          saldo?: number
+          unidade?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          estoque_minimo?: number
+          id?: string
+          imagem_url?: string | null
+          nome?: string
+          saldo?: number
+          unidade?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      estoque_movimentos: {
+        Row: {
+          created_at: string
+          estoque_item_id: string
+          id: string
+          item_id: number | null
+          marketplace: string | null
+          model_id: number | null
+          observacao: string | null
+          order_sn: string | null
+          origem: string
+          quantidade: number
+          saldo_apos: number | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          estoque_item_id: string
+          id?: string
+          item_id?: number | null
+          marketplace?: string | null
+          model_id?: number | null
+          observacao?: string | null
+          order_sn?: string | null
+          origem?: string
+          quantidade: number
+          saldo_apos?: number | null
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          estoque_item_id?: string
+          id?: string
+          item_id?: number | null
+          marketplace?: string | null
+          model_id?: number | null
+          observacao?: string | null
+          order_sn?: string | null
+          origem?: string
+          quantidade?: number
+          saldo_apos?: number | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_movimentos_estoque_item_id_fkey"
+            columns: ["estoque_item_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_itens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estoque_vinculos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          estoque_item_id: string
+          fator: number
+          id: string
+          item_id: number
+          marketplace: string
+          model_id: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          estoque_item_id: string
+          fator?: number
+          id?: string
+          item_id: number
+          marketplace?: string
+          model_id?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          estoque_item_id?: string
+          fator?: number
+          id?: string
+          item_id?: number
+          marketplace?: string
+          model_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estoque_vinculos_estoque_item_id_fkey"
+            columns: ["estoque_item_id"]
+            isOneToOne: false
+            referencedRelation: "estoque_itens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eventos_log: {
         Row: {
           assinatura_valida: boolean
@@ -1398,6 +1534,30 @@ export type Database = {
       }
       eh_owner: { Args: never; Returns: boolean }
       eh_owner_ou_service_role: { Args: never; Returns: boolean }
+      estoque_listar: {
+        Args: never
+        Returns: {
+          ativo: boolean
+          descricao: string
+          estoque_minimo: number
+          id: string
+          imagem_url: string
+          nome: string
+          saldo: number
+          unidade: string
+          vendidos_30d: number
+          vinculos: Json
+        }[]
+      }
+      estoque_movimentar: {
+        Args: {
+          p_estoque_item_id: string
+          p_observacao?: string
+          p_quantidade: number
+          p_tipo?: string
+        }
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
