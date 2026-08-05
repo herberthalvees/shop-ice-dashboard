@@ -47,6 +47,28 @@ const pct = (v: number) => `${(v * 100).toFixed(0)}%`;
 const toISO = (d: Date) => format(d, "yyyy-MM-dd");
 const fmtBR = (d: Date) => format(d, "dd/MM/yyyy");
 
+function fmtVs(value: number, isCurrency: boolean) {
+  if (isCurrency) return brl(value);
+  return value.toLocaleString("pt-BR");
+}
+
+function VsPill({ current, previous, label, isCurrency = false }: {
+  current: number; previous: number; label: string; isCurrency?: boolean;
+}) {
+  if (previous === 0 && current === 0) {
+    return <span className="text-[10px] text-muted-foreground">vs {label}: —</span>;
+  }
+  const change = previous === 0 ? 1 : (current - previous) / previous;
+  const sign = change > 0 ? "+" : "";
+  const color = change > 0 ? "text-[color:var(--success)]" : change < 0 ? "text-destructive" : "text-muted-foreground";
+  return (
+    <span className="text-[10px] tabular-nums text-muted-foreground">
+      vs {label}: <span className={color}>{sign}{(change * 100).toFixed(0).replace(".", ",")}%</span>
+      <span className="hidden sm:inline"> · {fmtVs(previous, isCurrency)}</span>
+    </span>
+  );
+}
+
 type Preset = "hoje" | "ontem" | "7d" | "30d" | "mes" | "ano" | "custom";
 
 function DashboardPage() {
