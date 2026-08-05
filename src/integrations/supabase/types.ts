@@ -252,8 +252,10 @@ export type Database = {
           id: number
           limite_estoque_baixo: number
           notificacoes_ativas: boolean
+          push_chat_ativo: boolean
           push_chat_corpo: string
           push_chat_titulo: string
+          push_venda_ativo: boolean
           push_venda_corpo: string
           push_venda_titulo: string
           updated_at: string
@@ -265,8 +267,10 @@ export type Database = {
           id?: number
           limite_estoque_baixo?: number
           notificacoes_ativas?: boolean
+          push_chat_ativo?: boolean
           push_chat_corpo?: string
           push_chat_titulo?: string
+          push_venda_ativo?: boolean
           push_venda_corpo?: string
           push_venda_titulo?: string
           updated_at?: string
@@ -278,8 +282,10 @@ export type Database = {
           id?: number
           limite_estoque_baixo?: number
           notificacoes_ativas?: boolean
+          push_chat_ativo?: boolean
           push_chat_corpo?: string
           push_chat_titulo?: string
+          push_venda_ativo?: boolean
           push_venda_corpo?: string
           push_venda_titulo?: string
           updated_at?: string
