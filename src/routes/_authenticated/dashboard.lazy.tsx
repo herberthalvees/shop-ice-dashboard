@@ -142,6 +142,35 @@ function DashboardPage() {
     retry: 2,
   });
 
+  const { data: kpisPrev, isLoading: loadKpisPrev } = useQuery({
+    queryKey: ["kpis-anterior", p_prev_de, p_prev_ate],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de: p_prev_de, p_ate: p_prev_ate });
+      if (error) throw error;
+      const r = ((data as any)?.[0] ?? {}) as any;
+      return {
+        pedidosValidos: Number(r.pedidos_validos ?? 0),
+        unidades: Number(r.unidades ?? 0),
+        faturamento: Number(r.faturamento ?? 0),
+        ticketMedio: Number(r.ticket_medio ?? 0),
+        cancelados: Number(r.pedidos_cancelados ?? 0),
+        valorCancelado: Number(r.valor_cancelado ?? 0),
+        devolvidos: Number(r.pedidos_devolvidos ?? 0),
+        valorDevolvido: Number(r.valor_devolvido ?? 0),
+        taxas: Number(r.taxas ?? 0),
+        custoTotal: Number(r.custo_total ?? 0),
+        imposto: Number(r.imposto ?? 0),
+        valorLiquido: Number(r.valor_liquido ?? 0),
+        lucroSemAds: Number(r.lucro_sem_ads ?? 0),
+        lucroComAds: Number(r.lucro_com_ads ?? 0),
+        lucroMedio: Number(r.lucro_medio ?? 0),
+      };
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+    retry: 2,
+  });
+
   const { data: serie, isLoading: loadSerie } = useQuery({
     queryKey: ["serie", p_de, p_ate],
     queryFn: async () => {
