@@ -1110,7 +1110,12 @@ function SheetHistorico({ item, onClose }: { item: ItemEstoque | null; onClose: 
                       {nf(q)}
                     </span>{" "}
                     <span className="text-muted-foreground">
-                      · {m.origem === "venda" ? "venda" : m.tipo}
+                      ·{" "}
+                      {m.origem === "venda"
+                        ? "venda"
+                        : m.origem === "cancelamento"
+                          ? "cancelamento"
+                          : m.tipo}
                     </span>
                   </p>
                   <p className="text-xs text-muted-foreground">
