@@ -129,6 +129,7 @@ function EstoquePage() {
   const [busca, setBusca] = useState("");
   const [somenteBaixo, setSomenteBaixo] = useState(false);
   const [editando, setEditando] = useState<ItemEstoque | "novo" | null>(null);
+  const [criandoDeProduto, setCriandoDeProduto] = useState(false);
   const [movimentando, setMovimentando] = useState<ItemEstoque | null>(null);
   const [vinculando, setVinculando] = useState<ItemEstoque | null>(null);
   const [historico, setHistorico] = useState<ItemEstoque | null>(null);
@@ -276,7 +277,7 @@ function EstoquePage() {
               Só estoque baixo
             </Label>
           </div>
-          <Button onClick={() => setEditando("novo")}>
+          <Button onClick={() => setCriandoDeProduto(true)}>
             <Plus className="size-4" /> Novo item
           </Button>
         </div>
@@ -292,11 +293,11 @@ function EstoquePage() {
             <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
               <Boxes className="size-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                Nenhum item de estoque ainda. Crie um item (ex.: “Antena corta pipa cromada”) e
-                vincule as variações que você vende.
+                Nenhum item de estoque ainda. Escolha um produto da aba Produtos e informe apenas a
+                quantidade que você tem — a variação, o SKU e a imagem já vêm prontos.
               </p>
-              <Button onClick={() => setEditando("novo")}>
-                <Plus className="size-4" /> Criar primeiro item
+              <Button onClick={() => setCriandoDeProduto(true)}>
+                <Plus className="size-4" /> Criar a partir de um produto
               </Button>
             </CardContent>
           </Card>
@@ -323,6 +324,17 @@ function EstoquePage() {
         onSalvo={() => {
           setEditando(null);
           recarregar();
+        }}
+      />
+      <DialogNovoDeProduto
+        aberto={criandoDeProduto}
+        produtos={produtos ?? []}
+        jaVinculados={vinculadosSet}
+        onClose={() => setCriandoDeProduto(false)}
+        onSalvo={recarregar}
+        onManual={() => {
+          setCriandoDeProduto(false);
+          setEditando("novo");
         }}
       />
       <DialogMovimento
