@@ -599,10 +599,10 @@ function DashboardPage() {
 
       {/* BLOCO 3: Composição de custos */}
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <CompCard label="Custos" valor={loadKpis ? null : brl(kpis?.custoTotal ?? 0)} pct={loadKpis ? null : `${(kpis?.custoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="danger" />
-        <CompCard label="Tarifas" valor={loadKpis ? null : brl(kpis?.taxas ?? 0)} pct={loadKpis ? null : `${(kpis?.taxasPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="warning" />
-        <CompCard label="Impostos" valor={loadKpis ? null : brl(kpis?.imposto ?? 0)} pct={loadKpis ? null : ((kpis?.impostoPct ?? 0) === 0 ? "defina em Configurações" : `${(kpis?.impostoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`)} tone="muted" />
-        <CompCard label="Líquido Shopee" valor={loadKpis ? null : brl(kpis?.valorLiquido ?? 0)} pct={null} tone="primary" />
+        <CompCard label="Custos" valor={loadKpis ? null : brl(kpis?.custoTotal ?? 0)} pct={loadKpis ? null : `${(kpis?.custoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="danger" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.custoTotal ?? 0, previous: kpisPrev?.custoTotal ?? 0, label: prevLabel, isCurrency: true }} />
+        <CompCard label="Tarifas" valor={loadKpis ? null : brl(kpis?.taxas ?? 0)} pct={loadKpis ? null : `${(kpis?.taxasPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="warning" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.taxas ?? 0, previous: kpisPrev?.taxas ?? 0, label: prevLabel, isCurrency: true }} />
+        <CompCard label="Impostos" valor={loadKpis ? null : brl(kpis?.imposto ?? 0)} pct={loadKpis ? null : ((kpis?.impostoPct ?? 0) === 0 ? "defina em Configurações" : `${(kpis?.impostoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`)} tone="muted" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.imposto ?? 0, previous: kpisPrev?.imposto ?? 0, label: prevLabel, isCurrency: true }} />
+        <CompCard label="Líquido Shopee" valor={loadKpis ? null : brl(kpis?.valorLiquido ?? 0)} pct={null} tone="primary" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.valorLiquido ?? 0, previous: kpisPrev?.valorLiquido ?? 0, label: prevLabel, isCurrency: true }} />
       </div>
 
       {/* BLOCO 4: Ads */}
