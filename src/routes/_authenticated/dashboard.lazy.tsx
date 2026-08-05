@@ -554,8 +554,13 @@ function DashboardPage() {
           label="Vendas"
           value={loadKpis ? null : String(kpis?.pedidosValidos ?? 0)}
           hint={loadKpis ? undefined : `${kpis?.unidades ?? 0} unidades`}
+          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.pedidosValidos ?? 0, previous: kpisPrev?.pedidosValidos ?? 0, label: prevLabel }}
         />
-        <ResultCard label="Ticket médio" value={loadKpis ? null : brl(kpis?.ticketMedio ?? 0)} />
+        <ResultCard
+          label="Ticket médio"
+          value={loadKpis ? null : brl(kpis?.ticketMedio ?? 0)}
+          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.ticketMedio ?? 0, previous: kpisPrev?.ticketMedio ?? 0, label: prevLabel, isCurrency: true }}
+        />
         <ResultCard
           label="Lucro médio (sem Ads)"
           value={
@@ -567,24 +572,28 @@ function DashboardPage() {
           }
           hint={loadKpis ? undefined : "por pedido, antes de Ads"}
           tone="warning"
+          vs={loadKpis || loadKpisPrev ? undefined : { current: (kpis?.pedidosValidos ?? 0) === 0 ? 0 : (kpis?.lucroSemAds ?? 0) / (kpis?.pedidosValidos || 1), previous: (kpisPrev?.pedidosValidos ?? 0) === 0 ? 0 : (kpisPrev?.lucroSemAds ?? 0) / (kpisPrev?.pedidosValidos || 1), label: prevLabel, isCurrency: true }}
         />
         <ResultCard
           label="Lucro médio (com Ads)"
           value={loadKpis ? null : ((kpis?.coberturaCusto ?? 0) === 0 ? "—" : brl(kpis?.lucroMedio ?? 0))}
           hint={loadKpis ? undefined : "por pedido, já com Ads"}
           tone={((kpis?.lucroMedio ?? 0) < 0) ? "danger" : "success"}
+          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.lucroMedio ?? 0, previous: kpisPrev?.lucroMedio ?? 0, label: prevLabel, isCurrency: true }}
         />
         <ResultCard
           label="Canceladas"
           value={loadKpis ? null : String(kpis?.cancelados ?? 0)}
           hint={loadKpis ? undefined : brl(kpis?.valorCancelado ?? 0)}
           tone="warning"
+          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.cancelados ?? 0, previous: kpisPrev?.cancelados ?? 0, label: prevLabel }}
         />
         <ResultCard
           label="Devoluções"
           value={loadKpis ? null : String(kpis?.devolvidos ?? 0)}
           hint={loadKpis ? undefined : brl(kpis?.valorDevolvido ?? 0)}
           tone="warning"
+          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.devolvidos ?? 0, previous: kpisPrev?.devolvidos ?? 0, label: prevLabel }}
         />
       </div>
 
