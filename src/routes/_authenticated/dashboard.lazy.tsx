@@ -824,9 +824,10 @@ function DashboardPage() {
   );
 }
 
-function ResultCard({ label, value, hint, tone }: {
+function ResultCard({ label, value, hint, tone, vs }: {
   label: string; value: string | null; hint?: string;
   tone?: "warning" | "success" | "danger";
+  vs?: { current: number; previous: number; label: string; isCurrency?: boolean };
 }) {
   const valColor =
     tone === "danger" ? "text-destructive" :
@@ -839,6 +840,7 @@ function ResultCard({ label, value, hint, tone }: {
         <div className={`break-words text-xl font-semibold tabular-nums leading-tight sm:text-2xl ${valColor}`}>
           {value === null ? <Skeleton className="h-7 w-24" /> : value}
         </div>
+        {vs && <VsPill current={vs.current} previous={vs.previous} label={vs.label} isCurrency={vs.isCurrency} />}
         {hint && <div className="break-words text-[11px] text-muted-foreground tabular-nums">{hint}</div>}
       </CardContent>
     </Card>
