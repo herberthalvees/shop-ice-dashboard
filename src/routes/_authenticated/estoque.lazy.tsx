@@ -129,6 +129,7 @@ function EstoquePage() {
   const [busca, setBusca] = useState("");
   const [somenteBaixo, setSomenteBaixo] = useState(false);
   const [editando, setEditando] = useState<ItemEstoque | "novo" | null>(null);
+  const [criandoDeProduto, setCriandoDeProduto] = useState(false);
   const [movimentando, setMovimentando] = useState<ItemEstoque | null>(null);
   const [vinculando, setVinculando] = useState<ItemEstoque | null>(null);
   const [historico, setHistorico] = useState<ItemEstoque | null>(null);
@@ -276,7 +277,7 @@ function EstoquePage() {
               Só estoque baixo
             </Label>
           </div>
-          <Button onClick={() => setEditando("novo")}>
+          <Button onClick={() => setCriandoDeProduto(true)}>
             <Plus className="size-4" /> Novo item
           </Button>
         </div>
@@ -292,11 +293,11 @@ function EstoquePage() {
             <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
               <Boxes className="size-8 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                Nenhum item de estoque ainda. Crie um item (ex.: “Antena corta pipa cromada”) e
-                vincule as variações que você vende.
+                Nenhum item de estoque ainda. Escolha um produto da aba Produtos e informe apenas a
+                quantidade que você tem — a variação, o SKU e a imagem já vêm prontos.
               </p>
-              <Button onClick={() => setEditando("novo")}>
-                <Plus className="size-4" /> Criar primeiro item
+              <Button onClick={() => setCriandoDeProduto(true)}>
+                <Plus className="size-4" /> Criar a partir de um produto
               </Button>
             </CardContent>
           </Card>
@@ -323,6 +324,17 @@ function EstoquePage() {
         onSalvo={() => {
           setEditando(null);
           recarregar();
+        }}
+      />
+      <DialogNovoDeProduto
+        aberto={criandoDeProduto}
+        produtos={produtos ?? []}
+        jaVinculados={vinculadosSet}
+        onClose={() => setCriandoDeProduto(false)}
+        onSalvo={recarregar}
+        onManual={() => {
+          setCriandoDeProduto(false);
+          setEditando("novo");
         }}
       />
       <DialogMovimento
@@ -669,6 +681,192 @@ function DialogItem({
 }
 
 function DialogMovimento({
+  item,
+  onClose,
+  onSalvo,
+}: {
+  item: ItemEstoque | null;
+  onClose: () => void;
+  onSalvo: () => void;
+}) {
+  return <DialogMovimentoBase item={item} onClose={onClose} onSalvo={onSalvo} />;
+}
+
+function DialogNovoDeProduto({
+  aberto,
+  produtos,
+  jaVinculados,
+  onClose,
+  onSalvo,
+  onManual,
+}: {
+  aberto: boolean;
+  produtos: ProdutoRef[];
+  jaVinculados: Set<string>;
+  onClose: () => void;
+  onSalvo: () => void;
+  onManual: () => void;
+}) {
+  const [busca, setBusca] = useState("");
+  const [qtds, setQtds] = useState<Record<string, string>>({});
+  const [fatores, setFatores] = useState<Record<string, string>>({});
+  const [salvando, setSalvando] = useState<string | null>(null);
+
+  const filtrados = useMemo(() => {
+    const b = busca.trim().toLowerCase();
+    const base = b
+      ? produtos.filter(
+          (p) =>
+            (p.produto ?? "").toLowerCase().includes(b) ||
+            (p.variacao ?? "").toLowerCase().includes(b) ||
+            (p.sku ?? "").toLowerCase().includes(b),
+        )
+      : produtos;
+    return base.slice(0, 80);
+  }, [produtos, busca]);
+
+  async function criar(p: ProdutoRef) {
+    const chave = `${p.marketplace}:${p.item_id}:${p.model_id}`;
+    const qtd = Number(qtds[chave] ?? "");
+    if (Number.isNaN(qtd)) return toast.error("Informe a quantidade em estoque");
+    const fator = Number(fatores[chave] ?? sugerirFator(p.variacao)) || 1;
+    setSalvando(chave);
+    try {
+      const nome = [p.produto ?? `item ${p.item_id}`, p.variacao].filter(Boolean).join(" · ");
+      const { data, error } = await supabase
+        .from("estoque_itens" as any)
+        .insert({
+          nome,
+          descricao: p.sku ? `SKU ${p.sku}` : null,
+          imagem_url: p.imagem_url,
+          unidade: "un",
+          saldo: 0,
+        })
+        .select("id")
+        .single();
+      if (error) throw error;
+      const novoId = (data as any).id as string;
+
+      const { error: e2 } = await supabase.from("estoque_vinculos" as any).insert({
+        estoque_item_id: novoId,
+        marketplace: p.marketplace,
+        item_id: p.item_id,
+        model_id: p.model_id,
+        fator,
+      });
+      if (e2) throw e2;
+
+      if (qtd !== 0) {
+        const { error: e3 } = await supabase.rpc("estoque_movimentar" as any, {
+          p_estoque_item_id: novoId,
+          p_quantidade: qtd,
+          p_tipo: "entrada",
+          p_observacao: "saldo inicial",
+        });
+        if (e3) throw e3;
+      }
+      toast.success(`“${nome}” criado com ${qtd} un (×${fator} por venda)`);
+      setQtds((s) => ({ ...s, [chave]: "" }));
+      onSalvo();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Erro ao criar item");
+    } finally {
+      setSalvando(null);
+    }
+  }
+
+  return (
+    <Dialog open={aberto} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-h-[90vh] overflow-hidden sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Novo item de estoque</DialogTitle>
+          <DialogDescription>
+            Escolha o produto (com variação e SKU) e informe só a quantidade que você tem. O vínculo
+            é criado automaticamente, com o fator sugerido pela variação.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={busca}
+            onChange={(e) => setBusca(e.target.value)}
+            placeholder="Buscar produto, variação ou SKU"
+            className="pl-9"
+          />
+        </div>
+        <div className="max-h-[52vh] space-y-2 overflow-y-auto pr-1">
+          {filtrados.length === 0 && (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              Nenhum produto encontrado.
+            </p>
+          )}
+          {filtrados.map((p) => {
+            const chave = `${p.marketplace}:${p.item_id}:${p.model_id}`;
+            const usado = jaVinculados.has(chave);
+            return (
+              <div
+                key={chave}
+                className="flex flex-wrap items-center gap-2 rounded-md border border-border/60 p-2"
+              >
+                <Miniatura
+                  url={p.imagem_url}
+                  alt={p.produto ?? "produto"}
+                  className="size-12 shrink-0"
+                />
+                <div className="min-w-40 flex-1">
+                  <p className="truncate text-sm font-medium">{p.produto ?? `item ${p.item_id}`}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {p.variacao ?? "—"} {p.sku ? `· ${p.sku}` : ""}
+                    {usado && " · já tem item de estoque"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="space-y-0.5">
+                    <Label className="text-[10px] uppercase text-muted-foreground">Qtd</Label>
+                    <Input
+                      type="number"
+                      className="w-20"
+                      placeholder="0"
+                      value={qtds[chave] ?? ""}
+                      onChange={(e) => setQtds({ ...qtds, [chave]: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <Label className="text-[10px] uppercase text-muted-foreground">Fator</Label>
+                    <Input
+                      type="number"
+                      className="w-16"
+                      value={fatores[chave] ?? String(sugerirFator(p.variacao))}
+                      onChange={(e) => setFatores({ ...fatores, [chave]: e.target.value })}
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    className="mt-4"
+                    disabled={salvando === chave}
+                    onClick={() => criar(p)}
+                  >
+                    Criar
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <DialogFooter className="sm:justify-between">
+          <Button variant="ghost" size="sm" onClick={onManual}>
+            Criar item manual (agrupar vários produtos)
+          </Button>
+          <Button variant="outline" onClick={onClose}>
+            Fechar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DialogMovimentoBase({
   item,
   onClose,
   onSalvo,
