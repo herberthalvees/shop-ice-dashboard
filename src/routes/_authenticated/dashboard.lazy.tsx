@@ -847,9 +847,10 @@ function ResultCard({ label, value, hint, tone, vs }: {
   );
 }
 
-function CompCard({ label, valor, pct: pctText, tone }: {
+function CompCard({ label, valor, pct: pctText, tone, vs }: {
   label: string; valor: string | null; pct: string | null;
   tone: "danger" | "warning" | "muted" | "primary";
+  vs?: { current: number; previous: number; label: string; isCurrency?: boolean };
 }) {
   const pctColor =
     tone === "danger" ? "text-destructive" :
@@ -862,6 +863,7 @@ function CompCard({ label, valor, pct: pctText, tone }: {
         <div className="break-words text-xl font-semibold tabular-nums leading-tight sm:text-2xl">
           {valor === null ? <Skeleton className="h-7 w-24" /> : valor}
         </div>
+        {vs && <VsPill current={vs.current} previous={vs.previous} label={vs.label} isCurrency={vs.isCurrency} />}
         {pctText !== null && <div className={`break-words text-[11px] tabular-nums ${pctColor}`}>{pctText}</div>}
       </CardContent>
     </Card>
