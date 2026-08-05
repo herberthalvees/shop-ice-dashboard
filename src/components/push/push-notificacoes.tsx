@@ -4,8 +4,10 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell, BellOff, Loader2, Send, Smartphone, Trash2, Info } from "lucide-react";
+import { Bell, BellOff, Loader2, Send, Smartphone, Trash2, Info, MessageCircle, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   getPushConfig,
@@ -39,6 +41,34 @@ export function PushNotificacoes() {
 
   const [suportado, setSuportado] = useState<boolean | null>(null);
   const [assinado, setAssinado] = useState(false);
+
+  const { data: tags, isLoading: loadTags } = useQuery({
+    queryKey: ["push-tags"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("config")
+        .select("push_venda_ativo, push_chat_ativo")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) throw error;
+      return {
+        venda: (data as { push_venda_ativo?: boolean } | null)?.push_venda_ativo !== false,
+        chat: (data as { push_chat_ativo?: boolean } | null)?.push_chat_ativo !== false,
+      };
+    },
+  });
+
+  const tagMut = useMutation({
+    mutationFn: async (patch: { push_venda_ativo?: boolean; push_chat_ativo?: boolean }) => {
+      const { error } = await supabase.from("config").update(patch as never).eq("id", 1);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Preferência salva");
+      qc.invalidateQueries({ queryKey: ["push-tags"] });
+    },
+    onError: (e: Error) => toast.error("Erro ao salvar", { description: e.message }),
+  });
 
   useEffect(() => {
     const ok = pushSuportado();
@@ -143,6 +173,44 @@ export function PushNotificacoes() {
             à Tela de Início) e ativar as notificações de dentro do app instalado.
           </p>
         )}
+
+        <div className="space-y-2">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Quais alertas receber</p>
+          {loadTags ? (
+            <Skeleton className="h-24 w-full" />
+          ) : (
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                <div className="min-w-0">
+                  <Label htmlFor="tag-venda" className="flex items-center gap-2 font-medium">
+                    <ShoppingBag className="h-3.5 w-3.5" /> Vendas
+                  </Label>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Push a cada novo pedido.</p>
+                </div>
+                <Switch
+                  id="tag-venda"
+                  checked={tags?.venda ?? true}
+                  disabled={tagMut.isPending}
+                  onCheckedChange={(v) => tagMut.mutate({ push_venda_ativo: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+                <div className="min-w-0">
+                  <Label htmlFor="tag-chat" className="flex items-center gap-2 font-medium">
+                    <MessageCircle className="h-3.5 w-3.5" /> Chat
+                  </Label>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Push a cada mensagem do cliente.</p>
+                </div>
+                <Switch
+                  id="tag-chat"
+                  checked={tags?.chat ?? true}
+                  disabled={tagMut.isPending}
+                  onCheckedChange={(v) => tagMut.mutate({ push_chat_ativo: v })}
+                />
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-wrap gap-2">
           {assinado ? (
