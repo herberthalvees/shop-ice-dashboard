@@ -54,8 +54,11 @@ function DashboardPage() {
   const { preset, custom, setPreset, setCustom } = usePeriodo();
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
+  const { de: prevDe, ate: prevAte, label: prevLabel } = useMemo(() => computePreviousRange(preset, custom), [preset, custom]);
   const p_de = toISO(de);
   const p_ate = toISO(ate);
+  const p_prev_de = toISO(prevDe);
+  const p_prev_ate = toISO(prevAte);
   const diasDiff = Math.round((ate.getTime() - de.getTime()) / 86_400_000);
   const granLabel = diasDiff > 90 ? "mês" : diasDiff > 31 ? "semana" : "dia";
 
