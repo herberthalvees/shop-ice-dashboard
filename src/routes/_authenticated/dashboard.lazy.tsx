@@ -493,6 +493,11 @@ function DashboardPage() {
             <div className="text-[clamp(1.75rem,8vw,2.25rem)] font-semibold tabular-nums leading-none break-words md:text-5xl">
               {loadKpis ? <Skeleton className="h-10 w-48 sm:h-12 sm:w-64" /> : brl(kpis?.faturamento ?? 0)}
             </div>
+            {!loadKpis && !loadKpisPrev && (
+              <div className="pt-0.5">
+                <VsPill current={kpis?.faturamento ?? 0} previous={kpisPrev?.faturamento ?? 0} label={prevLabel} isCurrency />
+              </div>
+            )}
             <div className="flex min-w-0 flex-wrap items-center gap-3 pt-1">
               {loadKpis ? <Skeleton className="h-6 w-40" /> : (kpis?.coberturaCusto ?? 0) === 0 ? (
                 <div className="flex items-center gap-2 text-sm">
