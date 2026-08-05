@@ -17,13 +17,17 @@ type TextosPush = {
   push_venda_corpo: string;
   push_chat_titulo: string;
   push_chat_corpo: string;
+  push_venda_ativo: boolean;
+  push_chat_ativo: boolean;
 };
 
 /** Lê os textos editáveis das notificações na tabela config. */
 async function lerTextos(): Promise<TextosPush> {
   const { data } = await supabaseAdmin
     .from("config")
-    .select("push_venda_titulo, push_venda_corpo, push_chat_titulo, push_chat_corpo")
+    .select(
+      "push_venda_titulo, push_venda_corpo, push_chat_titulo, push_chat_corpo, push_venda_ativo, push_chat_ativo",
+    )
     .eq("id", 1)
     .maybeSingle();
   const c = (data ?? {}) as Partial<TextosPush>;
@@ -32,6 +36,8 @@ async function lerTextos(): Promise<TextosPush> {
     push_venda_corpo: c.push_venda_corpo ?? "{valor}{itens} · {pedido}",
     push_chat_titulo: c.push_chat_titulo ?? "💬 {comprador} enviou uma mensagem",
     push_chat_corpo: c.push_chat_corpo ?? "{mensagem}",
+    push_venda_ativo: c.push_venda_ativo !== false,
+    push_chat_ativo: c.push_chat_ativo !== false,
   };
 }
 
@@ -156,6 +162,7 @@ export async function notificarNovaVenda(pedido: {
   itens?: unknown;
 }) {
   const textos = await lerTextos();
+  if (!textos.push_venda_ativo) return { ok: false, error: "notificações de venda desativadas" };
   const valorFmt = Number(pedido.valor_total ?? 0).toLocaleString("pt-BR", {
     style: "currency",
     currency: "BRL",
@@ -193,6 +200,7 @@ export async function notificarNovoChat(msg: {
   texto?: string | null;
 }) {
   const textos = await lerTextos();
+  if (!textos.push_chat_ativo) return { ok: false, error: "notificações de chat desativadas" };
   const bruto = (msg.texto ?? "").trim();
   const vars = {
     comprador: msg.comprador?.trim() || "Comprador",
