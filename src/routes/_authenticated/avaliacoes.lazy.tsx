@@ -116,7 +116,7 @@ function AvaliacoesPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("config")
-        .select("avaliacoes_auto_ativo, avaliacoes_prompt")
+        .select("avaliacoes_auto_ativo, avaliacoes_prompt, avaliacoes_usar_ia")
         .eq("id", 1)
         .maybeSingle();
       if (error) throw error;
@@ -203,7 +203,11 @@ function AvaliacoesPage() {
     }
   }
 
-  async function salvarConfig(campos: { avaliacoes_auto_ativo?: boolean; avaliacoes_prompt?: string }) {
+  async function salvarConfig(campos: {
+    avaliacoes_auto_ativo?: boolean;
+    avaliacoes_prompt?: string;
+    avaliacoes_usar_ia?: boolean;
+  }) {
     const { error } = await supabase.from("config").update(campos).eq("id", 1);
     if (error) toast.error("Erro ao salvar", { description: error.message });
     else {
@@ -372,6 +376,20 @@ function AvaliacoesPage() {
                   id="auto-aval"
                   checked={Boolean(config.data?.avaliacoes_auto_ativo)}
                   onCheckedChange={(v) => salvarConfig({ avaliacoes_auto_ativo: v })}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 p-3">
+                <div className="min-w-0">
+                  <Label htmlFor="ia-aval">Usar IA para escrever</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Ligado: o DreamAI escreve cada resposta. Desligado: usa apenas os textos prontos
+                    da aba Respostas de referência.
+                  </p>
+                </div>
+                <Switch
+                  id="ia-aval"
+                  checked={Boolean(config.data?.avaliacoes_usar_ia)}
+                  onCheckedChange={(v) => salvarConfig({ avaliacoes_usar_ia: v })}
                 />
               </div>
               <div className="space-y-1.5">
