@@ -162,7 +162,7 @@ export async function gerarRespostaAvaliacao(commentId: number) {
     "Nunca peça dados pessoais, nunca prometa reembolso ou troca; em casos negativos, peça para o cliente falar com a loja pelo chat da Shopee.",
     "Limite: 300 caracteres.",
     modelos.length
-      ? `Use estes textos da loja para ${estrelas} estrela(s) como referência de estilo (varie as palavras, não copie literalmente):\n- ${modelos.join("\n- ")}`
+      ? `Use os textos de referência abaixo como BASE PRINCIPAL da resposta. Varie o início da frase entre os exemplos, alterne estruturas e não repita o mesmo padrão de abertura. Misture ideias dos textos, mas mantenha o tom e o estilo da loja.\n\nTextos de referência para ${estrelas} estrela(s):\n- ${modelos.join("\n- ")}`
       : "Sem textos de referência cadastrados: escreva no tom simpático e objetivo.",
   ].join("\n");
 
