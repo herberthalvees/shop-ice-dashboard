@@ -182,6 +182,24 @@ export async function gerarRespostaAvaliacao(commentId: number) {
       prompt: usuario,
     });
     const texto = r.text.trim().replace(/^["“]|["”]$/g, "").slice(0, 500);
+
+    const entrada = r.usage?.inputTokens ?? 0;
+    const saida = r.usage?.outputTokens ?? 0;
+    const raciocinio =
+      (r.usage as { reasoningTokens?: number } | undefined)?.reasoningTokens ?? 0;
+    const custo =
+      (entrada / 1000) * CREDITOS_POR_1K_ENTRADA + (saida / 1000) * CREDITOS_POR_1K_SAIDA;
+    const { error: erroUso } = await supabaseAdmin.from("ia_uso").insert({
+      conversa_id: null,
+      modelo: `${MODELO} · avaliação`,
+      tokens_entrada: entrada,
+      tokens_saida: saida,
+      tokens_raciocinio: raciocinio,
+      passos: 1,
+      custo_creditos: Number(custo.toFixed(6)),
+    });
+    if (erroUso) console.error("falha ao registrar uso ia (avaliação)", erroUso.message);
+
     if (!texto) return { ok: false as const, error: "a IA não retornou texto" };
 
     await supabaseAdmin
