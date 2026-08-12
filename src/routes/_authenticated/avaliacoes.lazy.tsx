@@ -46,6 +46,17 @@ type Avaliacao = {
 
 type Exemplo = { id: string; estrelas: number; texto: string; ativo: boolean };
 
+type Historico = {
+  comment_id: number;
+  produto: string | null;
+  comprador: string | null;
+  rating: number | null;
+  comentario: string | null;
+  resposta_shopee: string | null;
+  resposta_gerada: string | null;
+  enviada_em: string | null;
+};
+
 function dataCurta(iso: string | null) {
   if (!iso) return "";
   return new Intl.DateTimeFormat("pt-BR", {
@@ -122,6 +133,22 @@ function AvaliacoesPage() {
         .order("estrelas", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Exemplo[];
+    },
+  });
+
+  const historico = useQuery({
+    queryKey: ["avaliacoes-historico"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("avaliacoes")
+        .select(
+          "comment_id, produto, comprador, rating, comentario, resposta_shopee, resposta_gerada, enviada_em",
+        )
+        .eq("respondida", true)
+        .order("enviada_em", { ascending: false, nullsFirst: false })
+        .limit(100);
+      if (error) throw error;
+      return (data ?? []) as Historico[];
     },
   });
 
@@ -214,6 +241,7 @@ function AvaliacoesPage() {
       <Tabs defaultValue="lista">
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="lista">Avaliações</TabsTrigger>
+          <TabsTrigger value="historico">Histórico</TabsTrigger>
           <TabsTrigger value="modelos">Respostas de referência</TabsTrigger>
           <TabsTrigger value="ajustes">Automação</TabsTrigger>
         </TabsList>
