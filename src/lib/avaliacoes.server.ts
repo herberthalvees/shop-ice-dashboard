@@ -158,6 +158,7 @@ export async function gerarRespostaAvaliacao(commentId: number) {
     "Você escreve respostas públicas de uma loja brasileira da Shopee às avaliações dos clientes.",
     prompt,
     "Regras: escreva apenas o texto final da resposta, sem aspas, sem assinatura de IA, sem emojis em excesso (no máximo 1).",
+    "Não inclua título, nome do cliente, nome do produto ou saudação genérica. Comece direto com agradecimento ou resposta.",
     "Nunca peça dados pessoais, nunca prometa reembolso ou troca; em casos negativos, peça para o cliente falar com a loja pelo chat da Shopee.",
     "Limite: 300 caracteres.",
     modelos.length
@@ -167,12 +168,8 @@ export async function gerarRespostaAvaliacao(commentId: number) {
 
   const usuario = [
     `Nota: ${estrelas} estrela(s)`,
-    av.produto ? `Produto: ${av.produto}` : null,
-    av.comprador ? `Cliente: ${av.comprador}` : null,
     `Comentário do cliente: ${av.comentario?.trim() || "(sem texto, apenas a nota)"}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  ].join("\n");
 
   try {
     const gateway = createLovableAiGatewayProvider(apiKey);
