@@ -243,12 +243,12 @@ export async function enviarRespostaAvaliacao(commentId: number, texto: string) 
 }
 
 /** Rotina do cron: sincroniza e responde automaticamente o que estiver pendente. */
-export async function processarAvaliacoesAutomaticas(limite = 10) {
+export async function processarAvaliacoesAutomaticas(limite = 10, apenasGerar = false) {
   const sync = await sincronizarAvaliacoes(2);
   if (!sync.ok) return { ok: false as const, error: sync.error };
 
   const { auto } = await configAvaliacoes();
-  if (!auto)
+  if (!auto && !apenasGerar)
     return {
       ok: true as const,
       encontradas: sync.encontradas,
@@ -275,6 +275,10 @@ export async function processarAvaliacoesAutomaticas(limite = 10) {
       erros.push(`${id}: ${g.error}`);
       continue;
     }
+    if (apenasGerar) {
+      respondidas++;
+      continue;
+    }
     const e = await enviarRespostaAvaliacao(id, g.texto);
     if (e.ok) respondidas++;
     else erros.push(`${id}: ${e.error}`);
@@ -285,7 +289,7 @@ export async function processarAvaliacoesAutomaticas(limite = 10) {
     encontradas: sync.encontradas,
     novas: sync.novas,
     respondidas,
-    automatico: true,
+    automatico: !apenasGerar,
     erros: erros.slice(0, 10),
   };
 }

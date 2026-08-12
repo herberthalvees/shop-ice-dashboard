@@ -14,7 +14,8 @@ async function handler({ request }: { request: Request }) {
 
   try {
     const { processarAvaliacoesAutomaticas } = await import("@/lib/avaliacoes.server");
-    const r = await processarAvaliacoesAutomaticas(10);
+    const apenasGerar = new URL(request.url).searchParams.get("gerar") === "1";
+    const r = await processarAvaliacoesAutomaticas(apenasGerar ? 1 : 10, apenasGerar);
     return responder(r, 200);
   } catch (erro) {
     console.error("erro no sync-avaliacoes", String(erro));
