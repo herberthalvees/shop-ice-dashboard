@@ -25,6 +25,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
 import { Route as AuthenticatedCalculadoraRouteImport } from './routes/_authenticated/calculadora'
+import { Route as AuthenticatedAvaliacoesRouteImport } from './routes/_authenticated/avaliacoes'
 import { Route as AuthenticatedIaIndexRouteImport } from './routes/_authenticated/ia.index'
 import { Route as ApiShopeeAuthUrlRouteImport } from './routes/api/shopee/auth-url'
 import { Route as AuthenticatedIaConversaIdRouteImport } from './routes/_authenticated/ia.$conversaId'
@@ -34,6 +35,7 @@ import { Route as ApiPublicShopeeSyncProdutosRouteImport } from './routes/api/pu
 import { Route as ApiPublicShopeeSyncEscrowRouteImport } from './routes/api/public/shopee/sync-escrow'
 import { Route as ApiPublicShopeeSyncChatRouteImport } from './routes/api/public/shopee/sync-chat'
 import { Route as ApiPublicShopeeSyncCarteiraRouteImport } from './routes/api/public/shopee/sync-carteira'
+import { Route as ApiPublicShopeeSyncAvaliacoesRouteImport } from './routes/api/public/shopee/sync-avaliacoes'
 import { Route as ApiPublicShopeeSyncAdsRouteImport } from './routes/api/public/shopee/sync-ads'
 import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
 import { Route as ApiPublicShopeeResumoDiarioRouteImport } from './routes/api/public/shopee/resumo-diario'
@@ -147,6 +149,13 @@ const AuthenticatedCalculadoraRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/calculadora.lazy').then((d) => d.Route),
   )
+const AuthenticatedAvaliacoesRoute = AuthenticatedAvaliacoesRouteImport.update({
+  id: '/avaliacoes',
+  path: '/avaliacoes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/avaliacoes.lazy').then((d) => d.Route),
+)
 const AuthenticatedIaIndexRoute = AuthenticatedIaIndexRouteImport.update({
   id: '/ia/',
   path: '/ia/',
@@ -200,6 +209,12 @@ const ApiPublicShopeeSyncCarteiraRoute =
     path: '/api/public/shopee/sync-carteira',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicShopeeSyncAvaliacoesRoute =
+  ApiPublicShopeeSyncAvaliacoesRouteImport.update({
+    id: '/api/public/shopee/sync-avaliacoes',
+    path: '/api/public/shopee/sync-avaliacoes',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicShopeeSyncAdsRoute = ApiPublicShopeeSyncAdsRouteImport.update({
   id: '/api/public/shopee/sync-ads',
   path: '/api/public/shopee/sync-ads',
@@ -243,6 +258,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/avaliacoes': typeof AuthenticatedAvaliacoesRoute
   '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/chat': typeof AuthenticatedChatRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -265,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-ads': typeof ApiPublicShopeeSyncAdsRoute
+  '/api/public/shopee/sync-avaliacoes': typeof ApiPublicShopeeSyncAvaliacoesRoute
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-chat': typeof ApiPublicShopeeSyncChatRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
@@ -276,6 +293,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/avaliacoes': typeof AuthenticatedAvaliacoesRoute
   '/calculadora': typeof AuthenticatedCalculadoraRoute
   '/chat': typeof AuthenticatedChatRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -298,6 +316,7 @@ export interface FileRoutesByTo {
   '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-ads': typeof ApiPublicShopeeSyncAdsRoute
+  '/api/public/shopee/sync-avaliacoes': typeof ApiPublicShopeeSyncAvaliacoesRoute
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-chat': typeof ApiPublicShopeeSyncChatRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
@@ -311,6 +330,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/_authenticated/avaliacoes': typeof AuthenticatedAvaliacoesRoute
   '/_authenticated/calculadora': typeof AuthenticatedCalculadoraRoute
   '/_authenticated/chat': typeof AuthenticatedChatRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -333,6 +353,7 @@ export interface FileRoutesById {
   '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
   '/api/public/shopee/sync': typeof ApiPublicShopeeSyncRoute
   '/api/public/shopee/sync-ads': typeof ApiPublicShopeeSyncAdsRoute
+  '/api/public/shopee/sync-avaliacoes': typeof ApiPublicShopeeSyncAvaliacoesRoute
   '/api/public/shopee/sync-carteira': typeof ApiPublicShopeeSyncCarteiraRoute
   '/api/public/shopee/sync-chat': typeof ApiPublicShopeeSyncChatRoute
   '/api/public/shopee/sync-escrow': typeof ApiPublicShopeeSyncEscrowRoute
@@ -346,6 +367,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/avaliacoes'
     | '/calculadora'
     | '/chat'
     | '/configuracoes'
@@ -368,6 +390,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/resumo-diario'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-ads'
+    | '/api/public/shopee/sync-avaliacoes'
     | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-chat'
     | '/api/public/shopee/sync-escrow'
@@ -379,6 +402,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/reset-password'
+    | '/avaliacoes'
     | '/calculadora'
     | '/chat'
     | '/configuracoes'
@@ -401,6 +425,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/resumo-diario'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-ads'
+    | '/api/public/shopee/sync-avaliacoes'
     | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-chat'
     | '/api/public/shopee/sync-escrow'
@@ -413,6 +438,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/reset-password'
+    | '/_authenticated/avaliacoes'
     | '/_authenticated/calculadora'
     | '/_authenticated/chat'
     | '/_authenticated/configuracoes'
@@ -435,6 +461,7 @@ export interface FileRouteTypes {
     | '/api/public/shopee/resumo-diario'
     | '/api/public/shopee/sync'
     | '/api/public/shopee/sync-ads'
+    | '/api/public/shopee/sync-avaliacoes'
     | '/api/public/shopee/sync-carteira'
     | '/api/public/shopee/sync-chat'
     | '/api/public/shopee/sync-escrow'
@@ -457,6 +484,7 @@ export interface RootRouteChildren {
   ApiPublicShopeeResumoDiarioRoute: typeof ApiPublicShopeeResumoDiarioRoute
   ApiPublicShopeeSyncRoute: typeof ApiPublicShopeeSyncRoute
   ApiPublicShopeeSyncAdsRoute: typeof ApiPublicShopeeSyncAdsRoute
+  ApiPublicShopeeSyncAvaliacoesRoute: typeof ApiPublicShopeeSyncAvaliacoesRoute
   ApiPublicShopeeSyncCarteiraRoute: typeof ApiPublicShopeeSyncCarteiraRoute
   ApiPublicShopeeSyncChatRoute: typeof ApiPublicShopeeSyncChatRoute
   ApiPublicShopeeSyncEscrowRoute: typeof ApiPublicShopeeSyncEscrowRoute
@@ -579,6 +607,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCalculadoraRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/avaliacoes': {
+      id: '/_authenticated/avaliacoes'
+      path: '/avaliacoes'
+      fullPath: '/avaliacoes'
+      preLoaderRoute: typeof AuthenticatedAvaliacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/ia/': {
       id: '/_authenticated/ia/'
       path: '/ia'
@@ -642,6 +677,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeSyncCarteiraRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/shopee/sync-avaliacoes': {
+      id: '/api/public/shopee/sync-avaliacoes'
+      path: '/api/public/shopee/sync-avaliacoes'
+      fullPath: '/api/public/shopee/sync-avaliacoes'
+      preLoaderRoute: typeof ApiPublicShopeeSyncAvaliacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shopee/sync-ads': {
       id: '/api/public/shopee/sync-ads'
       path: '/api/public/shopee/sync-ads'
@@ -695,6 +737,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAvaliacoesRoute: typeof AuthenticatedAvaliacoesRoute
   AuthenticatedCalculadoraRoute: typeof AuthenticatedCalculadoraRoute
   AuthenticatedChatRoute: typeof AuthenticatedChatRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
@@ -711,6 +754,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAvaliacoesRoute: AuthenticatedAvaliacoesRoute,
   AuthenticatedCalculadoraRoute: AuthenticatedCalculadoraRoute,
   AuthenticatedChatRoute: AuthenticatedChatRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
@@ -743,6 +787,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicShopeeResumoDiarioRoute: ApiPublicShopeeResumoDiarioRoute,
   ApiPublicShopeeSyncRoute: ApiPublicShopeeSyncRoute,
   ApiPublicShopeeSyncAdsRoute: ApiPublicShopeeSyncAdsRoute,
+  ApiPublicShopeeSyncAvaliacoesRoute: ApiPublicShopeeSyncAvaliacoesRoute,
   ApiPublicShopeeSyncCarteiraRoute: ApiPublicShopeeSyncCarteiraRoute,
   ApiPublicShopeeSyncChatRoute: ApiPublicShopeeSyncChatRoute,
   ApiPublicShopeeSyncEscrowRoute: ApiPublicShopeeSyncEscrowRoute,
