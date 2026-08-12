@@ -340,6 +340,7 @@ export type Database = {
           aliquota_imposto: number
           avaliacoes_auto_ativo: boolean
           avaliacoes_prompt: string
+          avaliacoes_usar_ia: boolean
           eventos: Json
           id: number
           limite_estoque_baixo: number
@@ -357,6 +358,7 @@ export type Database = {
           aliquota_imposto?: number
           avaliacoes_auto_ativo?: boolean
           avaliacoes_prompt?: string
+          avaliacoes_usar_ia?: boolean
           eventos?: Json
           id?: number
           limite_estoque_baixo?: number
@@ -374,6 +376,7 @@ export type Database = {
           aliquota_imposto?: number
           avaliacoes_auto_ativo?: boolean
           avaliacoes_prompt?: string
+          avaliacoes_usar_ia?: boolean
           eventos?: Json
           id?: number
           limite_estoque_baixo?: number
