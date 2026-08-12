@@ -46,6 +46,17 @@ type Avaliacao = {
 
 type Exemplo = { id: string; estrelas: number; texto: string; ativo: boolean };
 
+type Historico = {
+  comment_id: number;
+  produto: string | null;
+  comprador: string | null;
+  rating: number | null;
+  comentario: string | null;
+  resposta_shopee: string | null;
+  resposta_gerada: string | null;
+  enviada_em: string | null;
+};
+
 function dataCurta(iso: string | null) {
   if (!iso) return "";
   return new Intl.DateTimeFormat("pt-BR", {
@@ -122,6 +133,22 @@ function AvaliacoesPage() {
         .order("estrelas", { ascending: false });
       if (error) throw error;
       return (data ?? []) as Exemplo[];
+    },
+  });
+
+  const historico = useQuery({
+    queryKey: ["avaliacoes-historico"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("avaliacoes")
+        .select(
+          "comment_id, produto, comprador, rating, comentario, resposta_shopee, resposta_gerada, enviada_em",
+        )
+        .eq("respondida", true)
+        .order("enviada_em", { ascending: false, nullsFirst: false })
+        .limit(100);
+      if (error) throw error;
+      return (data ?? []) as Historico[];
     },
   });
 
@@ -214,6 +241,7 @@ function AvaliacoesPage() {
       <Tabs defaultValue="lista">
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="lista">Avaliações</TabsTrigger>
+          <TabsTrigger value="historico">Histórico</TabsTrigger>
           <TabsTrigger value="modelos">Respostas de referência</TabsTrigger>
           <TabsTrigger value="ajustes">Automação</TabsTrigger>
         </TabsList>
@@ -316,6 +344,14 @@ function AvaliacoesPage() {
           })}
         </TabsContent>
 
+        <TabsContent value="historico" className="mt-4">
+          <HistoricoRespostas
+            itens={historico.data ?? []}
+            carregando={historico.isLoading}
+            onAtualizar={() => qc.invalidateQueries({ queryKey: ["avaliacoes-historico"] })}
+          />
+        </TabsContent>
+
         <TabsContent value="modelos" className="mt-4">
           <Modelos exemplos={exemplos.data ?? []} carregando={exemplos.isLoading} />
         </TabsContent>
@@ -363,6 +399,76 @@ function AvaliacoesPage() {
 }
 
 function Modelos({ exemplos, carregando }: { exemplos: Exemplo[]; carregando: boolean }) {
+  return <ModelosInner exemplos={exemplos} carregando={carregando} />;
+}
+
+function HistoricoRespostas({
+  itens,
+  carregando,
+  onAtualizar,
+}: {
+  itens: Historico[];
+  carregando: boolean;
+  onAtualizar: () => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs text-muted-foreground">
+          {itens.length} respostas publicadas (mais recentes primeiro)
+        </span>
+        <Button variant="ghost" size="sm" onClick={onAtualizar}>
+          <RefreshCw className="size-4" /> Atualizar
+        </Button>
+      </div>
+
+      {carregando && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
+
+      {!carregando && itens.length === 0 && (
+        <Card>
+          <CardContent className="py-8 text-center text-sm text-muted-foreground">
+            Nenhuma resposta publicada ainda.
+          </CardContent>
+        </Card>
+      )}
+
+      {itens.map((a) => (
+        <Card key={a.comment_id}>
+          <CardHeader className="gap-1 pb-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <Estrelas nota={a.rating} />
+              <span className="text-sm font-medium">{a.comprador ?? "Cliente"}</span>
+              {a.enviada_em && (
+                <span className="text-xs text-muted-foreground">
+                  respondida em {dataCurta(a.enviada_em)}
+                </span>
+              )}
+              <Badge variant="secondary">
+                {a.resposta_gerada && a.resposta_gerada === a.resposta_shopee
+                  ? "DreamAI"
+                  : "Publicada"}
+              </Badge>
+            </div>
+            {a.produto && <CardDescription className="truncate">{a.produto}</CardDescription>}
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="whitespace-pre-wrap rounded-lg border border-border/60 bg-muted/40 p-3 text-sm">
+              {a.comentario?.trim() || "(sem comentário, apenas a nota)"}
+            </p>
+            <div className="whitespace-pre-wrap rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+              <span className="mb-1 block text-[10px] font-medium uppercase tracking-wide text-primary">
+                Resposta da loja
+              </span>
+              {a.resposta_shopee ?? a.resposta_gerada}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function ModelosInner({ exemplos, carregando }: { exemplos: Exemplo[]; carregando: boolean }) {
   const qc = useQueryClient();
   const [estrelas, setEstrelas] = useState("5");
   const [texto, setTexto] = useState("");
