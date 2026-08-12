@@ -6,6 +6,8 @@ import { getComments, replyComment } from "./shopee.server";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
 
 const MODELO = "openai/gpt-5.6-sol";
+const CREDITOS_POR_1K_ENTRADA = 0.02;
+const CREDITOS_POR_1K_SAIDA = 0.12;
 
 function segParaIso(v: unknown): string | null {
   const n = Number(v);
