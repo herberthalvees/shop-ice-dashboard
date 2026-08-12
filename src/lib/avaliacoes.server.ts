@@ -1,7 +1,13 @@
-// Server-only: avaliações da Shopee + resposta a partir dos textos de referência.
+// Server-only: avaliações da Shopee + resposta por IA ou textos de referência.
+import { generateText } from "ai";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { comRetry } from "./chat.server";
 import { getComments, replyComment } from "./shopee.server";
+import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+
+const MODELO = "openai/gpt-5.6-sol";
+const CREDITOS_POR_1K_ENTRADA = 0.02;
+const CREDITOS_POR_1K_SAIDA = 0.12;
 
 function segParaIso(v: unknown): string | null {
   const n = Number(v);
@@ -114,12 +120,13 @@ export async function sincronizarAvaliacoes(paginas = 3) {
 async function configAvaliacoes() {
   const { data } = await supabaseAdmin
     .from("config")
-    .select("avaliacoes_auto_ativo, avaliacoes_prompt")
+    .select("avaliacoes_auto_ativo, avaliacoes_prompt, avaliacoes_usar_ia")
     .eq("id", 1)
     .maybeSingle();
   return {
     auto: Boolean(data?.avaliacoes_auto_ativo),
     prompt: data?.avaliacoes_prompt ?? "",
+    usarIa: Boolean(data?.avaliacoes_usar_ia),
   };
 }
 
@@ -132,7 +139,7 @@ async function exemplos(estrelas: number) {
   return (data ?? []).map((e) => e.texto);
 }
 
-/** Escolhe uma resposta pronta da aba "Respostas de referência" (sem IA). */
+/** Gera a resposta: por IA (DreamAI) ou sorteando um texto pronto de referência. */
 export async function gerarRespostaAvaliacao(commentId: number) {
   const { data: av } = await supabaseAdmin
     .from("avaliacoes")
@@ -145,6 +152,11 @@ export async function gerarRespostaAvaliacao(commentId: number) {
   const modelos = (await exemplos(estrelas))
     .map((t) => (t ?? "").trim())
     .filter((t) => t.length > 0);
+  const { prompt, usarIa } = await configAvaliacoes();
+
+  if (usarIa) {
+    return await gerarComIa(commentId, estrelas, av.comentario, modelos, prompt);
+  }
 
   if (modelos.length === 0) {
     const erro = `sem respostas de referência cadastradas para ${estrelas} estrela(s)`;
@@ -173,6 +185,73 @@ export async function gerarRespostaAvaliacao(commentId: number) {
     .eq("comment_id", commentId);
 
   return { ok: true as const, texto };
+}
+
+async function gerarComIa(
+  commentId: number,
+  estrelas: number,
+  comentario: string | null,
+  modelos: string[],
+  prompt: string,
+) {
+  const apiKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey) return { ok: false as const, error: "LOVABLE_API_KEY ausente" };
+
+  const sistema = [
+    "Você escreve respostas públicas de uma loja brasileira da Shopee às avaliações dos clientes.",
+    prompt,
+    "Regras: escreva apenas o texto final da resposta, sem aspas, sem assinatura de IA, sem emojis em excesso (no máximo 1).",
+    "Não inclua título, nome do cliente, nome do produto ou saudação genérica. Comece direto com agradecimento ou resposta.",
+    "Nunca peça dados pessoais, nunca prometa reembolso ou troca; em casos negativos, peça para o cliente falar com a loja pelo chat da Shopee.",
+    "Limite: 300 caracteres.",
+    modelos.length
+      ? `Use os textos de referência abaixo como BASE PRINCIPAL da resposta. Varie o início da frase entre os exemplos, alterne estruturas e não repita o mesmo padrão de abertura.\n\nTextos de referência para ${estrelas} estrela(s):\n- ${modelos.join("\n- ")}`
+      : "Sem textos de referência cadastrados: escreva no tom simpático e objetivo.",
+  ].join("\n");
+
+  const usuario = [
+    `Nota: ${estrelas} estrela(s)`,
+    `Comentário do cliente: ${comentario?.trim() || "(sem texto, apenas a nota)"}`,
+  ].join("\n");
+
+  try {
+    const gateway = createLovableAiGatewayProvider(apiKey);
+    const r = await generateText({ model: gateway(MODELO), system: sistema, prompt: usuario });
+    const texto = r.text.trim().replace(/^["“]|["”]$/g, "").slice(0, 500);
+
+    const entrada = r.usage?.inputTokens ?? 0;
+    const saida = r.usage?.outputTokens ?? 0;
+    const raciocinio =
+      (r.usage as { reasoningTokens?: number } | undefined)?.reasoningTokens ?? 0;
+    const custo =
+      (entrada / 1000) * CREDITOS_POR_1K_ENTRADA + (saida / 1000) * CREDITOS_POR_1K_SAIDA;
+    const { error: erroUso } = await supabaseAdmin.from("ia_uso").insert({
+      conversa_id: null,
+      modelo: `${MODELO} · avaliação`,
+      tokens_entrada: entrada,
+      tokens_saida: saida,
+      tokens_raciocinio: raciocinio,
+      passos: 1,
+      custo_creditos: Number(custo.toFixed(6)),
+    });
+    if (erroUso) console.error("falha ao registrar uso ia (avaliação)", erroUso.message);
+
+    if (!texto) return { ok: false as const, error: "a IA não retornou texto" };
+
+    await supabaseAdmin
+      .from("avaliacoes")
+      .update({ resposta_gerada: texto, status: "gerada", erro: null })
+      .eq("comment_id", commentId);
+
+    return { ok: true as const, texto };
+  } catch (e) {
+    const erro = e instanceof Error ? e.message : String(e);
+    await supabaseAdmin
+      .from("avaliacoes")
+      .update({ status: "erro", erro: erro.slice(0, 400) })
+      .eq("comment_id", commentId);
+    return { ok: false as const, error: erro };
+  }
 }
 
 /** Envia a resposta para a Shopee. */

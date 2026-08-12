@@ -1,0 +1,1 @@
+ALTER TABLE public.config ADD COLUMN IF NOT EXISTS avaliacoes_usar_ia boolean NOT NULL DEFAULT false;
