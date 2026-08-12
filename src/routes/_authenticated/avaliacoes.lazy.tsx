@@ -344,11 +344,15 @@ function AvaliacoesPage() {
           })}
         </TabsContent>
 
-        <TabsContent value="modelos" className="mt-4">
-          {null}
+        <TabsContent value="historico" className="mt-4">
+          <HistoricoRespostas
+            itens={historico.data ?? []}
+            carregando={historico.isLoading}
+            onAtualizar={() => qc.invalidateQueries({ queryKey: ["avaliacoes-historico"] })}
+          />
         </TabsContent>
 
-        <TabsContent value="modelos2" className="mt-4">
+        <TabsContent value="modelos" className="mt-4">
           <Modelos exemplos={exemplos.data ?? []} carregando={exemplos.isLoading} />
         </TabsContent>
 
