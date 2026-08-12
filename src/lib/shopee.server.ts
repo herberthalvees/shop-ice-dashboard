@@ -211,3 +211,34 @@ export async function sendChatMessage(
   });
   return await res.json();
 }
+
+// ---------- Avaliações (product comment) ----------
+
+export async function getComments(
+  accessToken: string,
+  shopId: number,
+  opts: { cursor?: string; pageSize?: number } = {},
+) {
+  const path = "/api/v2/product/get_comment";
+  const url = shopUrl(path, accessToken, shopId, {
+    cursor: opts.cursor ?? "",
+    page_size: String(opts.pageSize ?? 50),
+  });
+  const res = await fetch(url);
+  return await res.json();
+}
+
+export async function replyComment(
+  accessToken: string,
+  shopId: number,
+  respostas: { comment_id: number; comment: string }[],
+) {
+  const path = "/api/v2/product/reply_comment";
+  const url = shopUrl(path, accessToken, shopId);
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ comment_list: respostas }),
+  });
+  return await res.json();
+}

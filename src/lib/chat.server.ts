@@ -34,7 +34,7 @@ function ehTokenInvalido(r: any) {
   return `${r?.error ?? ""}`.toLowerCase().includes("access_token");
 }
 
-async function comRetry<T>(fn: (c: Conn) => Promise<T>) {
+export async function comRetry<T>(fn: (c: Conn) => Promise<T>) {
   const base = await conexaoValida();
   if (!base.ok) return { ok: false as const, error: base.error };
   let res: any = await fn(base.conn);

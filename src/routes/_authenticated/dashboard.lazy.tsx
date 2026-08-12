@@ -464,7 +464,7 @@ function DashboardPage() {
               </div>
             </div>
             <Button asChild size="lg" className="w-full md:w-auto">
-              <Link to="/configuracoes">
+              <Link to="/configuracoes" search={{ conectado: undefined, erro: undefined }}>
                 Conectar Shopee <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>

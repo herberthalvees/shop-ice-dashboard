@@ -119,6 +119,96 @@ export type Database = {
         }
         Relationships: []
       }
+      avaliacoes: {
+        Row: {
+          comentario: string | null
+          comment_id: number
+          comprador: string | null
+          created_at: string
+          criado_em: string | null
+          enviada_em: string | null
+          erro: string | null
+          item_id: number | null
+          model_id: number | null
+          order_sn: string | null
+          payload: Json | null
+          produto: string | null
+          rating: number | null
+          respondida: boolean
+          resposta_gerada: string | null
+          resposta_shopee: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          comentario?: string | null
+          comment_id: number
+          comprador?: string | null
+          created_at?: string
+          criado_em?: string | null
+          enviada_em?: string | null
+          erro?: string | null
+          item_id?: number | null
+          model_id?: number | null
+          order_sn?: string | null
+          payload?: Json | null
+          produto?: string | null
+          rating?: number | null
+          respondida?: boolean
+          resposta_gerada?: string | null
+          resposta_shopee?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          comentario?: string | null
+          comment_id?: number
+          comprador?: string | null
+          created_at?: string
+          criado_em?: string | null
+          enviada_em?: string | null
+          erro?: string | null
+          item_id?: number | null
+          model_id?: number | null
+          order_sn?: string | null
+          payload?: Json | null
+          produto?: string | null
+          rating?: number | null
+          respondida?: boolean
+          resposta_gerada?: string | null
+          resposta_shopee?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      avaliacoes_exemplos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          estrelas: number
+          id: string
+          texto: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          estrelas: number
+          id?: string
+          texto: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          estrelas?: number
+          id?: string
+          texto?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       carteira_transacoes: {
         Row: {
           comprador: string | null
@@ -248,6 +338,8 @@ export type Database = {
       config: {
         Row: {
           aliquota_imposto: number
+          avaliacoes_auto_ativo: boolean
+          avaliacoes_prompt: string
           eventos: Json
           id: number
           limite_estoque_baixo: number
@@ -263,6 +355,8 @@ export type Database = {
         }
         Insert: {
           aliquota_imposto?: number
+          avaliacoes_auto_ativo?: boolean
+          avaliacoes_prompt?: string
           eventos?: Json
           id?: number
           limite_estoque_baixo?: number
@@ -278,6 +372,8 @@ export type Database = {
         }
         Update: {
           aliquota_imposto?: number
+          avaliacoes_auto_ativo?: boolean
+          avaliacoes_prompt?: string
           eventos?: Json
           id?: number
           limite_estoque_baixo?: number
