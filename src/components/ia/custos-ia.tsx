@@ -74,6 +74,7 @@ export function CustosIA() {
                 <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                   <tr>
                     <th className="px-3 py-2 text-left font-medium">Quando</th>
+                    <th className="px-3 py-2 text-left font-medium">Origem</th>
                     <th className="px-3 py-2 text-right font-medium">Entrada</th>
                     <th className="px-3 py-2 text-right font-medium">Saída</th>
                     <th className="px-3 py-2 text-right font-medium">Passos</th>
@@ -85,6 +86,9 @@ export function CustosIA() {
                     <tr key={l.id} className="border-t">
                       <td className="px-3 py-2 whitespace-nowrap">
                         {new Date(l.created_at).toLocaleString("pt-BR")}
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
+                        {l.modelo?.includes("avaliação") ? "Avaliação" : "Chat"}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums">{num(l.tokens_entrada)}</td>
                       <td className="px-3 py-2 text-right tabular-nums">{num(l.tokens_saida)}</td>
