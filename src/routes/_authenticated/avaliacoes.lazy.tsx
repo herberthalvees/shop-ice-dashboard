@@ -345,6 +345,10 @@ function AvaliacoesPage() {
         </TabsContent>
 
         <TabsContent value="modelos" className="mt-4">
+          {null}
+        </TabsContent>
+
+        <TabsContent value="modelos2" className="mt-4">
           <Modelos exemplos={exemplos.data ?? []} carregando={exemplos.isLoading} />
         </TabsContent>
 
