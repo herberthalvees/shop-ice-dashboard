@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   Copy,
+  ExternalLink,
   Loader2,
   MessageSquare,
   Pencil,
@@ -60,6 +61,29 @@ function horaCurta(iso: string | null) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(iso));
+}
+
+const ROTULOS_TIPO: Record<string, string> = {
+  item: "Produto mencionado",
+  order: "Pedido mencionado",
+  image: "Imagem enviada",
+  image_with_text: "Imagem enviada",
+  video: "Vídeo enviado",
+  sticker: "Sticker enviado",
+  voucher: "Cupom enviado",
+  faq: "Mensagem automática",
+};
+
+function linkConversaShopee(conversationId?: string | null) {
+  return conversationId
+    ? `https://seller.shopee.com.br/webchat/conversations/${conversationId}`
+    : "https://seller.shopee.com.br/webchat/conversations";
+}
+
+function rotuloAnexo(tipo: string, texto: string) {
+  if (ROTULOS_TIPO[tipo]) return ROTULOS_TIPO[tipo];
+  const limpo = texto.replace(/^\[|\]$/g, "").trim();
+  return limpo ? `Anexo: ${limpo}` : "Anexo";
 }
 
 function ChatPage() {
