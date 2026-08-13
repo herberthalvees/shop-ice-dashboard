@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import {
   ArrowLeft,
   Copy,
+  ExternalLink,
   Loader2,
   MessageSquare,
   Pencil,
@@ -60,6 +61,29 @@ function horaCurta(iso: string | null) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(iso));
+}
+
+const ROTULOS_TIPO: Record<string, string> = {
+  item: "Produto mencionado",
+  order: "Pedido mencionado",
+  image: "Imagem enviada",
+  image_with_text: "Imagem enviada",
+  video: "Vídeo enviado",
+  sticker: "Sticker enviado",
+  voucher: "Cupom enviado",
+  faq: "Mensagem automática",
+};
+
+function linkConversaShopee(conversationId?: string | null) {
+  return conversationId
+    ? `https://seller.shopee.com.br/webchat/conversations/${conversationId}`
+    : "https://seller.shopee.com.br/webchat/conversations";
+}
+
+function rotuloAnexo(tipo: string, texto: string) {
+  if (ROTULOS_TIPO[tipo]) return ROTULOS_TIPO[tipo];
+  const limpo = texto.replace(/^\[|\]$/g, "").trim();
+  return limpo ? `Anexo: ${limpo}` : "Anexo";
 }
 
 function ChatPage() {
@@ -232,6 +256,17 @@ function ChatPage() {
                     {atual ? "Histórico recente" : "Escolha um comprador na lista"}
                   </CardDescription>
                 </div>
+                {atual && (
+                  <Button asChild variant="outline" size="sm" className="ml-auto shrink-0">
+                    <a
+                      href={linkConversaShopee(atual.conversation_id)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <ExternalLink className="size-4" /> Abrir na Shopee
+                    </a>
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
                 <ScrollArea className="h-[320px] rounded-lg border border-border/60 bg-background/40 p-3 lg:h-[380px]">
@@ -271,7 +306,19 @@ function ChatPage() {
                                 : "rounded-2xl rounded-bl-sm border border-border bg-muted text-foreground")
                             }
                           >
-                            {m.texto}
+                            {m.tipo && m.tipo !== "text" ? (
+                              <a
+                                href={linkConversaShopee(selecionada)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 underline underline-offset-2"
+                              >
+                                <ExternalLink className="size-3.5 shrink-0" />
+                                {rotuloAnexo(m.tipo, m.texto)} — ver na Shopee
+                              </a>
+                            ) : (
+                              m.texto
+                            )}
                             <span
                               className={
                                 "mt-1 block text-[10px] " +
