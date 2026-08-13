@@ -256,6 +256,17 @@ function ChatPage() {
                     {atual ? "Histórico recente" : "Escolha um comprador na lista"}
                   </CardDescription>
                 </div>
+                {atual && (
+                  <Button asChild variant="outline" size="sm" className="ml-auto shrink-0">
+                    <a
+                      href={linkConversaShopee(atual.conversation_id)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <ExternalLink className="size-4" /> Abrir na Shopee
+                    </a>
+                  </Button>
+                )}
               </CardHeader>
               <CardContent className="flex flex-col gap-3">
                 <ScrollArea className="h-[320px] rounded-lg border border-border/60 bg-background/40 p-3 lg:h-[380px]">
