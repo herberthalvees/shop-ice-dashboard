@@ -80,6 +80,43 @@ function linkConversaShopee(conversationId?: string | null) {
     : "https://seller.shopee.com.br/webchat/conversations";
 }
 
+function deepLinksApp(conversationId?: string | null) {
+  const id = conversationId ?? "";
+  return [
+    id ? `shopee://seller/chat?conversationId=${id}` : "shopee://seller/chat",
+    id ? `shopeeseller://chat?conversationId=${id}` : "shopeeseller://chat",
+  ];
+}
+
+/** Tenta abrir o app da Shopee; se nada abrir em ~1,2s, cai para o link web. */
+function abrirConversaShopee(conversationId?: string | null) {
+  const web = linkConversaShopee(conversationId);
+  if (typeof window === "undefined") return;
+  const ehMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (!ehMobile) {
+    window.open(web, "_blank", "noopener,noreferrer");
+    return;
+  }
+
+  let saiu = false;
+  const marcarSaida = () => {
+    if (document.hidden) saiu = true;
+  };
+  document.addEventListener("visibilitychange", marcarSaida);
+
+  const [primeiro, segundo] = deepLinksApp(conversationId);
+  window.location.href = primeiro;
+  const tentaSegundo = window.setTimeout(() => {
+    if (!saiu) window.location.href = segundo;
+  }, 500);
+
+  window.setTimeout(() => {
+    window.clearTimeout(tentaSegundo);
+    document.removeEventListener("visibilitychange", marcarSaida);
+    if (!saiu) window.open(web, "_blank", "noopener,noreferrer");
+  }, 1400);
+}
+
 function rotuloAnexo(tipo: string, texto: string) {
   if (ROTULOS_TIPO[tipo]) return ROTULOS_TIPO[tipo];
   const limpo = texto.replace(/^\[|\]$/g, "").trim();
@@ -257,14 +294,13 @@ function ChatPage() {
                   </CardDescription>
                 </div>
                 {atual && (
-                  <Button asChild variant="outline" size="sm" className="ml-auto shrink-0">
-                    <a
-                      href={linkConversaShopee(atual.conversation_id)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <ExternalLink className="size-4" /> Abrir na Shopee
-                    </a>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-auto shrink-0"
+                    onClick={() => abrirConversaShopee(atual.conversation_id)}
+                  >
+                    <ExternalLink className="size-4" /> Abrir na Shopee
                   </Button>
                 )}
               </CardHeader>
@@ -307,15 +343,14 @@ function ChatPage() {
                             }
                           >
                             {m.tipo && m.tipo !== "text" ? (
-                              <a
-                                href={linkConversaShopee(selecionada)}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1.5 underline underline-offset-2"
+                              <button
+                                type="button"
+                                onClick={() => abrirConversaShopee(selecionada)}
+                                className="inline-flex items-center gap-1.5 text-left underline underline-offset-2"
                               >
                                 <ExternalLink className="size-3.5 shrink-0" />
                                 {rotuloAnexo(m.tipo, m.texto)} — ver na Shopee
-                              </a>
+                              </button>
                             ) : (
                               m.texto
                             )}
