@@ -306,7 +306,19 @@ function ChatPage() {
                                 : "rounded-2xl rounded-bl-sm border border-border bg-muted text-foreground")
                             }
                           >
-                            {m.texto}
+                            {m.tipo && m.tipo !== "text" ? (
+                              <a
+                                href={linkConversaShopee(selecionada)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 underline underline-offset-2"
+                              >
+                                <ExternalLink className="size-3.5 shrink-0" />
+                                {rotuloAnexo(m.tipo, m.texto)} — ver na Shopee
+                              </a>
+                            ) : (
+                              m.texto
+                            )}
                             <span
                               className={
                                 "mt-1 block text-[10px] " +
