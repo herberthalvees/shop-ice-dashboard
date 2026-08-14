@@ -265,6 +265,25 @@ function DashboardPage() {
 
   const semDadosHora = (serieHora ?? []).every((h) => h.pedidos === 0 && h.faturamento === 0);
 
+  const { data: transito, isLoading: loadTransito } = useQuery({
+    queryKey: ["pedidos-em-transito"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("pedidos_em_transito" as any);
+      if (error) throw error;
+      const r = ((data as any)?.[0] ?? {}) as any;
+      return {
+        pedidos: Number(r.pedidos ?? 0),
+        valor: Number(r.valor ?? 0),
+        unidades: Number(r.unidades ?? 0),
+        custo: Number(r.custo ?? 0),
+        cobertura: Number(r.cobertura_custo ?? 0),
+      };
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 60_000,
+    retry: 2,
+  });
+
   const { data: ads, isLoading: loadAds } = useQuery({
     queryKey: ["ads-resumo", p_de, p_ate],
     queryFn: async () => {
@@ -598,6 +617,27 @@ function DashboardPage() {
       </div>
 
       {/* BLOCO 3: Composição de custos */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-2">
+        <CompCard
+          label="Pedidos em trânsito"
+          valor={loadTransito ? null : String(transito?.pedidos ?? 0)}
+          pct={loadTransito ? null : `${transito?.unidades ?? 0} unidades · ${brl(transito?.valor ?? 0)} em vendas`}
+          tone="primary"
+        />
+        <CompCard
+          label="Produto em trânsito"
+          valor={loadTransito ? null : brl(transito?.custo ?? 0)}
+          pct={
+            loadTransito
+              ? null
+              : (transito?.cobertura ?? 0) >= 1
+                ? "custo dos produtos já enviados"
+                : `custo dos produtos já enviados · ${Math.round((transito?.cobertura ?? 0) * 100)}% com custo cadastrado`
+          }
+          tone="warning"
+        />
+      </div>
+
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <CompCard label="Custos" valor={loadKpis ? null : brl(kpis?.custoTotal ?? 0)} pct={loadKpis ? null : `${(kpis?.custoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="danger" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.custoTotal ?? 0, previous: kpisPrev?.custoTotal ?? 0, label: prevLabel, isCurrency: true }} />
         <CompCard label="Tarifas" valor={loadKpis ? null : brl(kpis?.taxas ?? 0)} pct={loadKpis ? null : `${(kpis?.taxasPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="warning" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.taxas ?? 0, previous: kpisPrev?.taxas ?? 0, label: prevLabel, isCurrency: true }} />
