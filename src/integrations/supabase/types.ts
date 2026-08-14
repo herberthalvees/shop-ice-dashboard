@@ -1764,6 +1764,26 @@ export type Database = {
           valor: number
         }[]
       }
+      pedidos_em_transito: {
+        Args: { p_marketplace?: string }
+        Returns: {
+          cobertura_custo: number
+          custo: number
+          pedidos: number
+          unidades: number
+          valor: number
+        }[]
+      }
+      pedidos_em_transito_impl: {
+        Args: { p_marketplace?: string }
+        Returns: {
+          cobertura_custo: number
+          custo: number
+          pedidos: number
+          unidades: number
+          valor: number
+        }[]
+      }
       pedidos_escrow_pendentes: {
         Args: { p_limite?: number }
         Returns: {
