@@ -604,7 +604,7 @@ function DashboardPage() {
           label="Canceladas"
           value={loadKpis ? null : String(kpis?.cancelados ?? 0)}
           hint={loadKpis ? undefined : brl(kpis?.valorCancelado ?? 0)}
-          tone="warning"
+          tone="danger"
           vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.cancelados ?? 0, previous: kpisPrev?.cancelados ?? 0, label: prevLabel }}
         />
         <ResultCard
