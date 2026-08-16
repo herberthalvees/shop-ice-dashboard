@@ -1407,6 +1407,72 @@ export type Database = {
           pedidos_mes: number
         }[]
       }
+      dashboard_kpis_parcial: {
+        Args: {
+          p_ate: string
+          p_de: string
+          p_marketplace?: string
+          p_minuto_max: number
+        }
+        Returns: {
+          ads_investimento: number
+          ads_pct: number
+          cobertura_custo: number
+          custo_pct: number
+          custo_total: number
+          faturamento: number
+          imposto: number
+          imposto_pct: number
+          lucro_com_ads: number
+          lucro_com_ads_pct: number
+          lucro_medio: number
+          lucro_sem_ads: number
+          lucro_sem_ads_pct: number
+          pedidos_cancelados: number
+          pedidos_devolvidos: number
+          pedidos_validos: number
+          taxas: number
+          taxas_pct: number
+          ticket_medio: number
+          unidades: number
+          valor_cancelado: number
+          valor_devolvido: number
+          valor_liquido: number
+        }[]
+      }
+      dashboard_kpis_parcial_impl: {
+        Args: {
+          p_ate: string
+          p_de: string
+          p_marketplace?: string
+          p_minuto_max: number
+        }
+        Returns: {
+          ads_investimento: number
+          ads_pct: number
+          cobertura_custo: number
+          custo_pct: number
+          custo_total: number
+          faturamento: number
+          imposto: number
+          imposto_pct: number
+          lucro_com_ads: number
+          lucro_com_ads_pct: number
+          lucro_medio: number
+          lucro_sem_ads: number
+          lucro_sem_ads_pct: number
+          pedidos_cancelados: number
+          pedidos_devolvidos: number
+          pedidos_validos: number
+          taxas: number
+          taxas_pct: number
+          ticket_medio: number
+          unidades: number
+          valor_cancelado: number
+          valor_devolvido: number
+          valor_liquido: number
+        }[]
+      }
       dashboard_kpis_periodo: {
         Args: { p_ate: string; p_de: string; p_marketplace?: string }
         Returns: {

@@ -81,6 +81,19 @@ function DashboardPage() {
   const p_ate = toISO(ate);
   const p_prev_de = toISO(prevDe);
   const p_prev_ate = toISO(prevAte);
+  // Quando o filtro é "Hoje", o comparativo do dia anterior é truncado no
+  // mesmo horário atual (ex.: 12:05 → ontem até 12:05), em bucket de 5 min.
+  const minutoMax = useMemo(() => {
+    if (preset !== "hoje") return null;
+    const agoraBRT = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const min = agoraBRT.getHours() * 60 + agoraBRT.getMinutes();
+    return Math.floor(min / 5) * 5;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preset, p_de]);
+  const horaLabel = minutoMax == null
+    ? null
+    : `${String(Math.floor(minutoMax / 60)).padStart(2, "0")}:${String(minutoMax % 60).padStart(2, "0")}`;
+  const vsLabel = horaLabel ? `${prevLabel} até ${horaLabel}` : prevLabel;
   const diasDiff = Math.round((ate.getTime() - de.getTime()) / 86_400_000);
   const granLabel = diasDiff > 90 ? "mês" : diasDiff > 31 ? "semana" : "dia";
 
@@ -165,9 +178,11 @@ function DashboardPage() {
   });
 
   const { data: kpisPrev, isLoading: loadKpisPrev } = useQuery({
-    queryKey: ["kpis-anterior", p_prev_de, p_prev_ate],
+    queryKey: ["kpis-anterior", p_prev_de, p_prev_ate, minutoMax],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de: p_prev_de, p_ate: p_prev_ate });
+      const { data, error } = minutoMax == null
+        ? await supabase.rpc("dashboard_kpis_periodo" as any, { p_de: p_prev_de, p_ate: p_prev_ate })
+        : await supabase.rpc("dashboard_kpis_parcial" as any, { p_de: p_prev_de, p_ate: p_prev_ate, p_minuto_max: minutoMax });
       if (error) throw error;
       const r = ((data as any)?.[0] ?? {}) as any;
       return {
@@ -514,7 +529,7 @@ function DashboardPage() {
             </div>
             {!loadKpis && !loadKpisPrev && (
               <div className="pt-0.5">
-                <VsPill current={kpis?.faturamento ?? 0} previous={kpisPrev?.faturamento ?? 0} label={prevLabel} isCurrency />
+                <VsPill current={kpis?.faturamento ?? 0} previous={kpisPrev?.faturamento ?? 0} label={vsLabel} isCurrency />
               </div>
             )}
             <div className="flex min-w-0 flex-wrap items-center gap-3 pt-1">
@@ -573,12 +588,12 @@ function DashboardPage() {
           label="Vendas"
           value={loadKpis ? null : String(kpis?.pedidosValidos ?? 0)}
           hint={loadKpis ? undefined : `${kpis?.unidades ?? 0} unidades`}
-          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.pedidosValidos ?? 0, previous: kpisPrev?.pedidosValidos ?? 0, label: prevLabel }}
+          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.pedidosValidos ?? 0, previous: kpisPrev?.pedidosValidos ?? 0, label: vsLabel }}
         />
         <ResultCard
           label="Ticket médio"
           value={loadKpis ? null : brl(kpis?.ticketMedio ?? 0)}
-          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.ticketMedio ?? 0, previous: kpisPrev?.ticketMedio ?? 0, label: prevLabel, isCurrency: true }}
+          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.ticketMedio ?? 0, previous: kpisPrev?.ticketMedio ?? 0, label: vsLabel, isCurrency: true }}
         />
         <ResultCard
           label="Lucro médio (sem Ads)"
@@ -591,28 +606,28 @@ function DashboardPage() {
           }
           hint={loadKpis ? undefined : "por pedido, antes de Ads"}
           tone="warning"
-          vs={loadKpis || loadKpisPrev ? undefined : { current: (kpis?.pedidosValidos ?? 0) === 0 ? 0 : (kpis?.lucroSemAds ?? 0) / (kpis?.pedidosValidos || 1), previous: (kpisPrev?.pedidosValidos ?? 0) === 0 ? 0 : (kpisPrev?.lucroSemAds ?? 0) / (kpisPrev?.pedidosValidos || 1), label: prevLabel, isCurrency: true }}
+          vs={loadKpis || loadKpisPrev ? undefined : { current: (kpis?.pedidosValidos ?? 0) === 0 ? 0 : (kpis?.lucroSemAds ?? 0) / (kpis?.pedidosValidos || 1), previous: (kpisPrev?.pedidosValidos ?? 0) === 0 ? 0 : (kpisPrev?.lucroSemAds ?? 0) / (kpisPrev?.pedidosValidos || 1), label: vsLabel, isCurrency: true }}
         />
         <ResultCard
           label="Lucro médio (com Ads)"
           value={loadKpis ? null : ((kpis?.coberturaCusto ?? 0) === 0 ? "—" : brl(kpis?.lucroMedio ?? 0))}
           hint={loadKpis ? undefined : "por pedido, já com Ads"}
           tone={((kpis?.lucroMedio ?? 0) < 0) ? "danger" : "success"}
-          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.lucroMedio ?? 0, previous: kpisPrev?.lucroMedio ?? 0, label: prevLabel, isCurrency: true }}
+          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.lucroMedio ?? 0, previous: kpisPrev?.lucroMedio ?? 0, label: vsLabel, isCurrency: true }}
         />
         <ResultCard
           label="Canceladas"
           value={loadKpis ? null : String(kpis?.cancelados ?? 0)}
           hint={loadKpis ? undefined : brl(kpis?.valorCancelado ?? 0)}
           tone="danger"
-          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.cancelados ?? 0, previous: kpisPrev?.cancelados ?? 0, label: prevLabel }}
+          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.cancelados ?? 0, previous: kpisPrev?.cancelados ?? 0, label: vsLabel }}
         />
         <ResultCard
           label="Devoluções"
           value={loadKpis ? null : String(kpis?.devolvidos ?? 0)}
           hint={loadKpis ? undefined : brl(kpis?.valorDevolvido ?? 0)}
           tone="warning"
-          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.devolvidos ?? 0, previous: kpisPrev?.devolvidos ?? 0, label: prevLabel }}
+          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.devolvidos ?? 0, previous: kpisPrev?.devolvidos ?? 0, label: vsLabel }}
         />
       </div>
 
@@ -639,10 +654,10 @@ function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <CompCard label="Custos" valor={loadKpis ? null : brl(kpis?.custoTotal ?? 0)} pct={loadKpis ? null : `${(kpis?.custoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="danger" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.custoTotal ?? 0, previous: kpisPrev?.custoTotal ?? 0, label: prevLabel, isCurrency: true }} />
-        <CompCard label="Tarifas" valor={loadKpis ? null : brl(kpis?.taxas ?? 0)} pct={loadKpis ? null : `${(kpis?.taxasPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="warning" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.taxas ?? 0, previous: kpisPrev?.taxas ?? 0, label: prevLabel, isCurrency: true }} />
-        <CompCard label="Impostos" valor={loadKpis ? null : brl(kpis?.imposto ?? 0)} pct={loadKpis ? null : ((kpis?.impostoPct ?? 0) === 0 ? "defina em Configurações" : `${(kpis?.impostoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`)} tone="muted" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.imposto ?? 0, previous: kpisPrev?.imposto ?? 0, label: prevLabel, isCurrency: true }} />
-        <CompCard label="Líquido Shopee" valor={loadKpis ? null : brl(kpis?.valorLiquido ?? 0)} pct={null} tone="primary" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.valorLiquido ?? 0, previous: kpisPrev?.valorLiquido ?? 0, label: prevLabel, isCurrency: true }} />
+        <CompCard label="Custos" valor={loadKpis ? null : brl(kpis?.custoTotal ?? 0)} pct={loadKpis ? null : `${(kpis?.custoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="danger" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.custoTotal ?? 0, previous: kpisPrev?.custoTotal ?? 0, label: vsLabel, isCurrency: true }} />
+        <CompCard label="Tarifas" valor={loadKpis ? null : brl(kpis?.taxas ?? 0)} pct={loadKpis ? null : `${(kpis?.taxasPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="warning" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.taxas ?? 0, previous: kpisPrev?.taxas ?? 0, label: vsLabel, isCurrency: true }} />
+        <CompCard label="Impostos" valor={loadKpis ? null : brl(kpis?.imposto ?? 0)} pct={loadKpis ? null : ((kpis?.impostoPct ?? 0) === 0 ? "defina em Configurações" : `${(kpis?.impostoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`)} tone="muted" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.imposto ?? 0, previous: kpisPrev?.imposto ?? 0, label: vsLabel, isCurrency: true }} />
+        <CompCard label="Líquido Shopee" valor={loadKpis ? null : brl(kpis?.valorLiquido ?? 0)} pct={null} tone="primary" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.valorLiquido ?? 0, previous: kpisPrev?.valorLiquido ?? 0, label: vsLabel, isCurrency: true }} />
       </div>
 
       {/* BLOCO 4: Ads */}
