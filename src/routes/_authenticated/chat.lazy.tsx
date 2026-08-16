@@ -131,6 +131,7 @@ function ChatPage() {
 
   const [selecionada, setSelecionada] = useState<string | null>(null);
   const [texto, setTexto] = useState("");
+  const [soPendentes, setSoPendentes] = useState(false);
   const fimRef = useRef<HTMLDivElement | null>(null);
 
   const conversas = useQuery({
@@ -139,9 +140,18 @@ function ChatPage() {
     refetchInterval: 60_000,
   });
 
-  const lista = conversas.data && "conversas" in conversas.data ? conversas.data.conversas : [];
+  const todas = conversas.data && "conversas" in conversas.data ? conversas.data.conversas : [];
+  const pendentes = todas.filter((c) => c.pendente).length;
+  const lista = useMemo(() => {
+    const base = soPendentes ? todas.filter((c) => c.pendente) : todas;
+    // Conversas sem resposta primeiro, mantendo a ordem por recência.
+    return [...base].sort((a, b) => Number(b.pendente) - Number(a.pendente));
+  }, [todas, soPendentes]);
   const erroConversas = conversas.data && !conversas.data.ok ? (conversas.data as any).error : null;
-  const atual = useMemo(() => lista.find((c) => c.conversation_id === selecionada) ?? null, [lista, selecionada]);
+  const atual = useMemo(
+    () => todas.find((c) => c.conversation_id === selecionada) ?? null,
+    [todas, selecionada],
+  );
 
   const mensagens = useQuery({
     queryKey: ["chat-mensagens", selecionada, atual?.to_id ?? null],
@@ -234,7 +244,19 @@ function ChatPage() {
             <Card className={selecionada ? "hidden lg:block" : ""}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Conversas</CardTitle>
-                <CardDescription>Mensagens recebidas na loja</CardDescription>
+                <CardDescription>
+                  {pendentes > 0
+                    ? `${pendentes} sem resposta`
+                    : "Todas as conversas respondidas"}
+                </CardDescription>
+                <Button
+                  variant={soPendentes ? "default" : "outline"}
+                  size="sm"
+                  className="mt-2 w-fit"
+                  onClick={() => setSoPendentes((v) => !v)}
+                >
+                  {soPendentes ? "Mostrar todas" : "Só sem resposta"}
+                </Button>
               </CardHeader>
               <CardContent className="p-0">
                 <ScrollArea className="h-[300px] lg:h-[520px]">
@@ -260,10 +282,32 @@ function ChatPage() {
                         }
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="truncate text-sm font-medium">{c.to_name}</span>
-                          {c.nao_lidas > 0 && <Badge className="shrink-0">{c.nao_lidas}</Badge>}
+                          <span className="flex min-w-0 items-center gap-1.5">
+                            {c.pendente && (
+                              <span
+                                aria-label="Sem resposta"
+                                className="size-2 shrink-0 rounded-full bg-primary"
+                              />
+                            )}
+                            <span
+                              className={
+                                "truncate text-sm " +
+                                (c.pendente ? "font-semibold" : "font-medium text-muted-foreground")
+                              }
+                            >
+                              {c.to_name}
+                            </span>
+                          </span>
+                          {c.pendente ? (
+                            <Badge className="shrink-0">
+                              {c.nao_lidas > 0 ? c.nao_lidas : "Responder"}
+                            </Badge>
+                          ) : null}
                         </div>
-                        <p className="truncate text-xs text-muted-foreground">{c.ultima_mensagem}</p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {c.pendente ? "" : "Você: "}
+                          {c.ultima_mensagem}
+                        </p>
                         <p className="mt-0.5 text-[10px] text-muted-foreground/70">{horaCurta(c.ultima_em)}</p>
                       </button>
                     ))}

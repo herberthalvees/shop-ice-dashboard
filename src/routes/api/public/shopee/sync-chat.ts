@@ -16,7 +16,7 @@ async function handler({ request }: { request: Request }) {
   if (unauth) return unauth;
 
   try {
-    const { listarConversas } = await import("@/lib/chat.server");
+    const { listarConversas, listarMensagens } = await import("@/lib/chat.server");
     const { notificarNovoChat } = await import("@/lib/push.server");
 
     const r = await listarConversas();
@@ -26,14 +26,24 @@ async function handler({ request }: { request: Request }) {
     let notificadas = 0;
 
     for (const c of r.conversas) {
-      if (c.nao_lidas <= 0) continue;
+      // Só notifica quando a última mensagem é do comprador (conversa sem resposta).
+      if (!c.pendente) continue;
       const em = c.ultima_em ? new Date(c.ultima_em).getTime() : 0;
       if (!em || agora - em > JANELA_MS) continue;
+
+      // Busca a última mensagem realmente enviada pelo comprador, para não notificar
+      // com um texto da própria loja.
+      let texto = c.ultima_mensagem;
+      const hist = await listarMensagens(c.conversation_id, c.to_id);
+      if (hist.ok) {
+        const doCliente = [...hist.mensagens].reverse().find((m) => !m.de_loja);
+        if (doCliente?.texto) texto = doCliente.texto;
+      }
 
       const res = await notificarNovoChat({
         referencia: `${c.conversation_id}-${em}`,
         comprador: c.to_name,
-        texto: c.ultima_mensagem,
+        texto,
       });
       if (res.ok) notificadas++;
     }
