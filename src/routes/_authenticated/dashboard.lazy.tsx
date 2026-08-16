@@ -81,6 +81,19 @@ function DashboardPage() {
   const p_ate = toISO(ate);
   const p_prev_de = toISO(prevDe);
   const p_prev_ate = toISO(prevAte);
+  // Quando o filtro é "Hoje", o comparativo do dia anterior é truncado no
+  // mesmo horário atual (ex.: 12:05 → ontem até 12:05), em bucket de 5 min.
+  const minutoMax = useMemo(() => {
+    if (preset !== "hoje") return null;
+    const agoraBRT = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const min = agoraBRT.getHours() * 60 + agoraBRT.getMinutes();
+    return Math.floor(min / 5) * 5;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preset, p_de]);
+  const horaLabel = minutoMax == null
+    ? null
+    : `${String(Math.floor(minutoMax / 60)).padStart(2, "0")}:${String(minutoMax % 60).padStart(2, "0")}`;
+  const vsLabel = horaLabel ? `${prevLabel} até ${horaLabel}` : prevLabel;
   const diasDiff = Math.round((ate.getTime() - de.getTime()) / 86_400_000);
   const granLabel = diasDiff > 90 ? "mês" : diasDiff > 31 ? "semana" : "dia";
 
@@ -165,9 +178,11 @@ function DashboardPage() {
   });
 
   const { data: kpisPrev, isLoading: loadKpisPrev } = useQuery({
-    queryKey: ["kpis-anterior", p_prev_de, p_prev_ate],
+    queryKey: ["kpis-anterior", p_prev_de, p_prev_ate, minutoMax],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de: p_prev_de, p_ate: p_prev_ate });
+      const { data, error } = minutoMax == null
+        ? await supabase.rpc("dashboard_kpis_periodo" as any, { p_de: p_prev_de, p_ate: p_prev_ate })
+        : await supabase.rpc("dashboard_kpis_parcial" as any, { p_de: p_prev_de, p_ate: p_prev_ate, p_minuto_max: minutoMax });
       if (error) throw error;
       const r = ((data as any)?.[0] ?? {}) as any;
       return {
