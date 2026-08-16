@@ -57,6 +57,8 @@ export type Conversa = {
   ultima_mensagem: string;
   nao_lidas: number;
   ultima_em: string | null;
+  /** A última mensagem da conversa foi enviada pelo comprador (ou seja, ainda não respondida). */
+  pendente: boolean;
 };
 
 function nanoParaIso(v: unknown): string | null {
@@ -71,7 +73,15 @@ export async function listarConversas() {
   const r = await comRetry((c) => getConversationList(c.access_token, c.shop_id, { pageSize: 25 }));
   if (!r.ok) return r;
   const lista = ((r.data as any)?.response?.conversations ?? []) as any[];
-  const conversas: Conversa[] = lista.map((c) => ({
+  const conversas: Conversa[] = lista.map((c) => {
+    const remetente =
+      c.latest_message_from_id ?? c.last_message_from_id ?? c.latest_message_sender_id ?? null;
+    const naoLidas = Number(c.unread_count ?? 0);
+    const pendente =
+      remetente !== null && remetente !== undefined
+        ? String(remetente) === String(c.to_id ?? "")
+        : naoLidas > 0;
+    return {
     conversation_id: String(c.conversation_id ?? ""),
     to_id: String(c.to_id ?? ""),
     to_name: c.to_name ?? "Comprador",
@@ -82,9 +92,11 @@ export async function listarConversas() {
         : c.latest_message_type
           ? `[${c.latest_message_type}]`
           : "",
-    nao_lidas: Number(c.unread_count ?? 0),
+    nao_lidas: naoLidas,
     ultima_em: nanoParaIso(c.last_message_timestamp),
-  }));
+    pendente,
+    };
+  });
   return { ok: true as const, conversas };
 }
 
