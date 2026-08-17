@@ -143,9 +143,13 @@ function DashboardPage() {
   const notConnected = !loadConn && (!conn || !conn.shop_id);
 
   const { data: kpis, isLoading: loadKpis, error: erroKpis } = useQuery({
-    queryKey: ["kpis", p_de, p_ate],
+    queryKey: ["kpis", p_de, p_ate, minutoMax],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de, p_ate });
+      // Com o filtro "Hoje" usamos a mesma função parcial do comparativo, para
+      // que os dois lados usem a mesma fonte/corte de Ads (ads_gasto_horario).
+      const { data, error } = minutoMax == null
+        ? await supabase.rpc("dashboard_kpis_periodo" as any, { p_de, p_ate })
+        : await supabase.rpc("dashboard_kpis_parcial" as any, { p_de, p_ate, p_minuto_max: minutoMax });
       if (error) throw error;
       const r = ((data as any)?.[0] ?? {}) as any;
       return {
