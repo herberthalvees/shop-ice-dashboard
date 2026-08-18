@@ -16,12 +16,14 @@ import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { usePeriodo, computeRange } from "@/lib/periodo-store";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown, Check, CalendarIcon, History } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { HistoricoCustoSheet } from "@/components/historico-custo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 export const Route = createLazyFileRoute("/_authenticated/produtos")({
   component: ProdutosPage,
@@ -462,8 +464,14 @@ type LinhaAds = {
   roas: number;
 };
 
+type AdsSortKey = "produto" | "investimento" | "receita_ads" | "cliques" | "impressoes" | "ctr" | "roas";
+
 function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: string; rangeLabel: string }) {
   const [somenteAtivos, setSomenteAtivos] = useState(false);
+  const [sortKey, setSortKey] = useState<AdsSortKey>("investimento");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["produtos-com-ads", p_de, p_ate],
     queryFn: async (): Promise<LinhaAds[]> => {
@@ -523,108 +531,322 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
   });
 
   const todas = data ?? [];
-  const linhas = somenteAtivos && ativos ? todas.filter((l) => ativos.has(l.item_id)) : todas;
+  const filtradas = somenteAtivos && ativos ? todas.filter((l) => ativos.has(l.item_id)) : todas;
+
+  const linhas = useMemo(() => {
+    const dir = sortDir === "asc" ? 1 : -1;
+    const cmpStr = (a: string | null, b: string | null) => {
+      if (a == null && b == null) return 0;
+      if (a == null) return 1;
+      if (b == null) return -1;
+      return a.localeCompare(b, "pt-BR");
+    };
+    const cmpNum = (a: number, b: number) => a - b;
+    const sorted = [...filtradas];
+    switch (sortKey) {
+      case "produto":
+        sorted.sort((a, b) => dir * cmpStr(a.produto, b.produto));
+        break;
+      case "investimento":
+        sorted.sort((a, b) => dir * cmpNum(a.investimento, b.investimento));
+        break;
+      case "receita_ads":
+        sorted.sort((a, b) => dir * cmpNum(a.receita_ads, b.receita_ads));
+        break;
+      case "cliques":
+        sorted.sort((a, b) => dir * cmpNum(a.cliques, b.cliques));
+        break;
+      case "impressoes":
+        sorted.sort((a, b) => dir * cmpNum(a.impressoes, b.impressoes));
+        break;
+      case "ctr":
+        sorted.sort((a, b) => dir * cmpNum(a.ctr, b.ctr));
+        break;
+      case "roas":
+        sorted.sort((a, b) => dir * cmpNum(a.roas, b.roas));
+        break;
+    }
+    return sorted;
+  }, [filtradas, sortKey, sortDir]);
+
+  const visiveisIds = useMemo(() => linhas.map((l) => l.item_id), [linhas]);
+  const allSelected = visiveisIds.length > 0 && visiveisIds.every((id) => selected.has(id));
+  const someSelected = visiveisIds.some((id) => selected.has(id)) && !allSelected;
+
+  const toggleAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) {
+        for (const id of visiveisIds) next.delete(id);
+      } else {
+        for (const id of visiveisIds) next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleOne = (id: number) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSort = (key: AdsSortKey) => {
+    if (key === sortKey) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  };
+
+  const SortHeadAds = ({
+    label,
+    col,
+    align = "left",
+    className,
+  }: {
+    label: string;
+    col: AdsSortKey;
+    align?: "left" | "right";
+    className?: string;
+  }) => {
+    const active = sortKey === col;
+    const Icon = !active ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
+    return (
+      <TableHead className={className}>
+        <button
+          type="button"
+          onClick={() => handleSort(col)}
+          className={cn(
+            "inline-flex items-center gap-1 select-none hover:text-foreground transition-colors",
+            align === "right" && "w-full justify-end",
+            active ? "text-foreground" : "text-muted-foreground",
+          )}
+        >
+          <span>{label}</span>
+          <Icon className={cn("h-3.5 w-3.5", !active && "opacity-40")} />
+        </button>
+      </TableHead>
+    );
+  };
+
+  const selecionadas = useMemo(() => linhas.filter((l) => selected.has(l.item_id)), [linhas, selected]);
+
+  const kpi = useMemo(() => {
+    const base = selecionadas.length > 0 ? selecionadas : linhas;
+    const investimento = base.reduce((s, l) => s + l.investimento, 0);
+    const receita = base.reduce((s, l) => s + l.receita_ads, 0);
+    const cliques = base.reduce((s, l) => s + l.cliques, 0);
+    const impressoes = base.reduce((s, l) => s + l.impressoes, 0);
+    const roas = investimento > 0 ? receita / investimento : 0;
+    const ctr = impressoes > 0 ? (cliques / impressoes) * 100 : 0;
+    const cpc = cliques > 0 ? investimento / cliques : 0;
+    return {
+      itens: base.length,
+      investimento,
+      receita,
+      cliques,
+      impressoes,
+      roas,
+      ctr,
+      cpc,
+      selecionados: selecionadas.length,
+    };
+  }, [linhas, selecionadas]);
+
+  const KpiCard = ({
+    label,
+    value,
+    sub,
+    tone = "default",
+  }: {
+    label: string;
+    value: string;
+    sub?: string;
+    tone?: "default" | "success" | "warning" | "danger";
+  }) => {
+    const toneClass = {
+      default: "",
+      success: "border-l-4 border-l-success",
+      warning: "border-l-4 border-l-warning",
+      danger: "border-l-4 border-l-destructive",
+    }[tone];
+    return (
+      <Card className={cn("overflow-hidden", toneClass)}>
+        <CardContent className="p-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
+          <p className="text-lg sm:text-xl font-bold mt-1 truncate">{value}</p>
+          {sub && <p className="text-xs text-muted-foreground mt-1">{sub}</p>}
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-base font-semibold">Desempenho de Ads por produto</h2>
-            <p className="text-sm text-muted-foreground">{rangeLabel} · ordenado por investimento</p>
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        <KpiCard
+          label="Investimento"
+          value={brl(kpi.investimento)}
+          sub={kpi.selecionados > 0 ? `${kpi.selecionados} selecionados` : `${kpi.itens} itens`}
+          tone={kpi.investimento > 0 ? "warning" : "default"}
+        />
+        <KpiCard
+          label="Receita gerada"
+          value={brl(kpi.receita)}
+          sub={kpi.selecionados > 0 ? `${kpi.selecionados} selecionados` : `${kpi.itens} itens`}
+          tone={kpi.receita > 0 ? "success" : "default"}
+        />
+        <KpiCard
+          label="ROAS"
+          value={kpi.roas.toFixed(2).replace(".", ",")}
+          sub={kpi.roas >= 4 ? "Excelente" : kpi.roas >= 2 ? "Bom" : kpi.roas > 0 ? "Atenção" : "—"}
+          tone={kpi.roas >= 4 ? "success" : kpi.roas >= 2 ? "default" : kpi.roas > 0 ? "warning" : "default"}
+        />
+        <KpiCard
+          label="CTR"
+          value={`${kpi.ctr.toFixed(2).replace(".", ",")}%`}
+          sub={kpi.ctr > 0 ? `${kpi.cliques.toLocaleString("pt-BR")} cliques` : "—"}
+          tone={kpi.ctr >= 2 ? "success" : kpi.ctr > 0 ? "warning" : "default"}
+        />
+        <KpiCard
+          label="Cliques"
+          value={kpi.cliques.toLocaleString("pt-BR")}
+          sub={kpi.cpc > 0 ? `CPC ${brl(kpi.cpc)}` : "—"}
+        />
+        <KpiCard
+          label="Impressões"
+          value={kpi.impressoes.toLocaleString("pt-BR")}
+          sub={kpi.impressoes > 0 ? `alcance dos anúncios` : "—"}
+        />
+        <KpiCard
+          label="Itens"
+          value={String(kpi.itens)}
+          sub={kpi.selecionados > 0 ? `${kpi.selecionados} selecionados` : `total no período`}
+        />
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold">Desempenho de Ads por produto</h2>
+              <p className="text-sm text-muted-foreground">{rangeLabel} · selecione os itens para filtrar os cards</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="ads-ativos" checked={somenteAtivos} onCheckedChange={setSomenteAtivos} />
+              <Label htmlFor="ads-ativos" className="text-sm">Só com Ads ativos</Label>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Switch id="ads-ativos" checked={somenteAtivos} onCheckedChange={setSomenteAtivos} />
-            <Label htmlFor="ads-ativos" className="text-sm">Só com Ads ativos</Label>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[64px]"></TableHead>
-                <TableHead className="min-w-[360px]">Produto</TableHead>
-                <TableHead className="text-right">Investimento</TableHead>
-                <TableHead className="text-right">Receita gerada</TableHead>
-                <TableHead className="text-right">Cliques</TableHead>
-                <TableHead className="text-right">Impressões</TableHead>
-                <TableHead className="text-right">CTR</TableHead>
-                <TableHead className="text-right">ROAS</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={8}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
-                ))
-              ) : error ? (
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-10 text-sm text-destructive">
-                    Não foi possível carregar os dados de Ads.
-                  </TableCell>
+                  <TableHead className="w-[52px] text-center">
+                    <Checkbox
+                      id="select-all-ads"
+                      checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                      onCheckedChange={toggleAll}
+                      aria-label="Selecionar todos os itens visíveis"
+                    />
+                  </TableHead>
+                  <TableHead className="w-[64px]"></TableHead>
+                  <SortHeadAds label="Produto" col="produto" className="min-w-[300px]" />
+                  <SortHeadAds label="Investimento" col="investimento" align="right" className="text-right" />
+                  <SortHeadAds label="Receita gerada" col="receita_ads" align="right" className="text-right" />
+                  <SortHeadAds label="Cliques" col="cliques" align="right" className="text-right" />
+                  <SortHeadAds label="Impressões" col="impressoes" align="right" className="text-right" />
+                  <SortHeadAds label="CTR" col="ctr" align="right" className="text-right" />
+                  <SortHeadAds label="ROAS" col="roas" align="right" className="text-right" />
                 </TableRow>
-              ) : linhas.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} className="text-center py-10 text-sm text-muted-foreground">
-                    {somenteAtivos
-                      ? "Nenhum produto com Ads ativos no momento."
-                      : "Sem dados de Ads por produto no período selecionado."}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                linhas.map((l) => {
-                  const rowClass =
-                    l.roas > 5
-                      ? "bg-[color:var(--success)]/10 hover:bg-[color:var(--success)]/15"
-                      : l.roas < 2
-                        ? "bg-destructive/10 hover:bg-destructive/15"
-                        : undefined;
-                  const roasClass =
-                    l.roas > 5
-                      ? "text-[color:var(--success)]"
-                      : l.roas < 2
-                        ? "text-destructive"
-                        : "";
-                  return (
-                    <TableRow key={l.item_id} className={rowClass}>
-                      <TableCell>
-                        {imagens?.get(l.item_id) ? (
-                          <img
-                            src={imagens.get(l.item_id)}
-                            alt={l.produto ?? `Item ${l.item_id}`}
-                            loading="lazy"
-                            className="h-10 w-10 rounded-md object-cover border border-border"
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <TableRow key={i}><TableCell colSpan={9}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
+                  ))
+                ) : error ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-10 text-sm text-destructive">
+                      Não foi possível carregar os dados de Ads.
+                    </TableCell>
+                  </TableRow>
+                ) : linhas.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center py-10 text-sm text-muted-foreground">
+                      {somenteAtivos
+                        ? "Nenhum produto com Ads ativos no momento."
+                        : "Sem dados de Ads por produto no período selecionado."}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  linhas.map((l) => {
+                    const rowClass =
+                      l.roas > 5
+                        ? "bg-[color:var(--success)]/10 hover:bg-[color:var(--success)]/15"
+                        : l.roas < 2
+                          ? "bg-destructive/10 hover:bg-destructive/15"
+                          : undefined;
+                    const roasClass =
+                      l.roas > 5
+                        ? "text-[color:var(--success)]"
+                        : l.roas < 2
+                          ? "text-destructive"
+                          : "";
+                    const checked = selected.has(l.item_id);
+                    return (
+                      <TableRow key={l.item_id} className={cn(rowClass, checked && "bg-primary/5")}>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={() => toggleOne(l.item_id)}
+                            aria-label={`Selecionar ${l.produto ?? `Item ${l.item_id}`}`}
                           />
-                        ) : (
-                          <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
-                            <ImageOff className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="font-medium max-w-[420px]">
-                        <span className="line-clamp-2">{l.produto ?? `Item ${l.item_id}`}</span>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">{brl(l.investimento)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{brl(l.receita_ads)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{l.cliques.toLocaleString("pt-BR")}</TableCell>
-                      <TableCell className="text-right tabular-nums">{l.impressoes.toLocaleString("pt-BR")}</TableCell>
-                      <TableCell className="text-right tabular-nums">{l.ctr.toFixed(2).replace(".", ",")}%</TableCell>
-                      <TableCell className={cn("text-right tabular-nums font-semibold", roasClass)}>
-                        {l.roas.toFixed(2).replace(".", ",")}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+                        </TableCell>
+                        <TableCell>
+                          {imagens?.get(l.item_id) ? (
+                            <img
+                              src={imagens.get(l.item_id)}
+                              alt={l.produto ?? `Item ${l.item_id}`}
+                              loading="lazy"
+                              className="h-10 w-10 rounded-md object-cover border border-border"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
+                              <ImageOff className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-medium max-w-[420px]">
+                          <span className="line-clamp-2">{l.produto ?? `Item ${l.item_id}`}</span>
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">{brl(l.investimento)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{brl(l.receita_ads)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{l.cliques.toLocaleString("pt-BR")}</TableCell>
+                        <TableCell className="text-right tabular-nums">{l.impressoes.toLocaleString("pt-BR")}</TableCell>
+                        <TableCell className="text-right tabular-nums">{l.ctr.toFixed(2).replace(".", ",")}%</TableCell>
+                        <TableCell className={cn("text-right tabular-nums font-semibold", roasClass)}>
+                          {l.roas.toFixed(2).replace(".", ",")}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
+
 
 function CustoCell({
   item_id,
