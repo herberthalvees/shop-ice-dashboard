@@ -463,6 +463,7 @@ type LinhaAds = {
 };
 
 function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: string; rangeLabel: string }) {
+  const [somenteAtivos, setSomenteAtivos] = useState(false);
   const { data, isLoading, error } = useQuery({
     queryKey: ["produtos-com-ads", p_de, p_ate],
     queryFn: async (): Promise<LinhaAds[]> => {
@@ -483,14 +484,59 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
     staleTime: 60_000,
   });
 
-  const linhas = data ?? [];
+  const { data: imagens } = useQuery({
+    queryKey: ["produtos-imagens-ads"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("produtos" as any)
+        .select("item_id, imagem_url")
+        .not("imagem_url", "is", null);
+      if (error) throw error;
+      const m = new Map<number, string>();
+      for (const r of (data as any[]) ?? []) {
+        const id = Number(r.item_id);
+        if (id && r.imagem_url && !m.has(id)) m.set(id, String(r.imagem_url));
+      }
+      return m;
+    },
+    staleTime: 5 * 60_000,
+  });
+
+  const { data: ativos } = useQuery({
+    queryKey: ["ads-itens-ativos"],
+    queryFn: async () => {
+      const desde = new Date();
+      desde.setDate(desde.getDate() - 1);
+      const { data, error } = await supabase
+        .from("ads_campanhas" as any)
+        .select("item_id")
+        .eq("status", "ongoing")
+        .gte("data", toISO(desde));
+      if (error) throw error;
+      const s = new Set<number>();
+      for (const r of (data as any[]) ?? []) {
+        if (r.item_id) s.add(Number(r.item_id));
+      }
+      return s;
+    },
+    staleTime: 60_000,
+  });
+
+  const todas = data ?? [];
+  const linhas = somenteAtivos && ativos ? todas.filter((l) => ativos.has(l.item_id)) : todas;
 
   return (
     <Card>
       <CardHeader>
-        <div>
-          <h2 className="text-base font-semibold">Desempenho de Ads por produto</h2>
-          <p className="text-sm text-muted-foreground">{rangeLabel} · ordenado por investimento</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold">Desempenho de Ads por produto</h2>
+            <p className="text-sm text-muted-foreground">{rangeLabel} · ordenado por investimento</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch id="ads-ativos" checked={somenteAtivos} onCheckedChange={setSomenteAtivos} />
+            <Label htmlFor="ads-ativos" className="text-sm">Só com Ads ativos</Label>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -498,6 +544,7 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[64px]"></TableHead>
                 <TableHead className="min-w-[360px]">Produto</TableHead>
                 <TableHead className="text-right">Investimento</TableHead>
                 <TableHead className="text-right">Receita gerada</TableHead>
@@ -510,18 +557,20 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
             <TableBody>
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={7}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
+                  <TableRow key={i}><TableCell colSpan={8}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
                 ))
               ) : error ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10 text-sm text-destructive">
+                  <TableCell colSpan={8} className="text-center py-10 text-sm text-destructive">
                     Não foi possível carregar os dados de Ads.
                   </TableCell>
                 </TableRow>
               ) : linhas.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-10 text-sm text-muted-foreground">
-                    Sem dados de Ads por produto no período selecionado.
+                  <TableCell colSpan={8} className="text-center py-10 text-sm text-muted-foreground">
+                    {somenteAtivos
+                      ? "Nenhum produto com Ads ativos no momento."
+                      : "Sem dados de Ads por produto no período selecionado."}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -540,6 +589,20 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
                         : "";
                   return (
                     <TableRow key={l.item_id} className={rowClass}>
+                      <TableCell>
+                        {imagens?.get(l.item_id) ? (
+                          <img
+                            src={imagens.get(l.item_id)}
+                            alt={l.produto ?? `Item ${l.item_id}`}
+                            loading="lazy"
+                            className="h-10 w-10 rounded-md object-cover border border-border"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
+                            <ImageOff className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="font-medium max-w-[420px]">
                         <span className="line-clamp-2">{l.produto ?? `Item ${l.item_id}`}</span>
                       </TableCell>
