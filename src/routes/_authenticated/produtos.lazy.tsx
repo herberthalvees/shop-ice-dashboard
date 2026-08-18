@@ -16,12 +16,14 @@ import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { usePeriodo, computeRange } from "@/lib/periodo-store";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown, Check, CalendarIcon, History } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { HistoricoCustoSheet } from "@/components/historico-custo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 
 export const Route = createLazyFileRoute("/_authenticated/produtos")({
   component: ProdutosPage,
