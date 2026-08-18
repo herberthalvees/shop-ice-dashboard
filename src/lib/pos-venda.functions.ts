@@ -129,3 +129,69 @@ export const sugerirVariacoesPosVenda = createServerFn({ method: "POST" })
     const { sugerirVariacoes } = await import("./pos-venda.server");
     return await sugerirVariacoes(data.briefing, 3);
   });
+
+export type ContatoDetalhe = {
+  to_id: string;
+  conversation_id: string | null;
+  comprador: string | null;
+  ultima_em: string | null;
+  pedidos: number;
+  total_gasto: number;
+  ultimo_pedido_em: string | null;
+  ultimo_ticket: number | null;
+  ultimo_produto: string | null;
+  nota_media: number | null;
+  avaliacoes: number;
+  ultimo_contato_em: string | null;
+  optout: boolean;
+  bloqueado: boolean;
+};
+
+export type ListaContatos = { total: number; itens: ContatoDetalhe[] };
+
+export const listarContatosPosVenda = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { busca?: string; janelaDias?: number; limite?: number; offset?: number }) => ({
+    busca: String(data?.busca ?? "").trim().slice(0, 60),
+    janelaDias: Math.min(Math.max(Number(data?.janelaDias ?? 30) || 30, 0), 365),
+    limite: Math.min(Math.max(Number(data?.limite ?? 50) || 50, 1), 200),
+    offset: Math.max(Number(data?.offset ?? 0) || 0, 0),
+  }))
+  .handler(async ({ data, context }) => {
+    const { data: res, error } = await context.supabase.rpc("pv_contatos_lista", {
+      _busca: data.busca || null,
+      _janela_dias: data.janelaDias,
+      _limite: data.limite,
+      _offset: data.offset,
+    });
+    if (error) throw new Error(error.message);
+    return res as unknown as ListaContatos;
+  });
+
+export const statusEnvioIndividual = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    const { statusManual } = await import("./pos-venda.server");
+    return await statusManual();
+  });
+
+export const enviarIndividualPosVenda = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: { toId: string; texto: string; conversationId?: string | null; comprador?: string | null }) => {
+      const toId = String(data?.toId ?? "").trim();
+      const texto = String(data?.texto ?? "").trim();
+      if (!toId) throw new Error("contato inválido");
+      if (!texto) throw new Error("texto vazio");
+      return {
+        toId,
+        texto,
+        conversationId: data?.conversationId ? String(data.conversationId) : null,
+        comprador: data?.comprador ? String(data.comprador) : null,
+      };
+    },
+  )
+  .handler(async ({ data }) => {
+    const { enviarManual } = await import("./pos-venda.server");
+    return await enviarManual(data);
+  });
