@@ -15,6 +15,30 @@ export type FiltrosPublico = {
   janela_dias?: number | null;
 };
 
+export type AmostraPublico = {
+  comprador: string | null;
+  alcancavel: boolean;
+  pedidos: number;
+  total_gasto: number;
+  ultimo_em: string | null;
+  ultimo_produto: string | null;
+};
+
+export type PreviewPublico = {
+  total: number;
+  alcancaveis: number;
+  amostra: AmostraPublico[];
+};
+
+export type ResultadoCampanha = {
+  total: number;
+  enviados: number;
+  pendentes: number;
+  erros: number;
+  pedidos_pos: number;
+  receita_pos: number;
+};
+
 function limparFiltros(f: unknown): Record<string, unknown> {
   const src = (f ?? {}) as Record<string, unknown>;
   const out: Record<string, unknown> = {};
@@ -38,10 +62,10 @@ export const previewPublicoPosVenda = createServerFn({ method: "POST" })
   .inputValidator((data: { filtros: FiltrosPublico }) => ({ filtros: limparFiltros(data?.filtros) }))
   .handler(async ({ data, context }) => {
     const { data: res, error } = await context.supabase.rpc("pv_publico_preview", {
-      _f: data.filtros,
+      _f: data.filtros as never,
     });
     if (error) throw new Error(error.message);
-    return res as { total: number; alcancaveis: number; amostra: unknown[] };
+    return res as unknown as PreviewPublico;
   });
 
 export const materializarPublicoPosVenda = createServerFn({ method: "POST" })
@@ -63,14 +87,7 @@ export const resultadoCampanhaPosVenda = createServerFn({ method: "POST" })
       _campanha: data.campanhaId,
     });
     if (error) throw new Error(error.message);
-    return res as {
-      total: number;
-      enviados: number;
-      pendentes: number;
-      erros: number;
-      pedidos_pos: number;
-      receita_pos: number;
-    };
+    return res as unknown as ResultadoCampanha;
   });
 
 export const sincronizarContatosPosVenda = createServerFn({ method: "POST" })
