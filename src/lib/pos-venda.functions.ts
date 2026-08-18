@@ -159,7 +159,7 @@ export const listarContatosPosVenda = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data, context }) => {
     const { data: res, error } = await context.supabase.rpc("pv_contatos_lista", {
-      _busca: data.busca || null,
+      _busca: data.busca || undefined,
       _janela_dias: data.janelaDias,
       _limite: data.limite,
       _offset: data.offset,
