@@ -29,24 +29,32 @@ import {
 import { toast } from "sonner";
 import {
   Ban,
+  CheckCircle2,
+  Lock,
   Loader2,
   Pause,
   Play,
   Plus,
   RefreshCw,
   Send,
+  ShieldCheck,
+  Star,
   Sparkles,
   Trash2,
   Users,
 } from "lucide-react";
 import {
   enviarTestePosVenda,
+  enviarIndividualPosVenda,
+  listarContatosPosVenda,
   materializarPublicoPosVenda,
   previewPublicoPosVenda,
   processarFilaPosVenda,
   resultadoCampanhaPosVenda,
   sincronizarContatosPosVenda,
+  statusEnvioIndividual,
   sugerirVariacoesPosVenda,
+  type ContatoDetalhe,
   type FiltrosPublico,
   type PreviewPublico,
   type ResultadoCampanha,
@@ -296,6 +304,7 @@ function PosVendaPage() {
       <Tabs defaultValue="campanhas">
         <TabsList>
           <TabsTrigger value="campanhas">Campanhas</TabsTrigger>
+          <TabsTrigger value="contatos">Contatos</TabsTrigger>
           <TabsTrigger value="cupons">Cupons</TabsTrigger>
           <TabsTrigger value="optout">Opt-out</TabsTrigger>
         </TabsList>
@@ -331,6 +340,10 @@ function PosVendaPage() {
 
         <TabsContent value="cupons" className="pt-4">
           <Cupons cupons={cupons.data ?? []} carregando={cupons.isLoading} />
+        </TabsContent>
+
+        <TabsContent value="contatos" className="pt-4">
+          <Contatos />
         </TabsContent>
 
         <TabsContent value="optout" className="pt-4">
