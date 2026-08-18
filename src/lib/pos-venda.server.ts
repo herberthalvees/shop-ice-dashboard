@@ -211,6 +211,148 @@ export async function enviarTeste(input: { toId: string; texto: string }) {
   return await enviarMensagem({ toId: input.toId, texto: input.texto.slice(0, 800) });
 }
 
+// ============ Envio individual (sub-aba Contatos) ============
+
+export const REGRAS_MANUAL = {
+  janelaDias: 30,
+  limiteDia: 40,
+  intervaloSegundos: 20,
+  minCaracteres: 20,
+  maxCaracteres: 800,
+  semRepetirUltimos: 5,
+} as const;
+
+function inicioDoDiaBrt() {
+  const agora = new Date();
+  const brt = new Date(agora.getTime() - 3 * 3600_000);
+  const inicio = Date.UTC(brt.getUTCFullYear(), brt.getUTCMonth(), brt.getUTCDate(), 3, 0, 0, 0);
+  return new Date(inicio).toISOString();
+}
+
+function normalizar(t: string) {
+  return t.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+/** Contadores das regras de envio individual (usados na tela e na validação). */
+export async function statusManual() {
+  const inicio = inicioDoDiaBrt();
+  const { count } = await supabaseAdmin
+    .from("pv_envios_manuais")
+    .select("id", { count: "exact", head: true })
+    .eq("ok", true)
+    .gte("created_at", inicio);
+
+  const { data: ultimos } = await supabaseAdmin
+    .from("pv_envios_manuais")
+    .select("texto, created_at")
+    .eq("ok", true)
+    .order("created_at", { ascending: false })
+    .limit(REGRAS_MANUAL.semRepetirUltimos);
+
+  const enviadosHoje = count ?? 0;
+  const ultimoEnvioEm = ultimos?.[0]?.created_at ?? null;
+  const esperaSegundos = ultimoEnvioEm
+    ? Math.max(
+        0,
+        REGRAS_MANUAL.intervaloSegundos -
+          Math.floor((Date.now() - new Date(ultimoEnvioEm).getTime()) / 1000),
+      )
+    : 0;
+
+  return {
+    ok: true as const,
+    regras: REGRAS_MANUAL,
+    enviadosHoje,
+    restanteHoje: Math.max(0, REGRAS_MANUAL.limiteDia - enviadosHoje),
+    ultimoEnvioEm,
+    esperaSegundos,
+    ultimosTextos: (ultimos ?? []).map((u) => u.texto),
+  };
+}
+
+/** Envia uma mensagem individual aplicando automaticamente todas as regras de proteção. */
+export async function enviarManual(input: {
+  toId: string;
+  texto: string;
+  conversationId?: string | null;
+  comprador?: string | null;
+}) {
+  const texto = input.texto.trim().slice(0, REGRAS_MANUAL.maxCaracteres);
+  if (texto.length < REGRAS_MANUAL.minCaracteres) {
+    return { ok: false as const, error: `A mensagem precisa ter ao menos ${REGRAS_MANUAL.minCaracteres} caracteres` };
+  }
+
+  const status = await statusManual();
+  if (status.restanteHoje <= 0) {
+    return { ok: false as const, error: `Limite diário de ${REGRAS_MANUAL.limiteDia} mensagens individuais atingido` };
+  }
+  if (status.esperaSegundos > 0) {
+    return { ok: false as const, error: `Aguarde ${status.esperaSegundos}s entre envios para não parecer disparo em massa` };
+  }
+  if (status.ultimosTextos.some((t) => normalizar(t) === normalizar(texto))) {
+    return {
+      ok: false as const,
+      error: `Esse texto é igual a um dos últimos ${REGRAS_MANUAL.semRepetirUltimos} enviados — varie a mensagem`,
+    };
+  }
+
+  const comprador = (input.comprador ?? "").trim() || null;
+  if (comprador) {
+    const { data: bloqueio } = await supabaseAdmin
+      .from("pv_optout")
+      .select("comprador_username")
+      .ilike("comprador_username", comprador)
+      .maybeSingle();
+    if (bloqueio) return { ok: false as const, error: "Cliente está na lista de opt-out" };
+  }
+
+  const limite = new Date(Date.now() - REGRAS_MANUAL.janelaDias * 86400_000).toISOString();
+  const { count: manualRecente } = await supabaseAdmin
+    .from("pv_envios_manuais")
+    .select("id", { count: "exact", head: true })
+    .eq("ok", true)
+    .eq("to_id", input.toId)
+    .gte("created_at", limite);
+  if ((manualRecente ?? 0) > 0) {
+    return {
+      ok: false as const,
+      error: `Este cliente já recebeu mensagem nos últimos ${REGRAS_MANUAL.janelaDias} dias`,
+    };
+  }
+  if (comprador) {
+    const { count: campanhaRecente } = await supabaseAdmin
+      .from("pv_envios")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "enviado")
+      .ilike("comprador", comprador)
+      .gte("enviado_em", limite);
+    if ((campanhaRecente ?? 0) > 0) {
+      return {
+        ok: false as const,
+        error: `Este cliente recebeu uma campanha nos últimos ${REGRAS_MANUAL.janelaDias} dias`,
+      };
+    }
+  }
+
+  const r = await enviarMensagem({
+    toId: input.toId,
+    texto,
+    conversationId: input.conversationId ?? undefined,
+    comprador: comprador ?? undefined,
+  });
+
+  await supabaseAdmin.from("pv_envios_manuais").insert({
+    to_id: input.toId,
+    conversation_id: input.conversationId ?? null,
+    comprador,
+    texto,
+    ok: r.ok,
+    erro: r.ok ? null : r.error,
+  });
+
+  return r.ok ? { ok: true as const } : { ok: false as const, error: r.error };
+}
+
 /** Sugere variações de mensagem com IA, registrando o custo em ia_uso. */
 export async function sugerirVariacoes(briefing: string, quantidade = 3) {
   const apiKey = process.env["LOVABLE_API_KEY"];
