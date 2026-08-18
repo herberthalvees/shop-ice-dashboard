@@ -89,7 +89,9 @@ const AuthenticatedPosVendaRoute = AuthenticatedPosVendaRouteImport.update({
   id: '/pos-venda',
   path: '/pos-venda',
   getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_authenticated/pos-venda.lazy').then((d) => d.Route),
+)
 const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',

@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Calculator, Wallet, FileSpreadsheet, Bot, Percent, MessageSquare, Boxes, Star } from "lucide-react";
+import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Calculator, Wallet, FileSpreadsheet, Bot, Percent, MessageSquare, Boxes, Star, Megaphone } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -35,6 +35,7 @@ const grupos = [
       { title: "Estoque", url: "/estoque", icon: Boxes },
       { title: "Chat", url: "/chat", icon: MessageSquare },
       { title: "Avaliações", url: "/avaliacoes", icon: Star },
+      { title: "Pós-venda", url: "/pos-venda", icon: Megaphone },
       { title: "Precificação", url: "/precificacao", icon: Calculator },
       { title: "Calculadora", url: "/calculadora", icon: Percent },
     ],
