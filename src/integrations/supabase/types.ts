@@ -1243,6 +1243,39 @@ export type Database = {
           },
         ]
       }
+      pv_envios_manuais: {
+        Row: {
+          comprador: string | null
+          conversation_id: string | null
+          created_at: string
+          erro: string | null
+          id: string
+          ok: boolean
+          texto: string
+          to_id: string
+        }
+        Insert: {
+          comprador?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          erro?: string | null
+          id?: string
+          ok?: boolean
+          texto: string
+          to_id: string
+        }
+        Update: {
+          comprador?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          erro?: string | null
+          id?: string
+          ok?: boolean
+          texto?: string
+          to_id?: string
+        }
+        Relationships: []
+      }
       pv_optout: {
         Row: {
           comprador_username: string
@@ -2107,6 +2140,15 @@ export type Database = {
         }[]
       }
       pv_campanha_resultado: { Args: { _campanha: string }; Returns: Json }
+      pv_contatos_lista: {
+        Args: {
+          _busca?: string
+          _janela_dias?: number
+          _limite?: number
+          _offset?: number
+        }
+        Returns: Json
+      }
       pv_materializar_publico: { Args: { _campanha: string }; Returns: number }
       pv_publico: {
         Args: { _f: Json }
