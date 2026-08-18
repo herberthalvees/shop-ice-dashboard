@@ -1,61 +1,53 @@
-## Dream Ice — Painel privado da loja Shopee
+# Pós-venda — Fase 1
 
-Sistema pessoal single-user com Supabase (Auth + Postgres + Edge Functions + Cron) e frontend React/TS/Tailwind/shadcn em tema escuro PT-BR.
+Nova aba **Pós-venda** (`/pos-venda`) para criar campanhas de mensagem com cupom, enviadas pelo chat da Shopee para públicos filtrados de quem já comprou.
 
-### Ordem de execução
+## Como vai funcionar
 
-**1. Backend (Lovable Cloud + Supabase)**
-- Habilitar Lovable Cloud
-- Migração SQL:
-  - Tabelas: `shopee_connection`, `pedidos`, `produtos`, `eventos_log`, `config` (com linha única id=1 pré-populada)
-  - Índices: `pedidos(status)`, `pedidos(data_criacao_pedido)`, `produtos(estoque)`
-  - RLS habilitado em todas; policy única `auth.role() = 'authenticated'` para SELECT/INSERT/UPDATE/DELETE
-  - GRANTs para `authenticated` e `service_role`
-- Secrets: `SHOPEE_PARTNER_ID`, `SHOPEE_PARTNER_KEY` (solicitados via add_secret)
+**1. Contatos alcançáveis**
+A API só deixa mandar mensagem para compradores com `to_id` conhecido (conversa existente). Então um job novo varre a lista de conversas da Shopee (com paginação, não só as 25 primeiras) e guarda cada contato: `to_id`, nome/usuário, `conversation_id`, última interação. Esse cadastro é ligado aos pedidos pelo usuário do comprador, e é ele que define o alcance real de cada campanha. A tela mostra sempre "X clientes no filtro · Y alcançáveis por chat".
 
-**2. Edge Functions (Deno)**
-- `shopee-auth-url` (JWT) — gera URL OAuth com HMAC-SHA256
-- `shopee-oauth-callback` (público) — troca code→token, upsert em `shopee_connection`, redireciona `/configuracoes?conectado=1`
-- `shopee-webhook` (público) — valida assinatura HMAC do header Authorization, log em `eventos_log`, upsert em `pedidos`, dispara WhatsApp webhook se habilitado, responde 200 rápido
-- `shopee-refresh-token` (cron 3h) — renova token, marca `expirada` em falha
-- `shopee-sync` (cron 1h + manual) — puxa pedidos 24h + produtos, upsert
+**2. Construtor de público**
+Filtros combináveis, com contagem e amostra ao vivo antes de salvar:
+- Período do pedido (atalhos 7/30/90 dias + intervalo livre)
+- Nº de pedidos (mín./máx.) e total gasto (LTV mínimo)
+- Ticket do último pedido
+- Produto/SKU comprado
+- Só pedidos válidos (exclui `UNPAID`, `CANCELLED`, `TO_RETURN`)
+- Avaliação: avaliou 4–5★ / avaliou ≤3★ / nunca avaliou (via `avaliacoes.order_sn` → pedido → comprador)
+- Inatividade: sem comprar há X dias (winback)
+- Exclusões automáticas: já recebeu esta campanha, recebeu qualquer campanha nos últimos N dias, ou está na lista de opt-out
 
-Cron via `pg_cron` invocando as functions.
+**3. Cupom**
+Cadastro do código (código, desconto, validade, pedido mínimo, observação). O painel não cria o cupom na Shopee — você cria no Seller Center e registra aqui para usar na mensagem e medir a distribuição.
 
-**3. Frontend — Auth**
-- Rota `/login` (email + senha, sem cadastro público)
-- Rota `/recuperar-senha` + `/reset-password`
-- Layout `_authenticated` protegendo o resto
-- `onAuthStateChange` em `__root.tsx`, invalidação de router/queries
-- Sem landing pública — `/` redireciona para `/dashboard` (ou `/login`)
+**4. Mensagem**
+- Até 5 variações de texto por campanha, sorteadas por destinatário (evita repetição, igual às avaliações)
+- Variáveis: `{comprador}`, `{cupom}`, `{desconto}`, `{validade}`, `{produto}`
+- Prévia renderizada com um cliente real do público
+- Botão opcional "melhorar com IA", com o custo registrado em `ia_uso`
 
-**4. Frontend — Layout**
-- Sidebar fixa (shadcn) com navegação: Dashboard, Pedidos, Produtos, Notificações, Configurações + Sair
-- Tema escuro definido no design system (`src/styles.css` — oklch tokens escuros por padrão, sem toggle)
-- Skeletons, toasts (sonner), empty states padrão
+**5. Envio controlado**
+- Fila por destinatário, com estados: pendente / enviado / erro / pulado
+- Cron a cada 5 min processa um lote pequeno (ritmo configurável, ex.: 20 msgs/rodada) — evita parecer spam
+- Limite diário por campanha e regra global de "no máximo 1 mensagem promocional por cliente a cada 30 dias"
+- Agendar, pausar, retomar, cancelar
+- Reaproveita `enviarMensagem` (mesmo caminho do chat atual, já com renovação de token e log em `chat_envios`)
 
-**5. Telas**
-- **/dashboard** — 5 cards KPI, gráfico linha 30d (recharts), barras top 10 produtos, últimos 10 pedidos, seletor 7/30/90d
-- **/pedidos** — tabela com busca (order_sn/comprador), filtro status+período, paginação server-side, ordenação data/valor, drawer detalhe, export CSV do filtrado
-- **/produtos** — tabela nome/SKU/preço/estoque/status, filtro "estoque baixo", destaque vermelho abaixo do limite
-- **/notificacoes** — form URL webhook, checkboxes eventos, limite estoque, toggle geral, botão "Enviar teste", histórico últimos 50 `eventos_log`
-- **/configuracoes** — status conexão (loja, shop_id, validade), botão Conectar/Reconectar, botão Sincronizar agora, troca de senha. Nunca exibir tokens/partner_key.
+**6. Resultados**
+Por campanha: enviados, erros, respostas recebidas no chat, e pedidos feitos por quem recebeu nos 14 dias seguintes (receita atribuída). Mais uma sub-aba **Opt-out** para excluir clientes manualmente.
 
-**6. Data layer**
-- Server functions TanStack (`createServerFn` + `requireSupabaseAuth`) para queries agregadas do dashboard
-- TanStack Query para leituras de tabela via cliente supabase autenticado (RLS)
-- Chamadas às edge functions Shopee via `supabase.functions.invoke`
+## Telas
+- **Campanhas** — lista com status, público, enviados/total, receita atribuída
+- **Nova campanha** — passos: público → cupom → mensagem → ritmo/agendamento → revisar e ativar
+- **Cupons** — cadastro dos códigos
+- **Contatos & Opt-out** — cobertura de contatos alcançáveis e bloqueios
 
-### Notas técnicas
-- Stack real do template: **TanStack Start** (não Vite+React Router). Uso `createFileRoute` em `src/routes/`, `_authenticated/` para gate.
-- Redirect URI Shopee = URL pública da edge `shopee-oauth-callback` no Supabase.
-- Webhook WhatsApp: POST JSON conforme spec, com timeout curto para não bloquear resposta 200 ao Shopee.
-- CSV export gerado client-side a partir do resultado filtrado atual.
-- Config pré-populada com defaults do spec (limite 5, todos eventos exceto `pedido_enviado`, notificações ativas=false até URL configurada).
+## Detalhes técnicos
+- Tabelas novas: `pv_contatos`, `pv_cupons`, `pv_campanhas` (filtros em `jsonb`, variações de texto, ritmo, limites), `pv_envios` (fila + resultado), `pv_optout`. RLS igual ao resto do painel (owner/`service_role`) e `GRANT`s na mesma migração.
+- RPC `pv_publico_preview(filtros jsonb)` para contagem/amostra e `pv_materializar_publico(campanha_id)` para gerar a fila.
+- Server fns em `src/lib/pos-venda.functions.ts` + `pos-venda.server.ts`; sincronização de contatos e processamento da fila como rotas `api/public/*` protegidas por `CRON_SECRET`, agendadas no `pg_cron`.
+- Nada do fluxo atual de chat, avaliações ou dashboard é alterado.
 
-### O que preciso de você depois de aprovar
-1. Confirmar habilitação do Lovable Cloud (farei a chamada).
-2. Fornecer `SHOPEE_PARTNER_ID` e `SHOPEE_PARTNER_KEY` quando eu abrir o formulário seguro.
-3. Criar seu usuário no painel Supabase (Auth → Users) — não haverá tela de signup.
-
-Depois de aprovado, executo tudo em sequência: DB → Edge Functions → Auth → Layout → Telas.
+## Fora desta fase
+Criação automática de cupom na Shopee (a API de vouchers não está integrada), envio por e-mail/telefone (não existe na API) e campanhas recorrentes automáticas — ficam para a Fase 2.
