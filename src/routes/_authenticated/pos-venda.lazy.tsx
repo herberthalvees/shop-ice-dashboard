@@ -48,6 +48,8 @@ import {
   sincronizarContatosPosVenda,
   sugerirVariacoesPosVenda,
   type FiltrosPublico,
+  type PreviewPublico,
+  type ResultadoCampanha,
 } from "@/lib/pos-venda.functions";
 
 export const Route = createLazyFileRoute("/_authenticated/pos-venda")({
@@ -365,14 +367,7 @@ function CampanhaCard({
   onEditar: () => void;
   onStatus: (s: string) => void;
   onExcluir: () => void;
-  resultadoFn: (args: { data: { campanhaId: string } }) => Promise<{
-    total: number;
-    enviados: number;
-    pendentes: number;
-    erros: number;
-    pedidos_pos: number;
-    receita_pos: number;
-  }>;
+  resultadoFn: (args: { data: { campanhaId: string } }) => Promise<ResultadoCampanha>;
 }) {
   const resultado = useQuery({
     queryKey: ["pv-resultado", campanha.id, campanha.status],
@@ -465,11 +460,7 @@ function EditorCampanha({
   campanha: Campanha;
   cupons: Cupom[];
   onFechar: () => void;
-  previewFn: (args: { data: { filtros: FiltrosPublico } }) => Promise<{
-    total: number;
-    alcancaveis: number;
-    amostra: unknown[];
-  }>;
+  previewFn: (args: { data: { filtros: FiltrosPublico } }) => Promise<PreviewPublico>;
   testeFn: (args: { data: { toId: string; texto: string } }) => Promise<{ ok: boolean; error?: string }>;
   iaFn: (args: { data: { briefing: string } }) => Promise<
     { ok: true; variacoes: string[] } | { ok: false; error: string }
