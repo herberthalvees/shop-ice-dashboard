@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
 import { Route as AuthenticatedPrecificacaoRouteImport } from './routes/_authenticated/precificacao'
+import { Route as AuthenticatedPosVendaRouteImport } from './routes/_authenticated/pos-venda'
 import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
@@ -41,6 +42,7 @@ import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/sho
 import { Route as ApiPublicShopeeResumoDiarioRouteImport } from './routes/api/public/shopee/resumo-diario'
 import { Route as ApiPublicShopeeRefreshTokenRouteImport } from './routes/api/public/shopee/refresh-token'
 import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
+import { Route as ApiPublicShopeePosVendaRouteImport } from './routes/api/public/shopee/pos-venda'
 import { Route as ApiPublicShopeeCallbackAdsRouteImport } from './routes/api/public/shopee/callback-ads'
 import { Route as ApiPublicShopeeCallbackRouteImport } from './routes/api/public/shopee/callback'
 
@@ -83,6 +85,11 @@ const AuthenticatedPrecificacaoRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/precificacao.lazy').then((d) => d.Route),
   )
+const AuthenticatedPosVendaRoute = AuthenticatedPosVendaRouteImport.update({
+  id: '/pos-venda',
+  path: '/pos-venda',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
   id: '/pedidos',
   path: '/pedidos',
@@ -242,6 +249,11 @@ const ApiPublicShopeeRefreshRoute = ApiPublicShopeeRefreshRouteImport.update({
   path: '/api/public/shopee/refresh',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicShopeePosVendaRoute = ApiPublicShopeePosVendaRouteImport.update({
+  id: '/api/public/shopee/pos-venda',
+  path: '/api/public/shopee/pos-venda',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicShopeeCallbackAdsRoute =
   ApiPublicShopeeCallbackAdsRouteImport.update({
     id: '/api/public/shopee/callback-ads',
@@ -268,6 +280,7 @@ export interface FileRoutesByFullPath {
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/pos-venda': typeof AuthenticatedPosVendaRoute
   '/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/api/chat': typeof ApiChatRoute
@@ -276,6 +289,7 @@ export interface FileRoutesByFullPath {
   '/ia/': typeof AuthenticatedIaIndexRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
+  '/api/public/shopee/pos-venda': typeof ApiPublicShopeePosVendaRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
@@ -303,6 +317,7 @@ export interface FileRoutesByTo {
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
+  '/pos-venda': typeof AuthenticatedPosVendaRoute
   '/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/produtos': typeof AuthenticatedProdutosRoute
   '/api/chat': typeof ApiChatRoute
@@ -311,6 +326,7 @@ export interface FileRoutesByTo {
   '/ia': typeof AuthenticatedIaIndexRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
+  '/api/public/shopee/pos-venda': typeof ApiPublicShopeePosVendaRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
@@ -340,6 +356,7 @@ export interface FileRoutesById {
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
+  '/_authenticated/pos-venda': typeof AuthenticatedPosVendaRoute
   '/_authenticated/precificacao': typeof AuthenticatedPrecificacaoRoute
   '/_authenticated/produtos': typeof AuthenticatedProdutosRoute
   '/api/chat': typeof ApiChatRoute
@@ -348,6 +365,7 @@ export interface FileRoutesById {
   '/_authenticated/ia/': typeof AuthenticatedIaIndexRoute
   '/api/public/shopee/callback': typeof ApiPublicShopeeCallbackRoute
   '/api/public/shopee/callback-ads': typeof ApiPublicShopeeCallbackAdsRoute
+  '/api/public/shopee/pos-venda': typeof ApiPublicShopeePosVendaRoute
   '/api/public/shopee/refresh': typeof ApiPublicShopeeRefreshRoute
   '/api/public/shopee/refresh-token': typeof ApiPublicShopeeRefreshTokenRoute
   '/api/public/shopee/resumo-diario': typeof ApiPublicShopeeResumoDiarioRoute
@@ -377,6 +395,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/notificacoes'
     | '/pedidos'
+    | '/pos-venda'
     | '/precificacao'
     | '/produtos'
     | '/api/chat'
@@ -385,6 +404,7 @@ export interface FileRouteTypes {
     | '/ia/'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
+    | '/api/public/shopee/pos-venda'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/resumo-diario'
@@ -412,6 +432,7 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/notificacoes'
     | '/pedidos'
+    | '/pos-venda'
     | '/precificacao'
     | '/produtos'
     | '/api/chat'
@@ -420,6 +441,7 @@ export interface FileRouteTypes {
     | '/ia'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
+    | '/api/public/shopee/pos-venda'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/resumo-diario'
@@ -448,6 +470,7 @@ export interface FileRouteTypes {
     | '/_authenticated/financeiro'
     | '/_authenticated/notificacoes'
     | '/_authenticated/pedidos'
+    | '/_authenticated/pos-venda'
     | '/_authenticated/precificacao'
     | '/_authenticated/produtos'
     | '/api/chat'
@@ -456,6 +479,7 @@ export interface FileRouteTypes {
     | '/_authenticated/ia/'
     | '/api/public/shopee/callback'
     | '/api/public/shopee/callback-ads'
+    | '/api/public/shopee/pos-venda'
     | '/api/public/shopee/refresh'
     | '/api/public/shopee/refresh-token'
     | '/api/public/shopee/resumo-diario'
@@ -479,6 +503,7 @@ export interface RootRouteChildren {
   ApiShopeeAuthUrlRoute: typeof ApiShopeeAuthUrlRoute
   ApiPublicShopeeCallbackRoute: typeof ApiPublicShopeeCallbackRoute
   ApiPublicShopeeCallbackAdsRoute: typeof ApiPublicShopeeCallbackAdsRoute
+  ApiPublicShopeePosVendaRoute: typeof ApiPublicShopeePosVendaRoute
   ApiPublicShopeeRefreshRoute: typeof ApiPublicShopeeRefreshRoute
   ApiPublicShopeeRefreshTokenRoute: typeof ApiPublicShopeeRefreshTokenRoute
   ApiPublicShopeeResumoDiarioRoute: typeof ApiPublicShopeeResumoDiarioRoute
@@ -542,6 +567,13 @@ declare module '@tanstack/react-router' {
       path: '/precificacao'
       fullPath: '/precificacao'
       preLoaderRoute: typeof AuthenticatedPrecificacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pos-venda': {
+      id: '/_authenticated/pos-venda'
+      path: '/pos-venda'
+      fullPath: '/pos-venda'
+      preLoaderRoute: typeof AuthenticatedPosVendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/pedidos': {
@@ -719,6 +751,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeRefreshRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/shopee/pos-venda': {
+      id: '/api/public/shopee/pos-venda'
+      path: '/api/public/shopee/pos-venda'
+      fullPath: '/api/public/shopee/pos-venda'
+      preLoaderRoute: typeof ApiPublicShopeePosVendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/shopee/callback-ads': {
       id: '/api/public/shopee/callback-ads'
       path: '/api/public/shopee/callback-ads'
@@ -747,6 +786,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
+  AuthenticatedPosVendaRoute: typeof AuthenticatedPosVendaRoute
   AuthenticatedPrecificacaoRoute: typeof AuthenticatedPrecificacaoRoute
   AuthenticatedProdutosRoute: typeof AuthenticatedProdutosRoute
   AuthenticatedIaConversaIdRoute: typeof AuthenticatedIaConversaIdRoute
@@ -764,6 +804,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
+  AuthenticatedPosVendaRoute: AuthenticatedPosVendaRoute,
   AuthenticatedPrecificacaoRoute: AuthenticatedPrecificacaoRoute,
   AuthenticatedProdutosRoute: AuthenticatedProdutosRoute,
   AuthenticatedIaConversaIdRoute: AuthenticatedIaConversaIdRoute,
@@ -782,6 +823,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiShopeeAuthUrlRoute: ApiShopeeAuthUrlRoute,
   ApiPublicShopeeCallbackRoute: ApiPublicShopeeCallbackRoute,
   ApiPublicShopeeCallbackAdsRoute: ApiPublicShopeeCallbackAdsRoute,
+  ApiPublicShopeePosVendaRoute: ApiPublicShopeePosVendaRoute,
   ApiPublicShopeeRefreshRoute: ApiPublicShopeeRefreshRoute,
   ApiPublicShopeeRefreshTokenRoute: ApiPublicShopeeRefreshTokenRoute,
   ApiPublicShopeeResumoDiarioRoute: ApiPublicShopeeResumoDiarioRoute,
