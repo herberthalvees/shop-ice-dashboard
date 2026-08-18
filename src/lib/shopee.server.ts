@@ -156,7 +156,7 @@ export function originFromRequest(): string {
 export async function getConversationList(
   accessToken: string,
   shopId: number,
-  opts: { tipo?: string; pageSize?: number } = {},
+  opts: { tipo?: string; pageSize?: number; nextTimestampNano?: string } = {},
 ) {
   const path = "/api/v2/sellerchat/get_conversation_list";
   const url = shopUrl(path, accessToken, shopId, {
@@ -165,6 +165,7 @@ export async function getConversationList(
     // as conversas mais ANTIGAS primeiro (de 2025), escondendo as de hoje.
     direction: "older",
     page_size: String(opts.pageSize ?? 25),
+    ...(opts.nextTimestampNano ? { next_timestamp_nano: opts.nextTimestampNano } : {}),
   });
   const res = await fetch(url);
   return await res.json();

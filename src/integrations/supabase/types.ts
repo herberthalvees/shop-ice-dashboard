@@ -1077,6 +1077,190 @@ export type Database = {
         }
         Relationships: []
       }
+      pv_campanhas: {
+        Row: {
+          agendada_para: string | null
+          created_at: string
+          cupom_id: string | null
+          filtros: Json
+          id: string
+          janela_dias: number
+          limite_diario: number
+          nome: string
+          ritmo: number
+          status: string
+          updated_at: string
+          variacoes: string[]
+        }
+        Insert: {
+          agendada_para?: string | null
+          created_at?: string
+          cupom_id?: string | null
+          filtros?: Json
+          id?: string
+          janela_dias?: number
+          limite_diario?: number
+          nome: string
+          ritmo?: number
+          status?: string
+          updated_at?: string
+          variacoes?: string[]
+        }
+        Update: {
+          agendada_para?: string | null
+          created_at?: string
+          cupom_id?: string | null
+          filtros?: Json
+          id?: string
+          janela_dias?: number
+          limite_diario?: number
+          nome?: string
+          ritmo?: number
+          status?: string
+          updated_at?: string
+          variacoes?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pv_campanhas_cupom_id_fkey"
+            columns: ["cupom_id"]
+            isOneToOne: false
+            referencedRelation: "pv_cupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pv_contatos: {
+        Row: {
+          atualizado_em: string
+          comprador_username: string | null
+          conversation_id: string | null
+          created_at: string
+          nome: string | null
+          to_id: string
+          ultima_em: string | null
+        }
+        Insert: {
+          atualizado_em?: string
+          comprador_username?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          nome?: string | null
+          to_id: string
+          ultima_em?: string | null
+        }
+        Update: {
+          atualizado_em?: string
+          comprador_username?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          nome?: string | null
+          to_id?: string
+          ultima_em?: string | null
+        }
+        Relationships: []
+      }
+      pv_cupons: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          created_at: string
+          desconto: string | null
+          id: string
+          observacao: string | null
+          pedido_minimo: number | null
+          validade: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          created_at?: string
+          desconto?: string | null
+          id?: string
+          observacao?: string | null
+          pedido_minimo?: number | null
+          validade?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          desconto?: string | null
+          id?: string
+          observacao?: string | null
+          pedido_minimo?: number | null
+          validade?: string | null
+        }
+        Relationships: []
+      }
+      pv_envios: {
+        Row: {
+          campanha_id: string
+          comprador: string | null
+          conversation_id: string | null
+          created_at: string
+          enviado_em: string | null
+          erro: string | null
+          id: string
+          produto: string | null
+          status: string
+          texto: string | null
+          to_id: string
+        }
+        Insert: {
+          campanha_id: string
+          comprador?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          enviado_em?: string | null
+          erro?: string | null
+          id?: string
+          produto?: string | null
+          status?: string
+          texto?: string | null
+          to_id: string
+        }
+        Update: {
+          campanha_id?: string
+          comprador?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          enviado_em?: string | null
+          erro?: string | null
+          id?: string
+          produto?: string | null
+          status?: string
+          texto?: string | null
+          to_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pv_envios_campanha_id_fkey"
+            columns: ["campanha_id"]
+            isOneToOne: false
+            referencedRelation: "pv_campanhas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pv_optout: {
+        Row: {
+          comprador_username: string
+          created_at: string
+          motivo: string | null
+        }
+        Insert: {
+          comprador_username: string
+          created_at?: string
+          motivo?: string | null
+        }
+        Update: {
+          comprador_username?: string
+          created_at?: string
+          motivo?: string | null
+        }
+        Relationships: []
+      }
       shopee_connection: {
         Row: {
           access_token: string | null
@@ -1922,6 +2106,22 @@ export type Database = {
           vendidos_periodo: number
         }[]
       }
+      pv_campanha_resultado: { Args: { _campanha: string }; Returns: Json }
+      pv_materializar_publico: { Args: { _campanha: string }; Returns: number }
+      pv_publico: {
+        Args: { _f: Json }
+        Returns: {
+          comprador: string
+          conversation_id: string
+          pedidos: number
+          to_id: string
+          total_gasto: number
+          ultimo_em: string
+          ultimo_produto: string
+          ultimo_ticket: number
+        }[]
+      }
+      pv_publico_preview: { Args: { _f: Json }; Returns: Json }
       registrar_custo: {
         Args: {
           p_custo: number
