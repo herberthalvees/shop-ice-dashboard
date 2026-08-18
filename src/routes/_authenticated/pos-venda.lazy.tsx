@@ -1019,3 +1019,357 @@ function OptOut() {
     </div>
   );
 }
+
+// ============ Contatos: envio individual com regras automáticas ============
+
+function Contatos() {
+  const qc = useQueryClient();
+  const listarFn = useServerFn(listarContatosPosVenda);
+  const statusFn = useServerFn(statusEnvioIndividual);
+  const enviarFn = useServerFn(enviarIndividualPosVenda);
+  const iaFn = useServerFn(sugerirVariacoesPosVenda);
+
+  const [busca, setBusca] = useState("");
+  const [buscaAtiva, setBuscaAtiva] = useState("");
+  const [pagina, setPagina] = useState(0);
+  const [somenteLiberados, setSomenteLiberados] = useState(false);
+  const [alvo, setAlvo] = useState<ContatoDetalhe | null>(null);
+  const porPagina = 50;
+
+  const status = useQuery({
+    queryKey: ["pv-status-manual"],
+    queryFn: () => statusFn({}),
+    refetchInterval: 20_000,
+  });
+
+  const lista = useQuery({
+    queryKey: ["pv-contatos-lista", buscaAtiva, pagina],
+    queryFn: () =>
+      listarFn({ data: { busca: buscaAtiva, limite: porPagina, offset: pagina * porPagina } }),
+  });
+
+  const regras = status.data?.regras;
+  const itens = (lista.data?.itens ?? []).filter((c) => (somenteLiberados ? !c.bloqueado : true));
+  const total = lista.data?.total ?? 0;
+
+  return (
+    <div className="space-y-4">
+      <Card className="border-primary/30">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ShieldCheck className="size-4 text-primary" />
+            Regras do envio individual (aplicadas automaticamente)
+          </CardTitle>
+          <CardDescription>
+            O sistema bloqueia o envio sozinho quando alguma regra abaixo não é atendida — você não
+            precisa controlar nada na mão.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <ul className="grid gap-2 text-sm sm:grid-cols-2">
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 size-4 text-emerald-500" />
+              <span>
+                Máximo de <b>{regras?.limiteDia ?? 40} mensagens por dia</b> (individuais).
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 size-4 text-emerald-500" />
+              <span>
+                Intervalo mínimo de <b>{regras?.intervaloSegundos ?? 20}s</b> entre um envio e o
+                próximo.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 size-4 text-emerald-500" />
+              <span>
+                <b>1 mensagem por cliente a cada {regras?.janelaDias ?? 30} dias</b>, contando
+                também as campanhas.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 size-4 text-emerald-500" />
+              <span>
+                Texto sempre diferente: não repete nenhuma das{" "}
+                <b>últimas {regras?.semRepetirUltimos ?? 5} mensagens</b> enviadas.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 size-4 text-emerald-500" />
+              <span>
+                Mensagem entre <b>{regras?.minCaracteres ?? 20}</b> e{" "}
+                <b>{regras?.maxCaracteres ?? 800}</b> caracteres.
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <CheckCircle2 className="mt-0.5 size-4 text-emerald-500" />
+              <span>Clientes em opt-out e sem conversa aberta nunca recebem.</span>
+            </li>
+          </ul>
+          <div className="flex flex-wrap items-center gap-2 border-t pt-3 text-sm">
+            <Badge variant="secondary">
+              Hoje: {status.data?.enviadosHoje ?? 0}/{regras?.limiteDia ?? 40}
+            </Badge>
+            <Badge variant="outline">Restam hoje: {status.data?.restanteHoje ?? 0}</Badge>
+            {(status.data?.esperaSegundos ?? 0) > 0 && (
+              <Badge className="bg-yellow-500/15 text-yellow-500">
+                Aguarde {status.data?.esperaSegundos}s
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Input
+          className="max-w-xs"
+          placeholder="Buscar comprador…"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              setPagina(0);
+              setBuscaAtiva(busca.trim());
+            }
+          }}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setPagina(0);
+            setBuscaAtiva(busca.trim());
+          }}
+        >
+          Buscar
+        </Button>
+        <Button
+          size="sm"
+          variant={somenteLiberados ? "default" : "outline"}
+          onClick={() => setSomenteLiberados((v) => !v)}
+        >
+          Só liberados
+        </Button>
+        <span className="text-xs text-muted-foreground">{total} contatos</span>
+      </div>
+
+      {lista.isLoading ? (
+        <div className="space-y-2">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-16 w-full" />
+          ))}
+        </div>
+      ) : itens.length === 0 ? (
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            Nenhum contato encontrado. Use “Atualizar contatos” para buscar as conversas na Shopee.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {itens.map((c) => (
+            <Card key={c.to_id}>
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <div className="min-w-0 space-y-1">
+                  <p className="flex items-center gap-2 text-sm font-medium">
+                    {c.comprador ?? c.to_id}
+                    {c.bloqueado && (
+                      <Badge className="bg-muted text-muted-foreground">
+                        <Lock className="mr-1 size-3" />
+                        {c.optout ? "opt-out" : "em janela"}
+                      </Badge>
+                    )}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {c.pedidos} pedido{c.pedidos === 1 ? "" : "s"} · {moeda(c.total_gasto)} · último{" "}
+                    {dataCurta(c.ultimo_pedido_em)}
+                    {c.ultimo_produto ? ` · ${c.ultimo_produto}` : ""}
+                  </p>
+                  <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {c.avaliacoes > 0 ? (
+                      <span className="flex items-center gap-1 text-yellow-500">
+                        <Star className="size-3" />
+                        {c.nota_media} ({c.avaliacoes})
+                      </span>
+                    ) : (
+                      <span>sem avaliação</span>
+                    )}
+                    <span>
+                      · último contato: {c.ultimo_contato_em ? dataCurta(c.ultimo_contato_em) : "nunca"}
+                    </span>
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" disabled={c.bloqueado} onClick={() => setAlvo(c)}>
+                  <Send className="size-4" />
+                  Mensagem
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {total > porPagina && (
+        <div className="flex items-center justify-between gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={pagina === 0}
+            onClick={() => setPagina((p) => Math.max(0, p - 1))}
+          >
+            Anterior
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Página {pagina + 1} de {Math.max(1, Math.ceil(total / porPagina))}
+          </span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={(pagina + 1) * porPagina >= total}
+            onClick={() => setPagina((p) => p + 1)}
+          >
+            Próxima
+          </Button>
+        </div>
+      )}
+
+      {alvo && (
+        <DialogMensagem
+          contato={alvo}
+          onFechar={() => setAlvo(null)}
+          enviar={async (texto) => {
+            const r = await enviarFn({
+              data: {
+                toId: alvo.to_id,
+                texto,
+                conversationId: alvo.conversation_id,
+                comprador: alvo.comprador,
+              },
+            });
+            if (!r.ok) {
+              toast.error(r.error);
+              return false;
+            }
+            toast.success("Mensagem enviada");
+            setAlvo(null);
+            await qc.invalidateQueries({ queryKey: ["pv-status-manual"] });
+            await qc.invalidateQueries({ queryKey: ["pv-contatos-lista"] });
+            return true;
+          }}
+          iaFn={iaFn}
+        />
+      )}
+    </div>
+  );
+}
+
+function DialogMensagem({
+  contato,
+  onFechar,
+  enviar,
+  iaFn,
+}: {
+  contato: ContatoDetalhe;
+  onFechar: () => void;
+  enviar: (texto: string) => Promise<boolean>;
+  iaFn: (arg: { data: { briefing: string } }) => Promise<
+    { ok: true; variacoes: string[] } | { ok: false; error: string }
+  >;
+}) {
+  const [texto, setTexto] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [gerando, setGerando] = useState(false);
+  const [sugestoes, setSugestoes] = useState<string[]>([]);
+
+  const primeiroNome = (contato.comprador ?? "").split(/\s+/)[0] ?? "";
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onFechar()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Mensagem para {contato.comprador ?? contato.to_id}</DialogTitle>
+          <DialogDescription>
+            {contato.pedidos} pedido{contato.pedidos === 1 ? "" : "s"} · {moeda(contato.total_gasto)} ·{" "}
+            {contato.avaliacoes > 0 ? `nota ${contato.nota_media}` : "sem avaliação"}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <Textarea
+            rows={5}
+            value={texto}
+            onChange={(e) => setTexto(e.target.value)}
+            placeholder={`Oi ${primeiroNome || "{comprador}"}! Obrigada por comprar com a gente…`}
+          />
+          <p className="text-xs text-muted-foreground">{texto.trim().length} caracteres</p>
+
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={gerando}
+              onClick={async () => {
+                setGerando(true);
+                try {
+                  const r = await iaFn({
+                    data: {
+                      briefing: `Mensagem individual de pós-venda para ${
+                        contato.comprador ?? "um cliente"
+                      }, que fez ${contato.pedidos} pedido(s), gastou ${moeda(
+                        contato.total_gasto,
+                      )} e comprou ${contato.ultimo_produto ?? "produtos da loja"}.`,
+                    },
+                  });
+                  if (!r.ok) throw new Error(r.error);
+                  setSugestoes(r.variacoes);
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : String(e));
+                } finally {
+                  setGerando(false);
+                }
+              }}
+            >
+              {gerando ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+              Sugerir com IA
+            </Button>
+          </div>
+
+          {sugestoes.length > 0 && (
+            <div className="space-y-2">
+              {sugestoes.map((s, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className="w-full rounded-md border border-border p-2 text-left text-xs hover:border-primary"
+                  onClick={() => setTexto(s)}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={onFechar}>
+            Cancelar
+          </Button>
+          <Button
+            disabled={enviando || texto.trim().length < 20}
+            onClick={async () => {
+              setEnviando(true);
+              try {
+                await enviar(texto.trim());
+              } finally {
+                setEnviando(false);
+              }
+            }}
+          >
+            {enviando ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+            Enviar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
