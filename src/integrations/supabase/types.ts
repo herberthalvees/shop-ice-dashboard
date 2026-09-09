@@ -1294,6 +1294,57 @@ export type Database = {
         }
         Relationships: []
       }
+      resumo_cron_config: {
+        Row: {
+          base_url: string
+          cron_secret: string
+          id: number
+          updated_at: string
+        }
+        Insert: {
+          base_url: string
+          cron_secret: string
+          id?: number
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string
+          cron_secret?: string
+          id?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      resumo_horarios: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          hora: number
+          id: string
+          minuto: number
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          hora: number
+          id?: string
+          minuto?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          hora?: number
+          id?: string
+          minuto?: number
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       shopee_connection: {
         Row: {
           access_token: string | null
@@ -2174,6 +2225,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      resumo_horarios_aplicar: { Args: never; Returns: number }
       status_disponiveis: {
         Args: never
         Returns: {
