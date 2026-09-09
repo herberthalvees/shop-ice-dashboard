@@ -74,6 +74,7 @@ function ProdutosPage() {
   useEffect(() => { if (search.q) setBusca(search.q); }, [search.q]);
   const [somenteRisco, setSomenteRisco] = useState(false);
   const [somenteVendidos, setSomenteVendidos] = useState(false);
+  const [somenteNaoPrecificados, setSomenteNaoPrecificados] = useState(false);
   const { preset, custom, setPreset, setCustom } = usePeriodo();
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
