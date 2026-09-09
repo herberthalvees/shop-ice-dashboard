@@ -14,6 +14,7 @@ import { Store, RefreshCw, Loader2, ExternalLink, Lock, AlertTriangle, Percent, 
 import { getShopeeAuthUrl, runShopeeSync } from "@/lib/shopee.functions";
 import { CustosIA } from "@/components/ia/custos-ia";
 import { PushNotificacoes } from "@/components/push/push-notificacoes";
+import { ResumoHorarios } from "@/components/resumo-horarios";
 
 export const Route = createLazyFileRoute("/_authenticated/configuracoes")({
   component: ConfigPage,
@@ -248,6 +249,8 @@ function ConfigPage() {
           </form>
         </CardContent>
       </Card>
+
+      <ResumoHorarios />
 
       <PushNotificacoes />
 
