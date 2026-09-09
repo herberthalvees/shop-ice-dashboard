@@ -144,6 +144,9 @@ function ProdutosPage() {
     if (somenteVendidos) {
       base = base.filter((l) => (l.vendidos_periodo ?? 0) > 0);
     }
+    if (somenteNaoPrecificados) {
+      base = base.filter((l) => l.custo_unitario == null);
+    }
     const dir = sortDir === "asc" ? 1 : -1;
     const cmpStr = (a: string | null, b: string | null) => {
       if (a == null && b == null) return 0;
@@ -196,7 +199,7 @@ function ProdutosPage() {
       sorted.sort((a, b) => dir * cmpNum(a.margem_pct, b.margem_pct));
     }
     return sorted;
-  }, [data, busca, somenteRisco, somenteVendidos, sortKey, sortDir]);
+  }, [data, busca, somenteRisco, somenteVendidos, somenteNaoPrecificados, sortKey, sortDir]);
 
   const totaisRodape = useMemo(() => {
     const total = data?.length ?? 0;
@@ -302,6 +305,10 @@ function ProdutosPage() {
             <div className="flex items-center gap-2">
               <Switch id="vendidos" checked={somenteVendidos} onCheckedChange={setSomenteVendidos} />
               <Label htmlFor="vendidos" className="cursor-pointer">Somente vendidos no período</Label>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="nao-precificados" checked={somenteNaoPrecificados} onCheckedChange={setSomenteNaoPrecificados} />
+              <Label htmlFor="nao-precificados" className="cursor-pointer">Não precificados</Label>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-2">
