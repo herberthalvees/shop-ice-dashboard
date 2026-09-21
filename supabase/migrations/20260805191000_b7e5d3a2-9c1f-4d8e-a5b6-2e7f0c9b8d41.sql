@@ -12,9 +12,10 @@ with (security_invoker = on) as
 select
   pi.id, pi.order_sn, pi.item_id, pi.model_id, pi.produto, pi.sku,
   pi.quantidade, pi.preco_unitario, pi.receita, pi.status_pedido,
-  pi.data_criacao_pedido, pi.created_at, pi.marketplace,
+  pi.data_criacao_pedido, pi.created_at,
   c.custo_unitario as custo_vigente,
-  pi.quantidade::numeric * c.custo_unitario as custo_total
+  pi.quantidade::numeric * c.custo_unitario as custo_total,
+  pi.marketplace
 from public.pedido_itens pi
 left join lateral (
   select pc.custo_unitario
