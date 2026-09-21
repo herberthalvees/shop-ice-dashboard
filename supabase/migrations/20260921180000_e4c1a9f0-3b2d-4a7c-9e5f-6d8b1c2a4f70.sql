@@ -146,13 +146,14 @@ alter table public.pedido_itens alter column loja_id set not null;
 
 -- ===== 5. Constraints únicas passam a ser por loja =====
 
+alter table public.pedido_itens drop constraint if exists pedido_itens_order_sn_fkey;
+
 alter table public.pedidos drop constraint if exists pedidos_order_sn_key;
 alter table public.pedidos add constraint pedidos_loja_order_sn_key unique (loja_id, order_sn);
 
 alter table public.produtos drop constraint if exists produtos_item_id_key;
 alter table public.produtos add constraint produtos_loja_item_id_key unique (loja_id, item_id);
 
-alter table public.pedido_itens drop constraint if exists pedido_itens_order_sn_fkey;
 alter table public.pedido_itens
   add constraint pedido_itens_loja_order_sn_fkey
   foreign key (loja_id, order_sn) references public.pedidos (loja_id, order_sn) on delete cascade;
