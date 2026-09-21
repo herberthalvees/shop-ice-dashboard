@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { checkCronSecret } from "@/lib/cron-auth.server";
+import { listarLojasAtivas } from "@/lib/lojas.server";
 
 function responder(corpo: unknown, status = 200) {
   return new Response(JSON.stringify(corpo, null, 2), {
@@ -11,44 +12,58 @@ function responder(corpo: unknown, status = 200) {
 // Só notifica mensagens recentes, para não disparar um monte de push na 1ª execução.
 const JANELA_MS = 30 * 60_000;
 
+async function sincronizarLoja(lojaId: number) {
+  const { listarConversas, listarMensagens } = await import("@/lib/chat.server");
+  const { notificarNovoChat } = await import("@/lib/push.server");
+
+  const r = await listarConversas(lojaId);
+  if (!r.ok) return { loja_id: lojaId, ok: false, erro: r.error };
+
+  const agora = Date.now();
+  let notificadas = 0;
+
+  for (const c of r.conversas) {
+    // Só notifica quando a última mensagem é do comprador (conversa sem resposta).
+    if (!c.pendente) continue;
+    const em = c.ultima_em ? new Date(c.ultima_em).getTime() : 0;
+    if (!em || agora - em > JANELA_MS) continue;
+
+    // Busca a última mensagem realmente enviada pelo comprador, para não notificar
+    // com um texto da própria loja.
+    let texto = c.ultima_mensagem;
+    const hist = await listarMensagens(c.conversation_id, c.to_id, lojaId);
+    if (hist.ok) {
+      const doCliente = [...hist.mensagens].reverse().find((m) => !m.de_loja);
+      if (doCliente?.texto) texto = doCliente.texto;
+    }
+
+    const res = await notificarNovoChat({
+      referencia: `${c.conversation_id}-${em}`,
+      comprador: c.to_name,
+      texto,
+    });
+    if (res.ok) notificadas++;
+  }
+
+  return { loja_id: lojaId, ok: true, conversas: r.conversas.length, notificadas };
+}
+
 async function handler({ request }: { request: Request }) {
   const unauth = checkCronSecret(request);
   if (unauth) return unauth;
 
   try {
-    const { listarConversas, listarMensagens } = await import("@/lib/chat.server");
-    const { notificarNovoChat } = await import("@/lib/push.server");
-
-    const r = await listarConversas();
-    if (!r.ok) return responder({ ok: false, erro: r.error }, 200);
-
-    const agora = Date.now();
-    let notificadas = 0;
-
-    for (const c of r.conversas) {
-      // Só notifica quando a última mensagem é do comprador (conversa sem resposta).
-      if (!c.pendente) continue;
-      const em = c.ultima_em ? new Date(c.ultima_em).getTime() : 0;
-      if (!em || agora - em > JANELA_MS) continue;
-
-      // Busca a última mensagem realmente enviada pelo comprador, para não notificar
-      // com um texto da própria loja.
-      let texto = c.ultima_mensagem;
-      const hist = await listarMensagens(c.conversation_id, c.to_id);
-      if (hist.ok) {
-        const doCliente = [...hist.mensagens].reverse().find((m) => !m.de_loja);
-        if (doCliente?.texto) texto = doCliente.texto;
-      }
-
-      const res = await notificarNovoChat({
-        referencia: `${c.conversation_id}-${em}`,
-        comprador: c.to_name,
-        texto,
-      });
-      if (res.ok) notificadas++;
+    const lojas = await listarLojasAtivas();
+    if (lojas.length === 0) {
+      return responder({ ok: false, erro: "nenhuma loja ativa cadastrada" }, 400);
     }
 
-    return responder({ ok: true, conversas: r.conversas.length, notificadas });
+    const resultados = [];
+    for (const loja of lojas) {
+      resultados.push(await sincronizarLoja(loja.id));
+    }
+
+    return responder({ ok: resultados.every((r) => r.ok), lojas: resultados });
   } catch (erro) {
     console.error("erro no sync-chat", String(erro));
     const detalhe = erro instanceof Error ? `${erro.name}: ${erro.message}` : String(erro);

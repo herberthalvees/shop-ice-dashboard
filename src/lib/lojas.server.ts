@@ -13,3 +13,13 @@ export async function listarLojasAtivas(): Promise<Loja[]> {
   if (error) throw new Error(`falha ao listar lojas: ${error.message}`);
   return (data ?? []) as unknown as Loja[];
 }
+
+/**
+ * Loja usada quando uma tela/ação ainda não deixa o usuário escolher qual
+ * loja (chat, avaliações, pós-venda) — a primeira loja ativa cadastrada.
+ * Isso será substituído por um seletor real na Etapa 4.
+ */
+export async function obterLojaPadraoId(): Promise<number | null> {
+  const lojas = await listarLojasAtivas();
+  return lojas[0]?.id ?? null;
+}

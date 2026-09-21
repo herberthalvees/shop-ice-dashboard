@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { comRetry, enviarMensagem } from "./chat.server";
 import { getConversationList } from "./shopee.server";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { obterLojaPadraoId } from "./lojas.server";
 
 const MODELO = "openai/gpt-5.6-sol";
 const CREDITOS_POR_1K_ENTRADA = 0.02;
@@ -25,14 +26,20 @@ function paraNano(v: unknown): string | null {
 }
 
 /** Varre a lista de conversas da Shopee (paginada) e guarda os contatos alcançáveis. */
-export async function sincronizarContatos(paginas = 20, pageSize = 50) {
+export async function sincronizarContatos(paginas = 20, pageSize = 50, lojaId?: number) {
+  const idLoja = lojaId ?? (await obterLojaPadraoId());
+  if (!idLoja)
+    return { ok: false as const, error: "nenhuma loja cadastrada", gravados: 0, lidos: 0 };
+
   let cursor: string | undefined;
   let gravados = 0;
   let lidos = 0;
 
   for (let i = 0; i < paginas; i++) {
-    const r = await comRetry((c) =>
-      getConversationList(c.access_token, c.shop_id, { pageSize, nextTimestampNano: cursor }),
+    const r = await comRetry(
+      (c) =>
+        getConversationList(c.access_token, c.shop_id, { pageSize, nextTimestampNano: cursor }),
+      idLoja,
     );
     if (!r.ok) return { ok: false as const, error: r.error, gravados, lidos };
 
@@ -43,6 +50,7 @@ export async function sincronizarContatos(paginas = 20, pageSize = 50) {
     const linhas = lista
       .filter((c) => c.to_id)
       .map((c) => ({
+        loja_id: idLoja,
         to_id: String(c.to_id),
         conversation_id: c.conversation_id ? String(c.conversation_id) : null,
         nome: c.to_name ?? null,
@@ -52,7 +60,9 @@ export async function sincronizarContatos(paginas = 20, pageSize = 50) {
       }));
 
     if (linhas.length > 0) {
-      const { error } = await supabaseAdmin.from("pv_contatos").upsert(linhas, { onConflict: "to_id" });
+      const { error } = await supabaseAdmin
+        .from("pv_contatos")
+        .upsert(linhas as never, { onConflict: "loja_id,to_id" });
       if (error) return { ok: false as const, error: error.message, gravados, lidos };
       gravados += linhas.length;
     }
@@ -114,7 +124,7 @@ async function enviadosHoje(campanhaId: string) {
 }
 
 /** Processa a fila das campanhas ativas respeitando ritmo e limite diário. */
-export async function processarFila() {
+export async function processarFila(lojaId?: number) {
   const agora = new Date().toISOString();
   const { data: campanhas, error } = await supabaseAdmin
     .from("pv_campanhas")
@@ -173,6 +183,7 @@ export async function processarFila() {
         texto,
         conversationId: e.conversation_id ?? undefined,
         comprador: e.comprador ?? undefined,
+        lojaId,
       });
       await supabaseAdmin
         .from("pv_envios")
@@ -207,8 +218,12 @@ export async function processarFila() {
 }
 
 /** Envia uma mensagem de teste para um contato específico usando o texto da campanha. */
-export async function enviarTeste(input: { toId: string; texto: string }) {
-  return await enviarMensagem({ toId: input.toId, texto: input.texto.slice(0, 800) });
+export async function enviarTeste(input: { toId: string; texto: string; lojaId?: number }) {
+  return await enviarMensagem({
+    toId: input.toId,
+    texto: input.texto.slice(0, 800),
+    lojaId: input.lojaId,
+  });
 }
 
 // ============ Envio individual (sub-aba Contatos) ============
@@ -234,20 +249,24 @@ function normalizar(t: string) {
 }
 
 /** Contadores das regras de envio individual (usados na tela e na validação). */
-export async function statusManual() {
+export async function statusManual(lojaId?: number) {
   const inicio = inicioDoDiaBrt();
-  const { count } = await supabaseAdmin
+  let contagem = supabaseAdmin
     .from("pv_envios_manuais")
     .select("id", { count: "exact", head: true })
     .eq("ok", true)
     .gte("created_at", inicio);
+  if (lojaId) contagem = (contagem as any).eq("loja_id", lojaId);
+  const { count } = await contagem;
 
-  const { data: ultimos } = await supabaseAdmin
+  let ultimosQuery = supabaseAdmin
     .from("pv_envios_manuais")
     .select("texto, created_at")
     .eq("ok", true)
     .order("created_at", { ascending: false })
     .limit(REGRAS_MANUAL.semRepetirUltimos);
+  if (lojaId) ultimosQuery = (ultimosQuery as any).eq("loja_id", lojaId);
+  const { data: ultimos } = await ultimosQuery;
 
   const enviadosHoje = count ?? 0;
   const ultimoEnvioEm = ultimos?.[0]?.created_at ?? null;
@@ -276,18 +295,31 @@ export async function enviarManual(input: {
   texto: string;
   conversationId?: string | null;
   comprador?: string | null;
+  lojaId?: number;
 }) {
   const texto = input.texto.trim().slice(0, REGRAS_MANUAL.maxCaracteres);
   if (texto.length < REGRAS_MANUAL.minCaracteres) {
-    return { ok: false as const, error: `A mensagem precisa ter ao menos ${REGRAS_MANUAL.minCaracteres} caracteres` };
+    return {
+      ok: false as const,
+      error: `A mensagem precisa ter ao menos ${REGRAS_MANUAL.minCaracteres} caracteres`,
+    };
   }
 
-  const status = await statusManual();
+  const idLoja = input.lojaId ?? (await obterLojaPadraoId());
+  if (!idLoja) return { ok: false as const, error: "nenhuma loja cadastrada" };
+
+  const status = await statusManual(idLoja);
   if (status.restanteHoje <= 0) {
-    return { ok: false as const, error: `Limite diário de ${REGRAS_MANUAL.limiteDia} mensagens individuais atingido` };
+    return {
+      ok: false as const,
+      error: `Limite diário de ${REGRAS_MANUAL.limiteDia} mensagens individuais atingido`,
+    };
   }
   if (status.esperaSegundos > 0) {
-    return { ok: false as const, error: `Aguarde ${status.esperaSegundos}s entre envios para não parecer disparo em massa` };
+    return {
+      ok: false as const,
+      error: `Aguarde ${status.esperaSegundos}s entre envios para não parecer disparo em massa`,
+    };
   }
   if (status.ultimosTextos.some((t) => normalizar(t) === normalizar(texto))) {
     return {
@@ -339,16 +371,18 @@ export async function enviarManual(input: {
     texto,
     conversationId: input.conversationId ?? undefined,
     comprador: comprador ?? undefined,
+    lojaId: idLoja,
   });
 
   await supabaseAdmin.from("pv_envios_manuais").insert({
+    loja_id: idLoja,
     to_id: input.toId,
     conversation_id: input.conversationId ?? null,
     comprador,
     texto,
     ok: r.ok,
     erro: r.ok ? null : r.error,
-  });
+  } as never);
 
   return r.ok ? { ok: true as const } : { ok: false as const, error: r.error };
 }
@@ -388,7 +422,12 @@ export async function sugerirVariacoes(briefing: string, quantidade = 3) {
 
     const variacoes = r.text
       .split("\n")
-      .map((l) => l.replace(/^\s*[-*\d.)]+\s*/, "").replace(/^["“]|["”]$/g, "").trim())
+      .map((l) =>
+        l
+          .replace(/^\s*[-*\d.)]+\s*/, "")
+          .replace(/^["“]|["”]$/g, "")
+          .trim(),
+      )
       .filter((l) => l.length > 10)
       .slice(0, quantidade);
     if (variacoes.length === 0) return { ok: false as const, error: "a IA não retornou texto" };

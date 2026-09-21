@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { comRetry } from "./chat.server";
 import { getComments, replyComment } from "./shopee.server";
 import { createLovableAiGatewayProvider } from "./ai-gateway.server";
+import { obterLojaPadraoId } from "./lojas.server";
 
 const MODELO = "openai/gpt-5.6-sol";
 const CREDITOS_POR_1K_ENTRADA = 0.02;
@@ -35,14 +36,20 @@ export type Avaliacao = {
 };
 
 /** Busca as avaliações na Shopee e grava/atualiza no banco. */
-export async function sincronizarAvaliacoes(paginas = 3) {
+export async function sincronizarAvaliacoes(paginas = 3, lojaId?: number) {
+  const idLoja = lojaId ?? (await obterLojaPadraoId());
+  if (!idLoja) return { ok: false as const, error: "nenhuma loja cadastrada" };
+
   let cursor = "";
   let encontradas = 0;
   const novas: number[] = [];
 
   for (let i = 0; i < paginas; i++) {
     const cur = cursor;
-    const r = await comRetry((c) => getComments(c.access_token, c.shop_id, { cursor: cur, pageSize: 50 }));
+    const r = await comRetry(
+      (c) => getComments(c.access_token, c.shop_id, { cursor: cur, pageSize: 50 }),
+      idLoja,
+    );
     if (!r.ok) return { ok: false as const, error: r.error };
 
     const resp = (r.data as any)?.response ?? {};
@@ -63,7 +70,10 @@ export async function sincronizarAvaliacoes(paginas = 3) {
     const { data: existentes } = await supabaseAdmin
       .from("avaliacoes")
       .select("comment_id")
-      .in("comment_id", lista.map((c) => Number(c.comment_id)));
+      .in(
+        "comment_id",
+        lista.map((c) => Number(c.comment_id)),
+      );
     const jaTem = new Set((existentes ?? []).map((e) => Number(e.comment_id)));
 
     const linhas = lista.map((c) => {
@@ -74,6 +84,7 @@ export async function sincronizarAvaliacoes(paginas = 3) {
       const commentId = Number(c.comment_id);
       if (!jaTem.has(commentId) && !respostaLoja) novas.push(commentId);
       return {
+        loja_id: idLoja,
         comment_id: commentId,
         order_sn: c.order_sn ? String(c.order_sn) : null,
         item_id: c.item_id ? Number(c.item_id) : null,
@@ -217,12 +228,14 @@ async function gerarComIa(
   try {
     const gateway = createLovableAiGatewayProvider(apiKey);
     const r = await generateText({ model: gateway(MODELO), system: sistema, prompt: usuario });
-    const texto = r.text.trim().replace(/^["“]|["”]$/g, "").slice(0, 500);
+    const texto = r.text
+      .trim()
+      .replace(/^["“]|["”]$/g, "")
+      .slice(0, 500);
 
     const entrada = r.usage?.inputTokens ?? 0;
     const saida = r.usage?.outputTokens ?? 0;
-    const raciocinio =
-      (r.usage as { reasoningTokens?: number } | undefined)?.reasoningTokens ?? 0;
+    const raciocinio = (r.usage as { reasoningTokens?: number } | undefined)?.reasoningTokens ?? 0;
     const custo =
       (entrada / 1000) * CREDITOS_POR_1K_ENTRADA + (saida / 1000) * CREDITOS_POR_1K_SAIDA;
     const { error: erroUso } = await supabaseAdmin.from("ia_uso").insert({
@@ -255,12 +268,13 @@ async function gerarComIa(
 }
 
 /** Envia a resposta para a Shopee. */
-export async function enviarRespostaAvaliacao(commentId: number, texto: string) {
+export async function enviarRespostaAvaliacao(commentId: number, texto: string, lojaId?: number) {
   const corpo = texto.trim();
   if (!corpo) return { ok: false as const, error: "texto vazio" };
 
-  const r = await comRetry((c) =>
-    replyComment(c.access_token, c.shop_id, [{ comment_id: commentId, comment: corpo }]),
+  const r = await comRetry(
+    (c) => replyComment(c.access_token, c.shop_id, [{ comment_id: commentId, comment: corpo }]),
+    lojaId,
   );
 
   if (!r.ok) {
@@ -299,8 +313,12 @@ export async function enviarRespostaAvaliacao(commentId: number, texto: string) 
 }
 
 /** Rotina do cron: sincroniza e responde automaticamente o que estiver pendente. */
-export async function processarAvaliacoesAutomaticas(limite = 10, apenasGerar = false) {
-  const sync = await sincronizarAvaliacoes(2);
+export async function processarAvaliacoesAutomaticas(
+  limite = 10,
+  apenasGerar = false,
+  lojaId?: number,
+) {
+  const sync = await sincronizarAvaliacoes(2, lojaId);
   if (!sync.ok) return { ok: false as const, error: sync.error };
 
   const { auto } = await configAvaliacoes();
@@ -314,13 +332,16 @@ export async function processarAvaliacoesAutomaticas(limite = 10, apenasGerar = 
       erros: [] as string[],
     };
 
-  const { data: pendentes } = await supabaseAdmin
+  const idLoja = lojaId ?? (await obterLojaPadraoId());
+  let query = supabaseAdmin
     .from("avaliacoes")
     .select("comment_id")
     .eq("respondida", false)
     .in("status", ["pendente", "gerada"])
     .order("criado_em", { ascending: false })
     .limit(limite);
+  if (idLoja) query = (query as any).eq("loja_id", idLoja);
+  const { data: pendentes } = await query;
 
   let respondidas = 0;
   const erros: string[] = [];
@@ -335,7 +356,7 @@ export async function processarAvaliacoesAutomaticas(limite = 10, apenasGerar = 
       respondidas++;
       continue;
     }
-    const e = await enviarRespostaAvaliacao(id, g.texto);
+    const e = await enviarRespostaAvaliacao(id, g.texto, lojaId);
     if (e.ok) respondidas++;
     else erros.push(`${id}: ${e.error}`);
   }

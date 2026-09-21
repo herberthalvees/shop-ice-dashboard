@@ -1,47 +1,26 @@
 // Server-only: acesso ao Seller Chat da Shopee com renovação automática de token.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import {
-  getChatMessages,
-  getConversationList,
-  sendChatMessage,
-} from "./shopee.server";
-import { refreshTokenIfNeeded } from "./shopee-sync.server";
+import { getChatMessages, getConversationList, sendChatMessage } from "./shopee.server";
+import { conexaoValida, type ConexaoValida } from "./loja-conexao.server";
+import { obterLojaPadraoId } from "./lojas.server";
 
-async function conexao() {
-  const { data } = await supabaseAdmin
-    .from("shopee_connection")
-    .select("*")
-    .eq("app_tipo", "principal")
-    .maybeSingle();
-  return data;
-}
-
-type Conn = { access_token: string; shop_id: number };
-
-async function conexaoValida(): Promise<{ ok: true; conn: Conn } | { ok: false; error: string }> {
-  let conn = await conexao();
-  if (!conn?.access_token || !conn.shop_id) return { ok: false, error: "sem conexão ativa com a Shopee" };
-  if (!conn.token_expires_at || new Date(conn.token_expires_at).getTime() <= Date.now() + 5 * 60_000) {
-    const r = await refreshTokenIfNeeded();
-    if (!r.ok) return { ok: false, error: r.error ?? "falha ao renovar token" };
-    conn = await conexao();
-    if (!conn?.access_token || !conn.shop_id) return { ok: false, error: "token renovado indisponível" };
-  }
-  return { ok: true, conn: { access_token: conn.access_token, shop_id: Number(conn.shop_id) } };
+async function resolverLojaId(lojaId?: number): Promise<number | null> {
+  return lojaId ?? (await obterLojaPadraoId());
 }
 
 function ehTokenInvalido(r: any) {
   return `${r?.error ?? ""}`.toLowerCase().includes("access_token");
 }
 
-export async function comRetry<T>(fn: (c: Conn) => Promise<T>) {
-  const base = await conexaoValida();
+export async function comRetry<T>(fn: (c: ConexaoValida) => Promise<T>, lojaId?: number) {
+  const id = await resolverLojaId(lojaId);
+  if (!id) return { ok: false as const, error: "nenhuma loja cadastrada" };
+
+  const base = await conexaoValida(id, "principal");
   if (!base.ok) return { ok: false as const, error: base.error };
   let res: any = await fn(base.conn);
   if (ehTokenInvalido(res)) {
-    const r = await refreshTokenIfNeeded();
-    if (!r.ok) return { ok: false as const, error: r.error ?? "falha ao renovar token" };
-    const novo = await conexaoValida();
+    const novo = await conexaoValida(id, "principal");
     if (!novo.ok) return { ok: false as const, error: novo.error };
     res = await fn(novo.conn);
   }
@@ -69,8 +48,8 @@ function nanoParaIso(v: unknown): string | null {
   return new Date(ms).toISOString();
 }
 
-export async function listarConversas() {
-  const r = await comRetry((c) => getConversationList(c.access_token, c.shop_id, { pageSize: 25 }));
+export async function listarConversas(lojaId?: number) {
+  const r = await comRetry((c) => getConversationList(c.access_token, c.shop_id, { pageSize: 25 }), lojaId);
   if (!r.ok) return r;
   const lista = ((r.data as any)?.response?.conversations ?? []) as any[];
   const conversas: Conversa[] = lista.map((c) => {
@@ -108,12 +87,12 @@ export type Mensagem = {
   em: string | null;
 };
 
-export async function listarMensagens(conversationId: string, buyerId?: string) {
+export async function listarMensagens(conversationId: string, buyerId?: string, lojaId?: number) {
   let shopId = 0;
   const r = await comRetry((c) => {
     shopId = c.shop_id;
     return getChatMessages(c.access_token, c.shop_id, conversationId, 40);
-  });
+  }, lojaId);
   if (!r.ok) return r;
   const brutas = ((r.data as any)?.response?.messages ?? []) as any[];
   const comprador = String(buyerId ?? "").trim();
@@ -145,15 +124,21 @@ export async function enviarMensagem(input: {
   texto: string;
   conversationId?: string;
   comprador?: string;
+  lojaId?: number;
 }) {
-  const r = await comRetry((c) => sendChatMessage(c.access_token, c.shop_id, input.toId, input.texto));
+  const lojaId = await resolverLojaId(input.lojaId);
+  const r = await comRetry(
+    (c) => sendChatMessage(c.access_token, c.shop_id, input.toId, input.texto),
+    input.lojaId,
+  );
   await supabaseAdmin.from("chat_envios").insert({
+    loja_id: lojaId,
     conversation_id: input.conversationId ?? null,
     to_id: input.toId,
     comprador: input.comprador ?? null,
     texto: input.texto,
     ok: r.ok,
     erro: r.ok ? null : r.error,
-  });
+  } as never);
   return r.ok ? { ok: true as const } : { ok: false as const, error: r.error };
 }
