@@ -1,5 +1,22 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, ShoppingBag, Package, Bell, Settings, LogOut, Calculator, Wallet, FileSpreadsheet, Bot, Percent, MessageSquare, Boxes, Star, Megaphone } from "lucide-react";
+import {
+  LayoutDashboard,
+  ShoppingBag,
+  Package,
+  Bell,
+  Settings,
+  LogOut,
+  Calculator,
+  Wallet,
+  FileSpreadsheet,
+  Bot,
+  Percent,
+  MessageSquare,
+  Boxes,
+  Star,
+  Megaphone,
+  Store,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -50,6 +67,7 @@ const grupos = [
   {
     label: "Sistema",
     items: [
+      { title: "Lojas", url: "/lojas", icon: Store },
       { title: "Notificações", url: "/notificacoes", icon: Bell },
       { title: "Configurações", url: "/configuracoes", icon: Settings },
     ],
@@ -97,11 +115,7 @@ export function AppSidebar() {
             />
           </span>
           {!collapsed && (
-            <img
-              src={logoAsset.url}
-              alt="Dream Ice Shop"
-              className="h-8 w-auto object-contain"
-            />
+            <img src={logoAsset.url} alt="Dream Ice Shop" className="h-8 w-auto object-contain" />
           )}
         </Link>
       </SidebarHeader>
@@ -126,7 +140,10 @@ export function AppSidebar() {
                           " data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/20 data-[active=true]:to-transparent data-[active=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
                         }
                       >
-                        <Link to={item.url} className="group-data-[collapsible=icon]:justify-center">
+                        <Link
+                          to={item.url}
+                          className="group-data-[collapsible=icon]:justify-center"
+                        >
                           <span
                             className={
                               tile3d +

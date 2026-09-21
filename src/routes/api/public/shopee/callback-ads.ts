@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 function redirecionar(origin: string, ok: boolean, erro?: string) {
-  const destino = new URL("/configuracoes", origin);
+  const destino = new URL("/lojas", origin);
   destino.searchParams.set("conectado", ok ? "1" : "0");
   if (erro) destino.searchParams.set("erro", erro);
   return Response.redirect(destino.toString(), 302);

@@ -9,46 +9,51 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiChatRouteImport } from './routes/api/chat'
-import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
-import { Route as AuthenticatedPrecificacaoRouteImport } from './routes/_authenticated/precificacao'
-import { Route as AuthenticatedPosVendaRouteImport } from './routes/_authenticated/pos-venda'
-import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
-import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
-import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
-import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticated/estoque'
-import { Route as AuthenticatedDreRouteImport } from './routes/_authenticated/dre'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
-import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
-import { Route as AuthenticatedCalculadoraRouteImport } from './routes/_authenticated/calculadora'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as AuthenticatedAvaliacoesRouteImport } from './routes/_authenticated/avaliacoes'
+import { Route as AuthenticatedCalculadoraRouteImport } from './routes/_authenticated/calculadora'
+import { Route as AuthenticatedChatRouteImport } from './routes/_authenticated/chat'
+import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDreRouteImport } from './routes/_authenticated/dre'
+import { Route as AuthenticatedEstoqueRouteImport } from './routes/_authenticated/estoque'
+import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedLojasRouteImport } from './routes/_authenticated/lojas'
+import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
+import { Route as AuthenticatedPedidosRouteImport } from './routes/_authenticated/pedidos'
+import { Route as AuthenticatedPosVendaRouteImport } from './routes/_authenticated/pos-venda'
+import { Route as AuthenticatedPrecificacaoRouteImport } from './routes/_authenticated/precificacao'
+import { Route as AuthenticatedProdutosRouteImport } from './routes/_authenticated/produtos'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedIaIndexRouteImport } from './routes/_authenticated/ia.index'
-import { Route as ApiShopeeAuthUrlRouteImport } from './routes/api/shopee/auth-url'
 import { Route as AuthenticatedIaConversaIdRouteImport } from './routes/_authenticated/ia.$conversaId'
-import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/shopee/webhook'
-import { Route as ApiPublicShopeeWatchdogRouteImport } from './routes/api/public/shopee/watchdog'
-import { Route as ApiPublicShopeeSyncProdutosRouteImport } from './routes/api/public/shopee/sync-produtos'
-import { Route as ApiPublicShopeeSyncEscrowRouteImport } from './routes/api/public/shopee/sync-escrow'
-import { Route as ApiPublicShopeeSyncChatRouteImport } from './routes/api/public/shopee/sync-chat'
-import { Route as ApiPublicShopeeSyncCarteiraRouteImport } from './routes/api/public/shopee/sync-carteira'
-import { Route as ApiPublicShopeeSyncAvaliacoesRouteImport } from './routes/api/public/shopee/sync-avaliacoes'
-import { Route as ApiPublicShopeeSyncAdsRouteImport } from './routes/api/public/shopee/sync-ads'
-import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
-import { Route as ApiPublicShopeeResumoDiarioRouteImport } from './routes/api/public/shopee/resumo-diario'
-import { Route as ApiPublicShopeeRefreshTokenRouteImport } from './routes/api/public/shopee/refresh-token'
-import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
-import { Route as ApiPublicShopeePosVendaRouteImport } from './routes/api/public/shopee/pos-venda'
-import { Route as ApiPublicShopeeCallbackAdsRouteImport } from './routes/api/public/shopee/callback-ads'
+import { Route as ApiShopeeAuthUrlRouteImport } from './routes/api/shopee/auth-url'
 import { Route as ApiPublicShopeeCallbackRouteImport } from './routes/api/public/shopee/callback'
+import { Route as ApiPublicShopeeCallbackAdsRouteImport } from './routes/api/public/shopee/callback-ads'
+import { Route as ApiPublicShopeePosVendaRouteImport } from './routes/api/public/shopee/pos-venda'
+import { Route as ApiPublicShopeeRefreshRouteImport } from './routes/api/public/shopee/refresh'
+import { Route as ApiPublicShopeeRefreshTokenRouteImport } from './routes/api/public/shopee/refresh-token'
+import { Route as ApiPublicShopeeResumoDiarioRouteImport } from './routes/api/public/shopee/resumo-diario'
+import { Route as ApiPublicShopeeSyncRouteImport } from './routes/api/public/shopee/sync'
+import { Route as ApiPublicShopeeSyncAdsRouteImport } from './routes/api/public/shopee/sync-ads'
+import { Route as ApiPublicShopeeSyncAvaliacoesRouteImport } from './routes/api/public/shopee/sync-avaliacoes'
+import { Route as ApiPublicShopeeSyncCarteiraRouteImport } from './routes/api/public/shopee/sync-carteira'
+import { Route as ApiPublicShopeeSyncChatRouteImport } from './routes/api/public/shopee/sync-chat'
+import { Route as ApiPublicShopeeSyncEscrowRouteImport } from './routes/api/public/shopee/sync-escrow'
+import { Route as ApiPublicShopeeSyncProdutosRouteImport } from './routes/api/public/shopee/sync-produtos'
+import { Route as ApiPublicShopeeWatchdogRouteImport } from './routes/api/public/shopee/watchdog'
+import { Route as ApiPublicShopeeWebhookRouteImport } from './routes/api/public/shopee/webhook'
 
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -56,99 +61,17 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiChatRoute = ApiChatRouteImport.update({
-  id: '/api/chat',
-  path: '/api/chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
-  id: '/produtos',
-  path: '/produtos',
+const AuthenticatedAvaliacoesRoute = AuthenticatedAvaliacoesRouteImport.update({
+  id: '/avaliacoes',
+  path: '/avaliacoes',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any).lazy(() =>
-  import('./routes/_authenticated/produtos.lazy').then((d) => d.Route),
-)
-const AuthenticatedPrecificacaoRoute =
-  AuthenticatedPrecificacaoRouteImport.update({
-    id: '/precificacao',
-    path: '/precificacao',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/precificacao.lazy').then((d) => d.Route),
-  )
-const AuthenticatedPosVendaRoute = AuthenticatedPosVendaRouteImport.update({
-  id: '/pos-venda',
-  path: '/pos-venda',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any).lazy(() =>
-  import('./routes/_authenticated/pos-venda.lazy').then((d) => d.Route),
-)
-const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
-  id: '/pedidos',
-  path: '/pedidos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any).lazy(() =>
-  import('./routes/_authenticated/pedidos.lazy').then((d) => d.Route),
-)
-const AuthenticatedNotificacoesRoute =
-  AuthenticatedNotificacoesRouteImport.update({
-    id: '/notificacoes',
-    path: '/notificacoes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/notificacoes.lazy').then((d) => d.Route),
-  )
-const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
-  id: '/financeiro',
-  path: '/financeiro',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any).lazy(() =>
-  import('./routes/_authenticated/financeiro.lazy').then((d) => d.Route),
-)
-const AuthenticatedEstoqueRoute = AuthenticatedEstoqueRouteImport.update({
-  id: '/estoque',
-  path: '/estoque',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any).lazy(() =>
-  import('./routes/_authenticated/estoque.lazy').then((d) => d.Route),
-)
-const AuthenticatedDreRoute = AuthenticatedDreRouteImport.update({
-  id: '/dre',
-  path: '/dre',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any).lazy(() =>
-  import('./routes/_authenticated/dre.lazy').then((d) => d.Route),
-)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any).lazy(() =>
-  import('./routes/_authenticated/dashboard.lazy').then((d) => d.Route),
-)
-const AuthenticatedConfiguracoesRoute =
-  AuthenticatedConfiguracoesRouteImport.update({
-    id: '/configuracoes',
-    path: '/configuracoes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any).lazy(() =>
-    import('./routes/_authenticated/configuracoes.lazy').then((d) => d.Route),
-  )
-const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any).lazy(() =>
-  import('./routes/_authenticated/chat.lazy').then((d) => d.Route),
+  import('./routes/_authenticated/avaliacoes.lazy').then((d) => d.Route),
 )
 const AuthenticatedCalculadoraRoute =
   AuthenticatedCalculadoraRouteImport.update({
@@ -158,13 +81,98 @@ const AuthenticatedCalculadoraRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/calculadora.lazy').then((d) => d.Route),
   )
-const AuthenticatedAvaliacoesRoute = AuthenticatedAvaliacoesRouteImport.update({
-  id: '/avaliacoes',
-  path: '/avaliacoes',
+const AuthenticatedChatRoute = AuthenticatedChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any).lazy(() =>
-  import('./routes/_authenticated/avaliacoes.lazy').then((d) => d.Route),
+  import('./routes/_authenticated/chat.lazy').then((d) => d.Route),
 )
+const AuthenticatedConfiguracoesRoute =
+  AuthenticatedConfiguracoesRouteImport.update({
+    id: '/configuracoes',
+    path: '/configuracoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/configuracoes.lazy').then((d) => d.Route),
+  )
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/dashboard.lazy').then((d) => d.Route),
+)
+const AuthenticatedDreRoute = AuthenticatedDreRouteImport.update({
+  id: '/dre',
+  path: '/dre',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/dre.lazy').then((d) => d.Route),
+)
+const AuthenticatedEstoqueRoute = AuthenticatedEstoqueRouteImport.update({
+  id: '/estoque',
+  path: '/estoque',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/estoque.lazy').then((d) => d.Route),
+)
+const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/financeiro.lazy').then((d) => d.Route),
+)
+const AuthenticatedLojasRoute = AuthenticatedLojasRouteImport.update({
+  id: '/lojas',
+  path: '/lojas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/lojas.lazy').then((d) => d.Route),
+)
+const AuthenticatedNotificacoesRoute =
+  AuthenticatedNotificacoesRouteImport.update({
+    id: '/notificacoes',
+    path: '/notificacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/notificacoes.lazy').then((d) => d.Route),
+  )
+const AuthenticatedPedidosRoute = AuthenticatedPedidosRouteImport.update({
+  id: '/pedidos',
+  path: '/pedidos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/pedidos.lazy').then((d) => d.Route),
+)
+const AuthenticatedPosVendaRoute = AuthenticatedPosVendaRouteImport.update({
+  id: '/pos-venda',
+  path: '/pos-venda',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/pos-venda.lazy').then((d) => d.Route),
+)
+const AuthenticatedPrecificacaoRoute =
+  AuthenticatedPrecificacaoRouteImport.update({
+    id: '/precificacao',
+    path: '/precificacao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any).lazy(() =>
+    import('./routes/_authenticated/precificacao.lazy').then((d) => d.Route),
+  )
+const AuthenticatedProdutosRoute = AuthenticatedProdutosRouteImport.update({
+  id: '/produtos',
+  path: '/produtos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any).lazy(() =>
+  import('./routes/_authenticated/produtos.lazy').then((d) => d.Route),
+)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedIaIndexRoute = AuthenticatedIaIndexRouteImport.update({
   id: '/ia/',
   path: '/ia/',
@@ -172,11 +180,6 @@ const AuthenticatedIaIndexRoute = AuthenticatedIaIndexRouteImport.update({
 } as any).lazy(() =>
   import('./routes/_authenticated/ia.index.lazy').then((d) => d.Route),
 )
-const ApiShopeeAuthUrlRoute = ApiShopeeAuthUrlRouteImport.update({
-  id: '/api/shopee/auth-url',
-  path: '/api/shopee/auth-url',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedIaConversaIdRoute =
   AuthenticatedIaConversaIdRouteImport.update({
     id: '/ia/$conversaId',
@@ -185,75 +188,14 @@ const AuthenticatedIaConversaIdRoute =
   } as any).lazy(() =>
     import('./routes/_authenticated/ia.$conversaId.lazy').then((d) => d.Route),
   )
-const ApiPublicShopeeWebhookRoute = ApiPublicShopeeWebhookRouteImport.update({
-  id: '/api/public/shopee/webhook',
-  path: '/api/public/shopee/webhook',
+const ApiShopeeAuthUrlRoute = ApiShopeeAuthUrlRouteImport.update({
+  id: '/api/shopee/auth-url',
+  path: '/api/shopee/auth-url',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicShopeeWatchdogRoute = ApiPublicShopeeWatchdogRouteImport.update({
-  id: '/api/public/shopee/watchdog',
-  path: '/api/public/shopee/watchdog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicShopeeSyncProdutosRoute =
-  ApiPublicShopeeSyncProdutosRouteImport.update({
-    id: '/api/public/shopee/sync-produtos',
-    path: '/api/public/shopee/sync-produtos',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicShopeeSyncEscrowRoute =
-  ApiPublicShopeeSyncEscrowRouteImport.update({
-    id: '/api/public/shopee/sync-escrow',
-    path: '/api/public/shopee/sync-escrow',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicShopeeSyncChatRoute = ApiPublicShopeeSyncChatRouteImport.update({
-  id: '/api/public/shopee/sync-chat',
-  path: '/api/public/shopee/sync-chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicShopeeSyncCarteiraRoute =
-  ApiPublicShopeeSyncCarteiraRouteImport.update({
-    id: '/api/public/shopee/sync-carteira',
-    path: '/api/public/shopee/sync-carteira',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicShopeeSyncAvaliacoesRoute =
-  ApiPublicShopeeSyncAvaliacoesRouteImport.update({
-    id: '/api/public/shopee/sync-avaliacoes',
-    path: '/api/public/shopee/sync-avaliacoes',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicShopeeSyncAdsRoute = ApiPublicShopeeSyncAdsRouteImport.update({
-  id: '/api/public/shopee/sync-ads',
-  path: '/api/public/shopee/sync-ads',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicShopeeSyncRoute = ApiPublicShopeeSyncRouteImport.update({
-  id: '/api/public/shopee/sync',
-  path: '/api/public/shopee/sync',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicShopeeResumoDiarioRoute =
-  ApiPublicShopeeResumoDiarioRouteImport.update({
-    id: '/api/public/shopee/resumo-diario',
-    path: '/api/public/shopee/resumo-diario',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicShopeeRefreshTokenRoute =
-  ApiPublicShopeeRefreshTokenRouteImport.update({
-    id: '/api/public/shopee/refresh-token',
-    path: '/api/public/shopee/refresh-token',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicShopeeRefreshRoute = ApiPublicShopeeRefreshRouteImport.update({
-  id: '/api/public/shopee/refresh',
-  path: '/api/public/shopee/refresh',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicShopeePosVendaRoute = ApiPublicShopeePosVendaRouteImport.update({
-  id: '/api/public/shopee/pos-venda',
-  path: '/api/public/shopee/pos-venda',
+const ApiPublicShopeeCallbackRoute = ApiPublicShopeeCallbackRouteImport.update({
+  id: '/api/public/shopee/callback',
+  path: '/api/public/shopee/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicShopeeCallbackAdsRoute =
@@ -262,9 +204,75 @@ const ApiPublicShopeeCallbackAdsRoute =
     path: '/api/public/shopee/callback-ads',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicShopeeCallbackRoute = ApiPublicShopeeCallbackRouteImport.update({
-  id: '/api/public/shopee/callback',
-  path: '/api/public/shopee/callback',
+const ApiPublicShopeePosVendaRoute = ApiPublicShopeePosVendaRouteImport.update({
+  id: '/api/public/shopee/pos-venda',
+  path: '/api/public/shopee/pos-venda',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicShopeeRefreshRoute = ApiPublicShopeeRefreshRouteImport.update({
+  id: '/api/public/shopee/refresh',
+  path: '/api/public/shopee/refresh',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicShopeeRefreshTokenRoute =
+  ApiPublicShopeeRefreshTokenRouteImport.update({
+    id: '/api/public/shopee/refresh-token',
+    path: '/api/public/shopee/refresh-token',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicShopeeResumoDiarioRoute =
+  ApiPublicShopeeResumoDiarioRouteImport.update({
+    id: '/api/public/shopee/resumo-diario',
+    path: '/api/public/shopee/resumo-diario',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicShopeeSyncRoute = ApiPublicShopeeSyncRouteImport.update({
+  id: '/api/public/shopee/sync',
+  path: '/api/public/shopee/sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicShopeeSyncAdsRoute = ApiPublicShopeeSyncAdsRouteImport.update({
+  id: '/api/public/shopee/sync-ads',
+  path: '/api/public/shopee/sync-ads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicShopeeSyncAvaliacoesRoute =
+  ApiPublicShopeeSyncAvaliacoesRouteImport.update({
+    id: '/api/public/shopee/sync-avaliacoes',
+    path: '/api/public/shopee/sync-avaliacoes',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicShopeeSyncCarteiraRoute =
+  ApiPublicShopeeSyncCarteiraRouteImport.update({
+    id: '/api/public/shopee/sync-carteira',
+    path: '/api/public/shopee/sync-carteira',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicShopeeSyncChatRoute = ApiPublicShopeeSyncChatRouteImport.update({
+  id: '/api/public/shopee/sync-chat',
+  path: '/api/public/shopee/sync-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicShopeeSyncEscrowRoute =
+  ApiPublicShopeeSyncEscrowRouteImport.update({
+    id: '/api/public/shopee/sync-escrow',
+    path: '/api/public/shopee/sync-escrow',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicShopeeSyncProdutosRoute =
+  ApiPublicShopeeSyncProdutosRouteImport.update({
+    id: '/api/public/shopee/sync-produtos',
+    path: '/api/public/shopee/sync-produtos',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicShopeeWatchdogRoute = ApiPublicShopeeWatchdogRouteImport.update({
+  id: '/api/public/shopee/watchdog',
+  path: '/api/public/shopee/watchdog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicShopeeWebhookRoute = ApiPublicShopeeWebhookRouteImport.update({
+  id: '/api/public/shopee/webhook',
+  path: '/api/public/shopee/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -280,6 +288,7 @@ export interface FileRoutesByFullPath {
   '/dre': typeof AuthenticatedDreRoute
   '/estoque': typeof AuthenticatedEstoqueRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/lojas': typeof AuthenticatedLojasRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/pos-venda': typeof AuthenticatedPosVendaRoute
@@ -317,6 +326,7 @@ export interface FileRoutesByTo {
   '/dre': typeof AuthenticatedDreRoute
   '/estoque': typeof AuthenticatedEstoqueRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/lojas': typeof AuthenticatedLojasRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/pedidos': typeof AuthenticatedPedidosRoute
   '/pos-venda': typeof AuthenticatedPosVendaRoute
@@ -356,6 +366,7 @@ export interface FileRoutesById {
   '/_authenticated/dre': typeof AuthenticatedDreRoute
   '/_authenticated/estoque': typeof AuthenticatedEstoqueRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/_authenticated/lojas': typeof AuthenticatedLojasRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/pedidos': typeof AuthenticatedPedidosRoute
   '/_authenticated/pos-venda': typeof AuthenticatedPosVendaRoute
@@ -395,6 +406,7 @@ export interface FileRouteTypes {
     | '/dre'
     | '/estoque'
     | '/financeiro'
+    | '/lojas'
     | '/notificacoes'
     | '/pedidos'
     | '/pos-venda'
@@ -432,6 +444,7 @@ export interface FileRouteTypes {
     | '/dre'
     | '/estoque'
     | '/financeiro'
+    | '/lojas'
     | '/notificacoes'
     | '/pedidos'
     | '/pos-venda'
@@ -470,6 +483,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dre'
     | '/_authenticated/estoque'
     | '/_authenticated/financeiro'
+    | '/_authenticated/lojas'
     | '/_authenticated/notificacoes'
     | '/_authenticated/pedidos'
     | '/_authenticated/pos-venda'
@@ -522,18 +536,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -543,95 +550,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/chat': {
-      id: '/api/chat'
-      path: '/api/chat'
-      fullPath: '/api/chat'
-      preLoaderRoute: typeof ApiChatRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/produtos': {
-      id: '/_authenticated/produtos'
-      path: '/produtos'
-      fullPath: '/produtos'
-      preLoaderRoute: typeof AuthenticatedProdutosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/precificacao': {
-      id: '/_authenticated/precificacao'
-      path: '/precificacao'
-      fullPath: '/precificacao'
-      preLoaderRoute: typeof AuthenticatedPrecificacaoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/pos-venda': {
-      id: '/_authenticated/pos-venda'
-      path: '/pos-venda'
-      fullPath: '/pos-venda'
-      preLoaderRoute: typeof AuthenticatedPosVendaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/pedidos': {
-      id: '/_authenticated/pedidos'
-      path: '/pedidos'
-      fullPath: '/pedidos'
-      preLoaderRoute: typeof AuthenticatedPedidosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/notificacoes': {
-      id: '/_authenticated/notificacoes'
-      path: '/notificacoes'
-      fullPath: '/notificacoes'
-      preLoaderRoute: typeof AuthenticatedNotificacoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/financeiro': {
-      id: '/_authenticated/financeiro'
-      path: '/financeiro'
-      fullPath: '/financeiro'
-      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/estoque': {
-      id: '/_authenticated/estoque'
-      path: '/estoque'
-      fullPath: '/estoque'
-      preLoaderRoute: typeof AuthenticatedEstoqueRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dre': {
-      id: '/_authenticated/dre'
-      path: '/dre'
-      fullPath: '/dre'
-      preLoaderRoute: typeof AuthenticatedDreRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/configuracoes': {
-      id: '/_authenticated/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/configuracoes'
-      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/chat': {
-      id: '/_authenticated/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof AuthenticatedChatRouteImport
+    '/_authenticated/avaliacoes': {
+      id: '/_authenticated/avaliacoes'
+      path: '/avaliacoes'
+      fullPath: '/avaliacoes'
+      preLoaderRoute: typeof AuthenticatedAvaliacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/calculadora': {
@@ -641,18 +578,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCalculadoraRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/avaliacoes': {
-      id: '/_authenticated/avaliacoes'
-      path: '/avaliacoes'
-      fullPath: '/avaliacoes'
-      preLoaderRoute: typeof AuthenticatedAvaliacoesRouteImport
+    '/_authenticated/chat': {
+      id: '/_authenticated/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AuthenticatedChatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/configuracoes': {
+      id: '/_authenticated/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dre': {
+      id: '/_authenticated/dre'
+      path: '/dre'
+      fullPath: '/dre'
+      preLoaderRoute: typeof AuthenticatedDreRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/estoque': {
+      id: '/_authenticated/estoque'
+      path: '/estoque'
+      fullPath: '/estoque'
+      preLoaderRoute: typeof AuthenticatedEstoqueRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/lojas': {
+      id: '/_authenticated/lojas'
+      path: '/lojas'
+      fullPath: '/lojas'
+      preLoaderRoute: typeof AuthenticatedLojasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notificacoes': {
+      id: '/_authenticated/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof AuthenticatedNotificacoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pedidos': {
+      id: '/_authenticated/pedidos'
+      path: '/pedidos'
+      fullPath: '/pedidos'
+      preLoaderRoute: typeof AuthenticatedPedidosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/pos-venda': {
+      id: '/_authenticated/pos-venda'
+      path: '/pos-venda'
+      fullPath: '/pos-venda'
+      preLoaderRoute: typeof AuthenticatedPosVendaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/precificacao': {
+      id: '/_authenticated/precificacao'
+      path: '/precificacao'
+      fullPath: '/precificacao'
+      preLoaderRoute: typeof AuthenticatedPrecificacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/produtos': {
+      id: '/_authenticated/produtos'
+      path: '/produtos'
+      fullPath: '/produtos'
+      preLoaderRoute: typeof AuthenticatedProdutosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/ia/': {
       id: '/_authenticated/ia/'
       path: '/ia'
       fullPath: '/ia/'
       preLoaderRoute: typeof AuthenticatedIaIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ia/$conversaId': {
+      id: '/_authenticated/ia/$conversaId'
+      path: '/ia/$conversaId'
+      fullPath: '/ia/$conversaId'
+      preLoaderRoute: typeof AuthenticatedIaConversaIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/shopee/auth-url': {
@@ -662,102 +690,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiShopeeAuthUrlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/ia/$conversaId': {
-      id: '/_authenticated/ia/$conversaId'
-      path: '/ia/$conversaId'
-      fullPath: '/ia/$conversaId'
-      preLoaderRoute: typeof AuthenticatedIaConversaIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/api/public/shopee/webhook': {
-      id: '/api/public/shopee/webhook'
-      path: '/api/public/shopee/webhook'
-      fullPath: '/api/public/shopee/webhook'
-      preLoaderRoute: typeof ApiPublicShopeeWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/watchdog': {
-      id: '/api/public/shopee/watchdog'
-      path: '/api/public/shopee/watchdog'
-      fullPath: '/api/public/shopee/watchdog'
-      preLoaderRoute: typeof ApiPublicShopeeWatchdogRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/sync-produtos': {
-      id: '/api/public/shopee/sync-produtos'
-      path: '/api/public/shopee/sync-produtos'
-      fullPath: '/api/public/shopee/sync-produtos'
-      preLoaderRoute: typeof ApiPublicShopeeSyncProdutosRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/sync-escrow': {
-      id: '/api/public/shopee/sync-escrow'
-      path: '/api/public/shopee/sync-escrow'
-      fullPath: '/api/public/shopee/sync-escrow'
-      preLoaderRoute: typeof ApiPublicShopeeSyncEscrowRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/sync-chat': {
-      id: '/api/public/shopee/sync-chat'
-      path: '/api/public/shopee/sync-chat'
-      fullPath: '/api/public/shopee/sync-chat'
-      preLoaderRoute: typeof ApiPublicShopeeSyncChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/sync-carteira': {
-      id: '/api/public/shopee/sync-carteira'
-      path: '/api/public/shopee/sync-carteira'
-      fullPath: '/api/public/shopee/sync-carteira'
-      preLoaderRoute: typeof ApiPublicShopeeSyncCarteiraRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/sync-avaliacoes': {
-      id: '/api/public/shopee/sync-avaliacoes'
-      path: '/api/public/shopee/sync-avaliacoes'
-      fullPath: '/api/public/shopee/sync-avaliacoes'
-      preLoaderRoute: typeof ApiPublicShopeeSyncAvaliacoesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/sync-ads': {
-      id: '/api/public/shopee/sync-ads'
-      path: '/api/public/shopee/sync-ads'
-      fullPath: '/api/public/shopee/sync-ads'
-      preLoaderRoute: typeof ApiPublicShopeeSyncAdsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/sync': {
-      id: '/api/public/shopee/sync'
-      path: '/api/public/shopee/sync'
-      fullPath: '/api/public/shopee/sync'
-      preLoaderRoute: typeof ApiPublicShopeeSyncRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/resumo-diario': {
-      id: '/api/public/shopee/resumo-diario'
-      path: '/api/public/shopee/resumo-diario'
-      fullPath: '/api/public/shopee/resumo-diario'
-      preLoaderRoute: typeof ApiPublicShopeeResumoDiarioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/refresh-token': {
-      id: '/api/public/shopee/refresh-token'
-      path: '/api/public/shopee/refresh-token'
-      fullPath: '/api/public/shopee/refresh-token'
-      preLoaderRoute: typeof ApiPublicShopeeRefreshTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/refresh': {
-      id: '/api/public/shopee/refresh'
-      path: '/api/public/shopee/refresh'
-      fullPath: '/api/public/shopee/refresh'
-      preLoaderRoute: typeof ApiPublicShopeeRefreshRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/shopee/pos-venda': {
-      id: '/api/public/shopee/pos-venda'
-      path: '/api/public/shopee/pos-venda'
-      fullPath: '/api/public/shopee/pos-venda'
-      preLoaderRoute: typeof ApiPublicShopeePosVendaRouteImport
+    '/api/public/shopee/callback': {
+      id: '/api/public/shopee/callback'
+      path: '/api/public/shopee/callback'
+      fullPath: '/api/public/shopee/callback'
+      preLoaderRoute: typeof ApiPublicShopeeCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/shopee/callback-ads': {
@@ -767,11 +704,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicShopeeCallbackAdsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/shopee/callback': {
-      id: '/api/public/shopee/callback'
-      path: '/api/public/shopee/callback'
-      fullPath: '/api/public/shopee/callback'
-      preLoaderRoute: typeof ApiPublicShopeeCallbackRouteImport
+    '/api/public/shopee/pos-venda': {
+      id: '/api/public/shopee/pos-venda'
+      path: '/api/public/shopee/pos-venda'
+      fullPath: '/api/public/shopee/pos-venda'
+      preLoaderRoute: typeof ApiPublicShopeePosVendaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/refresh': {
+      id: '/api/public/shopee/refresh'
+      path: '/api/public/shopee/refresh'
+      fullPath: '/api/public/shopee/refresh'
+      preLoaderRoute: typeof ApiPublicShopeeRefreshRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/refresh-token': {
+      id: '/api/public/shopee/refresh-token'
+      path: '/api/public/shopee/refresh-token'
+      fullPath: '/api/public/shopee/refresh-token'
+      preLoaderRoute: typeof ApiPublicShopeeRefreshTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/resumo-diario': {
+      id: '/api/public/shopee/resumo-diario'
+      path: '/api/public/shopee/resumo-diario'
+      fullPath: '/api/public/shopee/resumo-diario'
+      preLoaderRoute: typeof ApiPublicShopeeResumoDiarioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/sync': {
+      id: '/api/public/shopee/sync'
+      path: '/api/public/shopee/sync'
+      fullPath: '/api/public/shopee/sync'
+      preLoaderRoute: typeof ApiPublicShopeeSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/sync-ads': {
+      id: '/api/public/shopee/sync-ads'
+      path: '/api/public/shopee/sync-ads'
+      fullPath: '/api/public/shopee/sync-ads'
+      preLoaderRoute: typeof ApiPublicShopeeSyncAdsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/sync-avaliacoes': {
+      id: '/api/public/shopee/sync-avaliacoes'
+      path: '/api/public/shopee/sync-avaliacoes'
+      fullPath: '/api/public/shopee/sync-avaliacoes'
+      preLoaderRoute: typeof ApiPublicShopeeSyncAvaliacoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/sync-carteira': {
+      id: '/api/public/shopee/sync-carteira'
+      path: '/api/public/shopee/sync-carteira'
+      fullPath: '/api/public/shopee/sync-carteira'
+      preLoaderRoute: typeof ApiPublicShopeeSyncCarteiraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/sync-chat': {
+      id: '/api/public/shopee/sync-chat'
+      path: '/api/public/shopee/sync-chat'
+      fullPath: '/api/public/shopee/sync-chat'
+      preLoaderRoute: typeof ApiPublicShopeeSyncChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/sync-escrow': {
+      id: '/api/public/shopee/sync-escrow'
+      path: '/api/public/shopee/sync-escrow'
+      fullPath: '/api/public/shopee/sync-escrow'
+      preLoaderRoute: typeof ApiPublicShopeeSyncEscrowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/sync-produtos': {
+      id: '/api/public/shopee/sync-produtos'
+      path: '/api/public/shopee/sync-produtos'
+      fullPath: '/api/public/shopee/sync-produtos'
+      preLoaderRoute: typeof ApiPublicShopeeSyncProdutosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/watchdog': {
+      id: '/api/public/shopee/watchdog'
+      path: '/api/public/shopee/watchdog'
+      fullPath: '/api/public/shopee/watchdog'
+      preLoaderRoute: typeof ApiPublicShopeeWatchdogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/shopee/webhook': {
+      id: '/api/public/shopee/webhook'
+      path: '/api/public/shopee/webhook'
+      fullPath: '/api/public/shopee/webhook'
+      preLoaderRoute: typeof ApiPublicShopeeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -786,6 +807,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDreRoute: typeof AuthenticatedDreRoute
   AuthenticatedEstoqueRoute: typeof AuthenticatedEstoqueRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
+  AuthenticatedLojasRoute: typeof AuthenticatedLojasRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedPedidosRoute: typeof AuthenticatedPedidosRoute
   AuthenticatedPosVendaRoute: typeof AuthenticatedPosVendaRoute
@@ -804,6 +826,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDreRoute: AuthenticatedDreRoute,
   AuthenticatedEstoqueRoute: AuthenticatedEstoqueRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
+  AuthenticatedLojasRoute: AuthenticatedLojasRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedPedidosRoute: AuthenticatedPedidosRoute,
   AuthenticatedPosVendaRoute: AuthenticatedPosVendaRoute,
