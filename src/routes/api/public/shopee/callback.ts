@@ -57,7 +57,7 @@ export const Route = createFileRoute("/api/public/shopee/callback")({
           const { supabaseAdmin: supabaseAdminCheck } =
             await import("@/integrations/supabase/client.server");
           const { data: lojaExiste } = await supabaseAdminCheck
-            .from("lojas")
+            .from("lojas" as any)
             .select("id")
             .eq("id", lojaId)
             .maybeSingle();
@@ -115,7 +115,7 @@ export const Route = createFileRoute("/api/public/shopee/callback")({
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          const { error: erroBanco } = await supabaseAdmin.from("shopee_connection").upsert(
+          const { error: erroBanco } = await supabaseAdmin.from("shopee_connection" as any).upsert(
             {
               loja_id: lojaId,
               app_tipo: "principal",

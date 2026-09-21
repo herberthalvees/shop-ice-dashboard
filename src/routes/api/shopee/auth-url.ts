@@ -46,7 +46,7 @@ async function handler({ request }: { request: Request }) {
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: lojaExiste } = await supabaseAdmin
-      .from("lojas")
+      .from("lojas" as any)
       .select("id")
       .eq("id", lojaId)
       .maybeSingle();
