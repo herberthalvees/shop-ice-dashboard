@@ -152,7 +152,7 @@ alter table public.pedidos drop constraint if exists pedidos_order_sn_key;
 alter table public.pedidos add constraint pedidos_loja_order_sn_key unique (loja_id, order_sn);
 
 alter table public.produtos drop constraint if exists produtos_item_id_key;
-alter table public.produtos add constraint produtos_loja_item_id_key unique (loja_id, item_id);
+alter table public.produtos add constraint produtos_loja_item_id_key unique (loja_id, item_id, model_id);
 
 alter table public.pedido_itens
   add constraint pedido_itens_loja_order_sn_fkey
