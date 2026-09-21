@@ -3,12 +3,16 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const getShopeeAuthUrl = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { app?: string } | undefined) => ({
+  .inputValidator((data: { app?: string; lojaId?: number } | undefined) => ({
     app: data?.app === "ads" ? "ads" : "principal",
+    lojaId: Number(data?.lojaId),
   }))
   .handler(async ({ data }) => {
+    if (!Number.isFinite(data.lojaId)) {
+      throw new Error("loja inválida");
+    }
     const { buildAuthUrl, originFromRequest } = await import("./shopee.server");
-    return { url: buildAuthUrl(originFromRequest(), data.app) };
+    return { url: buildAuthUrl(originFromRequest(), data.app, data.lojaId) };
   });
 
 export const runShopeeSync = createServerFn({ method: "POST" })

@@ -7,8 +7,7 @@ import { credenciaisObrigatorias } from "@/lib/shopee-credenciais.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
@@ -21,11 +20,7 @@ async function hmacSha256Hex(chave: string, mensagem: string): Promise<string> {
     false,
     ["sign"],
   );
-  const assinatura = await crypto.subtle.sign(
-    "HMAC",
-    cryptoKey,
-    encoder.encode(mensagem),
-  );
+  const assinatura = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(mensagem));
   return Array.from(new Uint8Array(assinatura))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
@@ -37,25 +32,47 @@ async function handler({ request }: { request: Request }) {
   }
 
   try {
-    const appTipo =
-      new URL(request.url).searchParams.get("app") === "ads" ? "ads" : "principal";
+    const reqUrl = new URL(request.url);
+    const appTipo = reqUrl.searchParams.get("app") === "ads" ? "ads" : "principal";
+    const lojaIdParam = reqUrl.searchParams.get("loja_id");
+    const lojaId = lojaIdParam ? Number(lojaIdParam) : NaN;
+
+    if (!Number.isFinite(lojaId)) {
+      return new Response(JSON.stringify({ ok: false, erro: "informe ?loja_id=<id da loja>" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: lojaExiste } = await supabaseAdmin
+      .from("lojas")
+      .select("id")
+      .eq("id", lojaId)
+      .maybeSingle();
+    if (!lojaExiste) {
+      return new Response(JSON.stringify({ ok: false, erro: "loja nao encontrada" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { partnerId, partnerKey, apiBase, faltando } = credenciaisObrigatorias(appTipo);
 
-    const origem = new URL(request.url).origin;
-    const redirectUrl =
+    const origem = reqUrl.origin;
+    const redirectBase =
       appTipo === "ads"
         ? `${origem}/api/public/shopee/callback-ads`
         : (process.env.SHOPEE_REDIRECT_URL ?? `${origem}/api/public/shopee/callback`);
+    const redirectUrlObj = new URL(redirectBase);
+    redirectUrlObj.searchParams.set("loja_id", String(lojaId));
+    const redirectUrl = redirectUrlObj.toString();
 
     if (faltando.length > 0) {
-      return new Response(
-        JSON.stringify({ ok: false, erro: "secrets ausentes", faltando }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
+      return new Response(JSON.stringify({ ok: false, erro: "secrets ausentes", faltando }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const path = "/api/v2/shop/auth_partner";
@@ -91,13 +108,10 @@ async function handler({ request }: { request: Request }) {
     );
   } catch (erro) {
     console.error("falha ao gerar link", String(erro));
-    return new Response(
-      JSON.stringify({ ok: false, erro: "falha ao gerar link" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      },
-    );
+    return new Response(JSON.stringify({ ok: false, erro: "falha ao gerar link" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 }
 

@@ -24,21 +24,39 @@ export function signPublic(path: string, timestamp: number, appTipo: string = "p
   return hmacHex(partnerKey(appTipo), `${partnerId(appTipo)}${path}${timestamp}`);
 }
 
-export function signShop(path: string, timestamp: number, accessToken: string, shopId: number | string): string {
+export function signShop(
+  path: string,
+  timestamp: number,
+  accessToken: string,
+  shopId: number | string,
+): string {
   return hmacHex(partnerKey(), `${partnerId()}${path}${timestamp}${accessToken}${shopId}`);
 }
 
-export function getRedirectUri(origin: string, appTipo: string = "principal"): string {
-  return appTipo === "ads"
-    ? `${origin}/api/public/shopee/callback-ads`
-    : `${origin}/api/public/shopee/callback`;
+export function getRedirectUri(
+  origin: string,
+  appTipo: string = "principal",
+  lojaId?: number,
+): string {
+  const base =
+    appTipo === "ads"
+      ? `${origin}/api/public/shopee/callback-ads`
+      : `${origin}/api/public/shopee/callback`;
+  if (lojaId === undefined) return base;
+  const url = new URL(base);
+  url.searchParams.set("loja_id", String(lojaId));
+  return url.toString();
 }
 
-export function buildAuthUrl(origin: string, appTipo: string = "principal"): string {
+export function buildAuthUrl(
+  origin: string,
+  appTipo: string = "principal",
+  lojaId?: number,
+): string {
   const path = "/api/v2/shop/auth_partner";
   const timestamp = Math.floor(Date.now() / 1000);
   const sign = signPublic(path, timestamp, appTipo);
-  const redirect = encodeURIComponent(getRedirectUri(origin, appTipo));
+  const redirect = encodeURIComponent(getRedirectUri(origin, appTipo, lojaId));
   return `${SHOPEE_BASE}${path}?partner_id=${partnerId(appTipo)}&timestamp=${timestamp}&sign=${sign}&redirect=${redirect}`;
 }
 
@@ -75,7 +93,11 @@ export async function refreshAccessToken(refreshToken: string, shopId: number) {
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: refreshToken, shop_id: shopId, partner_id: Number(partnerId()) }),
+    body: JSON.stringify({
+      refresh_token: refreshToken,
+      shop_id: shopId,
+      partner_id: Number(partnerId()),
+    }),
   });
   return (await res.json()) as {
     access_token?: string;
@@ -86,7 +108,12 @@ export async function refreshAccessToken(refreshToken: string, shopId: number) {
   };
 }
 
-function shopUrl(path: string, accessToken: string, shopId: number, extra: Record<string, string> = {}): string {
+function shopUrl(
+  path: string,
+  accessToken: string,
+  shopId: number,
+  extra: Record<string, string> = {},
+): string {
   const timestamp = Math.floor(Date.now() / 1000);
   const sign = signShop(path, timestamp, accessToken, shopId);
   const params = new URLSearchParams({
@@ -100,7 +127,12 @@ function shopUrl(path: string, accessToken: string, shopId: number, extra: Recor
   return `${SHOPEE_BASE}${path}?${params.toString()}`;
 }
 
-export async function getOrderList(accessToken: string, shopId: number, timeFromSec: number, timeToSec: number) {
+export async function getOrderList(
+  accessToken: string,
+  shopId: number,
+  timeFromSec: number,
+  timeToSec: number,
+) {
   const path = "/api/v2/order/get_order_list";
   const url = shopUrl(path, accessToken, shopId, {
     time_range_field: "create_time",

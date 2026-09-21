@@ -45,9 +45,25 @@ export const Route = createFileRoute("/api/public/shopee/callback-ads")({
           const url = new URL(request.url);
           const code = url.searchParams.get("code");
           const shopIdParam = url.searchParams.get("shop_id");
+          const lojaIdParam = url.searchParams.get("loja_id");
+          const lojaId = lojaIdParam ? Number(lojaIdParam) : NaN;
 
           if (!code || !shopIdParam) {
             return redirecionar(url.origin, false, "parametros ausentes no retorno da Shopee");
+          }
+          if (!Number.isFinite(lojaId)) {
+            return redirecionar(url.origin, false, "loja nao identificada no retorno da Shopee");
+          }
+
+          const { supabaseAdmin: supabaseAdminCheck } =
+            await import("@/integrations/supabase/client.server");
+          const { data: lojaExiste } = await supabaseAdminCheck
+            .from("lojas")
+            .select("id")
+            .eq("id", lojaId)
+            .maybeSingle();
+          if (!lojaExiste) {
+            return redirecionar(url.origin, false, "loja nao encontrada");
           }
 
           const { partnerId, partnerKey, apiBase, faltando } = credenciaisObrigatorias("ads");
@@ -75,7 +91,10 @@ export const Route = createFileRoute("/api/public/shopee/callback-ads")({
           const dados: any = await resposta.json();
 
           if (dados.error && dados.error !== "") {
-            console.error("shopee ads recusou a troca do code", { error: dados.error, message: dados.message });
+            console.error("shopee ads recusou a troca do code", {
+              error: dados.error,
+              message: dados.message,
+            });
             return redirecionar(url.origin, false, String(dados.message ?? dados.error));
           }
           if (!dados.access_token || !dados.refresh_token) {
@@ -88,6 +107,7 @@ export const Route = createFileRoute("/api/public/shopee/callback-ads")({
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
           const registro = {
+            loja_id: lojaId,
             app_tipo: "ads",
             partner_id: Number(partnerId),
             shop_id: Number(shopIdParam),
@@ -100,7 +120,7 @@ export const Route = createFileRoute("/api/public/shopee/callback-ads")({
 
           const { error: erroBanco } = await supabaseAdmin
             .from("shopee_connection")
-            .upsert(registro, { onConflict: "app_tipo" });
+            .upsert(registro, { onConflict: "loja_id,app_tipo" });
 
           if (erroBanco) {
             console.error("falha ao gravar conexao ads", erroBanco.message);

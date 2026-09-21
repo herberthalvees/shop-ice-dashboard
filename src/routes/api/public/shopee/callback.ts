@@ -29,11 +29,7 @@ async function hmacSha256Hex(chave: string, mensagem: string): Promise<string> {
     false,
     ["sign"],
   );
-  const assinatura = await crypto.subtle.sign(
-    "HMAC",
-    cryptoKey,
-    encoder.encode(mensagem),
-  );
+  const assinatura = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(mensagem));
   return Array.from(new Uint8Array(assinatura))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
@@ -48,9 +44,25 @@ export const Route = createFileRoute("/api/public/shopee/callback")({
           const url = new URL(request.url);
           const code = url.searchParams.get("code");
           const shopIdParam = url.searchParams.get("shop_id");
+          const lojaIdParam = url.searchParams.get("loja_id");
+          const lojaId = lojaIdParam ? Number(lojaIdParam) : NaN;
 
           if (!code || !shopIdParam) {
             return redirecionar(url.origin, false, "parametros ausentes no retorno da Shopee");
+          }
+          if (!Number.isFinite(lojaId)) {
+            return redirecionar(url.origin, false, "loja nao identificada no retorno da Shopee");
+          }
+
+          const { supabaseAdmin: supabaseAdminCheck } =
+            await import("@/integrations/supabase/client.server");
+          const { data: lojaExiste } = await supabaseAdminCheck
+            .from("lojas")
+            .select("id")
+            .eq("id", lojaId)
+            .maybeSingle();
+          if (!lojaExiste) {
+            return redirecionar(url.origin, false, "loja nao encontrada");
           }
 
           const partnerId = process.env.SHOPEE_PARTNER_ID;
@@ -103,9 +115,9 @@ export const Route = createFileRoute("/api/public/shopee/callback")({
 
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          const { error: erroBanco } = await supabaseAdmin
-            .from("shopee_connection")
-            .upsert({
+          const { error: erroBanco } = await supabaseAdmin.from("shopee_connection").upsert(
+            {
+              loja_id: lojaId,
               app_tipo: "principal",
               partner_id: Number(partnerId),
               shop_id: Number(shopIdParam),
@@ -114,7 +126,9 @@ export const Route = createFileRoute("/api/public/shopee/callback")({
               token_expires_at: expiraEm,
               status: "ativa",
               updated_at: new Date().toISOString(),
-            }, { onConflict: "app_tipo" });
+            },
+            { onConflict: "loja_id,app_tipo" },
+          );
 
           if (erroBanco) {
             console.error("falha ao gravar conexao", erroBanco.message);
@@ -122,6 +136,7 @@ export const Route = createFileRoute("/api/public/shopee/callback")({
           }
 
           console.log("loja conectada", {
+            loja_id: lojaId,
             shop_id: Number(shopIdParam),
             expira_em: expiraEm,
           });
