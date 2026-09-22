@@ -38,10 +38,19 @@ export function getRedirectUri(
   appTipo: string = "principal",
   lojaId?: number,
 ): string {
+  // A Shopee valida o domínio do `redirect` contra o "Redirect URL Domain"
+  // cadastrado no console do app — que é fixo por app (principal/ads) e não
+  // muda conforme o domínio pelo qual o navegador acessou o painel (preview,
+  // domínio customizado etc.). Por isso a origem vem, de preferência, de uma
+  // variável de ambiente fixa; `origin` (derivado da requisição) só serve de
+  // fallback para ambientes sem essa variável configurada (ex.: dev local).
+  const origemFixa =
+    appTipo === "ads" ? process.env.SHOPEE_ADS_REDIRECT_ORIGIN : process.env.SHOPEE_REDIRECT_ORIGIN;
+  const origemBase = origemFixa || origin;
   const base =
     appTipo === "ads"
-      ? `${origin}/api/public/shopee/callback-ads`
-      : `${origin}/api/public/shopee/callback`;
+      ? `${origemBase}/api/public/shopee/callback-ads`
+      : `${origemBase}/api/public/shopee/callback`;
   if (lojaId === undefined) return base;
   const url = new URL(base);
   url.searchParams.set("loja_id", String(lojaId));
