@@ -49,6 +49,38 @@ export const salvarCredenciaisShopee = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// Backfill de pedidos de UMA loja recém-conectada (o cron só sincroniza pra
+// frente a partir de agora). Chama a própria rota /sync internamente com o
+// CRON_SECRET do servidor — nunca expõe o secret pro navegador.
+export const sincronizarPedidosHistorico = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { lojaId: number; dias?: number }) => ({
+    lojaId: Number(data.lojaId),
+    dias: Math.min(Math.max(Number(data.dias ?? 90), 1), 3650),
+  }))
+  .handler(async ({ data }) => {
+    if (!Number.isFinite(data.lojaId)) throw new Error("loja inválida");
+
+    const secret = process.env.CRON_SECRET;
+    if (!secret) throw new Error("CRON_SECRET não configurado");
+
+    const { originFromRequest } = await import("./shopee.server");
+    const agora = Math.floor(Date.now() / 1000);
+    const de = agora - data.dias * 24 * 60 * 60;
+
+    const url =
+      `${originFromRequest()}/api/public/shopee/sync` +
+      `?loja_id=${data.lojaId}&campo=create_time&de=${de}&ate=${agora}&s=${encodeURIComponent(secret)}`;
+
+    const res = await fetch(url, { method: "POST" });
+    const corpo = (await res.json()) as {
+      ok: boolean;
+      erro?: string;
+      lojas?: Array<{ loja_id: number; ok: boolean; gravados?: number; erro?: string }>;
+    };
+    return corpo;
+  });
+
 export const runShopeeSync = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {

@@ -9,8 +9,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Store, Loader2, ExternalLink, AlertTriangle, Plus, Power, KeyRound } from "lucide-react";
-import { getShopeeAuthUrl, salvarCredenciaisShopee } from "@/lib/shopee.functions";
+import {
+  Store,
+  Loader2,
+  ExternalLink,
+  AlertTriangle,
+  Plus,
+  Power,
+  KeyRound,
+  History,
+} from "lucide-react";
+import {
+  getShopeeAuthUrl,
+  salvarCredenciaisShopee,
+  sincronizarPedidosHistorico,
+} from "@/lib/shopee.functions";
 
 export const Route = createLazyFileRoute("/_authenticated/lojas")({
   component: LojasPage,
@@ -47,6 +60,7 @@ function LojasPage() {
   const qc = useQueryClient();
   const authUrlFn = useServerFn(getShopeeAuthUrl);
   const credFn = useServerFn(salvarCredenciaisShopee);
+  const historicoFn = useServerFn(sincronizarPedidosHistorico);
 
   useEffect(() => {
     if (search.conectado === "1") {
@@ -139,6 +153,21 @@ function LojasPage() {
     onError: (e: any) => toast.error("Erro ao salvar credenciais", { description: e.message }),
   });
 
+  const historicoMut = useMutation({
+    mutationFn: async (input: { lojaId: number; dias: number }) =>
+      await historicoFn({ data: input }),
+    onSuccess: (r: any) => {
+      if (r?.ok) {
+        const total = (r.lojas ?? []).reduce((s: number, l: any) => s + (l.gravados ?? 0), 0);
+        toast.success("Histórico sincronizado", { description: `${total} pedidos gravados` });
+      } else {
+        toast.error("Falha ao sincronizar histórico", { description: r?.erro ?? "erro" });
+      }
+      qc.invalidateQueries();
+    },
+    onError: (e: any) => toast.error("Erro", { description: e.message }),
+  });
+
   function handleCriar(e: React.FormEvent) {
     e.preventDefault();
     const nome = novoNome.trim();
@@ -218,6 +247,8 @@ function LojasPage() {
               onSalvarCredenciais={(app, partnerId, partnerKey) =>
                 credMut.mutate({ lojaId: loja.id, app, partnerId, partnerKey })
               }
+              sincronizandoHistorico={historicoMut.isPending}
+              onSincronizarHistorico={(dias) => historicoMut.mutate({ lojaId: loja.id, dias })}
               onAlternarStatus={() =>
                 statusMut.mutate({
                   id: loja.id,
@@ -249,6 +280,8 @@ function CardLoja({
   onConectar,
   salvandoCredenciais,
   onSalvarCredenciais,
+  sincronizandoHistorico,
+  onSincronizarHistorico,
   onAlternarStatus,
   alternandoStatus,
 }: {
@@ -258,6 +291,8 @@ function CardLoja({
   onConectar: (app: "principal" | "ads") => void;
   salvandoCredenciais: boolean;
   onSalvarCredenciais: (app: "principal" | "ads", partnerId: string, partnerKey: string) => void;
+  sincronizandoHistorico: boolean;
+  onSincronizarHistorico: (dias: number) => void;
   onAlternarStatus: () => void;
   alternandoStatus: boolean;
 }) {
@@ -345,6 +380,10 @@ function CardLoja({
             </div>
           );
         })}
+        <SincronizarHistorico
+          sincronizando={sincronizandoHistorico}
+          onSincronizar={onSincronizarHistorico}
+        />
         <Button size="sm" variant="ghost" onClick={onAlternarStatus} disabled={alternandoStatus}>
           {alternandoStatus ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -355,6 +394,42 @@ function CardLoja({
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+// O cron só sincroniza pedidos pra frente a partir de agora — uma loja
+// recém-conectada precisa desse backfill manual pra trazer o histórico.
+function SincronizarHistorico({
+  sincronizando,
+  onSincronizar,
+}: {
+  sincronizando: boolean;
+  onSincronizar: (dias: number) => void;
+}) {
+  const [dias, setDias] = useState("365");
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-md border border-dashed p-3">
+      <History className="h-4 w-4 text-muted-foreground shrink-0" />
+      <span className="text-xs text-muted-foreground">Buscar pedidos dos últimos</span>
+      <Input
+        type="number"
+        min={1}
+        max={3650}
+        value={dias}
+        onChange={(e) => setDias(e.target.value)}
+        className="h-8 w-20"
+      />
+      <span className="text-xs text-muted-foreground">dias</span>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={sincronizando || !Number(dias)}
+        onClick={() => onSincronizar(Number(dias))}
+      >
+        {sincronizando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        Sincronizar histórico
+      </Button>
+    </div>
   );
 }
 

@@ -317,7 +317,9 @@ async function handler({ request }: { request: Request }) {
       return responder({ ok: false, erro: "faixa de datas invalida" }, 400);
     }
 
-    const lojas = await listarLojasAtivas();
+    const lojaIdParam = url.searchParams.get("loja_id");
+    let lojas = await listarLojasAtivas();
+    if (lojaIdParam) lojas = lojas.filter((l) => l.id === Number(lojaIdParam));
     if (lojas.length === 0) {
       return responder({ ok: false, erro: "nenhuma loja ativa cadastrada" }, 400);
     }
