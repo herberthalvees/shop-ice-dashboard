@@ -9,9 +9,14 @@ function responder(corpo: unknown, status = 200) {
   });
 }
 
-async function sincronizarLoja(lojaId: number, limite: number, apenasGerar: boolean) {
+async function sincronizarLoja(
+  lojaId: number,
+  limite: number,
+  apenasGerar: boolean,
+  paginas: number,
+) {
   const { processarAvaliacoesAutomaticas } = await import("@/lib/avaliacoes.server");
-  const r = await processarAvaliacoesAutomaticas(limite, apenasGerar, lojaId);
+  const r = await processarAvaliacoesAutomaticas(limite, apenasGerar, lojaId, paginas);
   return { loja_id: lojaId, ...r };
 }
 
@@ -20,8 +25,10 @@ async function handler({ request }: { request: Request }) {
   if (unauth) return unauth;
 
   try {
-    const apenasGerar = new URL(request.url).searchParams.get("gerar") === "1";
+    const url = new URL(request.url);
+    const apenasGerar = url.searchParams.get("gerar") === "1";
     const limite = apenasGerar ? 1 : 15;
+    const paginas = Math.min(Number(url.searchParams.get("paginas") ?? "2"), 50);
 
     const lojas = await listarLojasAtivas();
     if (lojas.length === 0) {
@@ -30,7 +37,7 @@ async function handler({ request }: { request: Request }) {
 
     const resultados = [];
     for (const loja of lojas) {
-      resultados.push(await sincronizarLoja(loja.id, limite, apenasGerar));
+      resultados.push(await sincronizarLoja(loja.id, limite, apenasGerar, paginas));
     }
 
     return responder({ ok: resultados.every((r) => r.ok), lojas: resultados });

@@ -317,8 +317,9 @@ export async function processarAvaliacoesAutomaticas(
   limite = 10,
   apenasGerar = false,
   lojaId?: number,
+  paginas = 2,
 ) {
-  const sync = await sincronizarAvaliacoes(2, lojaId);
+  const sync = await sincronizarAvaliacoes(paginas, lojaId);
   if (!sync.ok) return { ok: false as const, error: sync.error };
 
   const { auto } = await configAvaliacoes();
