@@ -37,8 +37,8 @@ export async function sincronizarContatos(paginas = 20, pageSize = 50, lojaId?: 
 
   for (let i = 0; i < paginas; i++) {
     const r = await comRetry(
-      (c) =>
-        getConversationList(c.access_token, c.shop_id, { pageSize, nextTimestampNano: cursor }),
+      (c, id) =>
+        getConversationList(c.access_token, c.shop_id, id, { pageSize, nextTimestampNano: cursor }),
       idLoja,
     );
     if (!r.ok) return { ok: false as const, error: r.error, gravados, lidos };

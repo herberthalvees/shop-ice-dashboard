@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { checkCronSecret } from "@/lib/cron-auth.server";
-import { credenciais } from "@/lib/shopee-credenciais.server";
+import { credenciaisLoja } from "@/lib/shopee-credenciais.server";
 import { listarLojasAtivas } from "@/lib/lojas.server";
 
 function responder(corpo: unknown, status = 200) {
@@ -29,10 +29,12 @@ async function chamarShopee(
   path: string,
   accessToken: string,
   shopId: number,
+  lojaId: number,
   query: Record<string, string> = {},
 ) {
-  // credenciais do app de Ads (SHOPEE_ADS_PARTNER_ID / SHOPEE_ADS_PARTNER_KEY)
-  const { partnerId, partnerKey, apiBase } = credenciais("ads");
+  // credenciais do app de Ads da loja (partner_id/partner_key cadastrados em
+  // /lojas, com fallback pra SHOPEE_ADS_PARTNER_ID/KEY globais)
+  const { partnerId, partnerKey, apiBase } = await credenciaisLoja(lojaId, "ads");
   if (!partnerId || !partnerKey || !apiBase) throw new Error("credenciais Shopee Ads ausentes");
 
   const timestamp = Math.floor(Date.now() / 1000);
@@ -167,9 +169,15 @@ async function sincronizarLoja(
   const UM_DIA = 24 * 60 * 60;
   for (let dia = de; dia <= ate; dia += UM_DIA) {
     const dataDia = dataDDMMYYYY(new Date(dia * 1000));
-    const t1 = await chamarShopee("/api/v2/ads/get_all_cpc_ads_hourly_performance", token, shopId, {
-      performance_date: dataDia,
-    });
+    const t1 = await chamarShopee(
+      "/api/v2/ads/get_all_cpc_ads_hourly_performance",
+      token,
+      shopId,
+      lojaId,
+      {
+        performance_date: dataDia,
+      },
+    );
     if (t1.json?.error) {
       erroT1 = String(t1.json.error);
       registrarErro("get_all_cpc_ads_hourly_performance", erroT1, t1.texto);
@@ -208,6 +216,7 @@ async function sincronizarLoja(
       "/api/v2/ads/get_product_level_campaign_id_list",
       token,
       shopId,
+      lojaId,
       { ad_type: "all", offset: String(offset), limit: String(limite) },
     );
     if (listaCampanhas.json?.error) {
@@ -248,6 +257,7 @@ async function sincronizarLoja(
       "/api/v2/ads/get_product_level_campaign_setting_info",
       token,
       shopId,
+      lojaId,
       { info_type_list: "1,4", campaign_id_list: ids },
     );
     if (configuracoes.json?.error) {
@@ -285,6 +295,7 @@ async function sincronizarLoja(
       "/api/v2/ads/get_product_campaign_daily_performance",
       token,
       shopId,
+      lojaId,
       { start_date: inicioStr, end_date: fimStr, campaign_id_list: ids },
     );
     if (performance.json?.error) {
@@ -333,9 +344,15 @@ async function sincronizarLoja(
     endpointUsado = "hourly_performance + product_campaign_daily_performance";
 
   if (!endpointUsado) {
-    const kw = await chamarShopee("/api/v2/ads/get_recommended_keyword_list", token, shopId, {
-      item_id: "0",
-    });
+    const kw = await chamarShopee(
+      "/api/v2/ads/get_recommended_keyword_list",
+      token,
+      shopId,
+      lojaId,
+      {
+        item_id: "0",
+      },
+    );
     if (kw.json?.error) {
       registrarErro("get_recommended_keyword_list", String(kw.json.error), kw.texto);
     } else {

@@ -1,36 +1,46 @@
 // Server-only helpers para a API Shopee Open Platform.
 import { getRequestHeader } from "@tanstack/react-start/server";
-import { credenciais } from "./shopee-credenciais.server";
+import { credenciaisLoja, credenciaisPorShopId, type AppTipo } from "./shopee-credenciais.server";
 import { comparacaoSegura, hmacSha256Hex } from "./hmac-sha256";
 
 export const SHOPEE_BASE = "https://partner.shopeemobile.com";
 
-function partnerId(appTipo: string = "principal"): string {
-  const v = credenciais(appTipo).partnerId;
-  if (!v) throw new Error("partner id da Shopee não configurado");
-  return v;
-}
-function partnerKey(appTipo: string = "principal"): string {
-  const v = credenciais(appTipo).partnerKey;
-  if (!v) throw new Error("partner key da Shopee não configurada");
-  return v;
+// Cada loja pode ter seu próprio app cadastrado na Shopee (CNPJs diferentes),
+// então partner_id/partner_key sempre são resolvidos por loja — nunca globais.
+async function creds(lojaId: number, appTipo: AppTipo = "principal") {
+  const c = await credenciaisLoja(lojaId, appTipo);
+  if (!c.partnerId) throw new Error("partner id da Shopee não configurado para esta loja");
+  if (!c.partnerKey) throw new Error("partner key da Shopee não configurada para esta loja");
+  return { partnerId: c.partnerId, partnerKey: c.partnerKey };
 }
 
 function hmacHex(key: string, message: string): string {
   return hmacSha256Hex(key, message);
 }
 
-export function signPublic(path: string, timestamp: number, appTipo: string = "principal"): string {
-  return hmacHex(partnerKey(appTipo), `${partnerId(appTipo)}${path}${timestamp}`);
+export async function signPublic(
+  path: string,
+  timestamp: number,
+  lojaId: number,
+  appTipo: AppTipo = "principal",
+): Promise<{ sign: string; partnerId: string }> {
+  const { partnerId, partnerKey } = await creds(lojaId, appTipo);
+  return { sign: hmacHex(partnerKey, `${partnerId}${path}${timestamp}`), partnerId };
 }
 
-export function signShop(
+export async function signShop(
   path: string,
   timestamp: number,
   accessToken: string,
   shopId: number | string,
-): string {
-  return hmacHex(partnerKey(), `${partnerId()}${path}${timestamp}${accessToken}${shopId}`);
+  lojaId: number,
+  appTipo: AppTipo = "principal",
+): Promise<{ sign: string; partnerId: string }> {
+  const { partnerId, partnerKey } = await creds(lojaId, appTipo);
+  return {
+    sign: hmacHex(partnerKey, `${partnerId}${path}${timestamp}${accessToken}${shopId}`),
+    partnerId,
+  };
 }
 
 export function getRedirectUri(
@@ -57,33 +67,43 @@ export function getRedirectUri(
   return url.toString();
 }
 
-export function buildAuthUrl(
+export async function buildAuthUrl(
   origin: string,
-  appTipo: string = "principal",
-  lojaId?: number,
-): string {
+  appTipo: AppTipo = "principal",
+  lojaId: number,
+): Promise<string> {
   const path = "/api/v2/shop/auth_partner";
   const timestamp = Math.floor(Date.now() / 1000);
-  const sign = signPublic(path, timestamp, appTipo);
+  const { sign, partnerId } = await signPublic(path, timestamp, lojaId, appTipo);
   const redirect = encodeURIComponent(getRedirectUri(origin, appTipo, lojaId));
-  return `${SHOPEE_BASE}${path}?partner_id=${partnerId(appTipo)}&timestamp=${timestamp}&sign=${sign}&redirect=${redirect}`;
+  return `${SHOPEE_BASE}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}&redirect=${redirect}`;
 }
 
-export function verifyWebhookSignature(url: string, body: string, header: string | null): boolean {
+// A Shopee assina o push do webhook com o partner_key do app que autorizou
+// aquela loja; o payload só traz o shop_id, daí resolver por ele em vez de
+// receber loja_id/app_tipo prontos.
+export async function verifyWebhookSignatureForShop(
+  shopId: number,
+  url: string,
+  body: string,
+  header: string | null,
+): Promise<boolean> {
   if (!header) return false;
-  const expected = hmacHex(partnerKey(), `${url}|${body}`);
+  const { partnerKey } = await credenciaisPorShopId(shopId);
+  if (!partnerKey) return false;
+  const expected = hmacHex(partnerKey, `${url}|${body}`);
   return comparacaoSegura(header.trim().toLowerCase(), expected.toLowerCase());
 }
 
-export async function exchangeCodeForToken(code: string, shopId: number) {
+export async function exchangeCodeForToken(code: string, shopId: number, lojaId: number) {
   const path = "/api/v2/auth/token/get";
   const timestamp = Math.floor(Date.now() / 1000);
-  const sign = signPublic(path, timestamp);
-  const url = `${SHOPEE_BASE}${path}?partner_id=${partnerId()}&timestamp=${timestamp}&sign=${sign}`;
+  const { sign, partnerId } = await signPublic(path, timestamp, lojaId);
+  const url = `${SHOPEE_BASE}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}`;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code, shop_id: shopId, partner_id: Number(partnerId()) }),
+    body: JSON.stringify({ code, shop_id: shopId, partner_id: Number(partnerId) }),
   });
   return (await res.json()) as {
     access_token?: string;
@@ -94,18 +114,23 @@ export async function exchangeCodeForToken(code: string, shopId: number) {
   };
 }
 
-export async function refreshAccessToken(refreshToken: string, shopId: number) {
+export async function refreshAccessToken(
+  refreshToken: string,
+  shopId: number,
+  lojaId: number,
+  appTipo: AppTipo = "principal",
+) {
   const path = "/api/v2/auth/access_token/get";
   const timestamp = Math.floor(Date.now() / 1000);
-  const sign = signPublic(path, timestamp);
-  const url = `${SHOPEE_BASE}${path}?partner_id=${partnerId()}&timestamp=${timestamp}&sign=${sign}`;
+  const { sign, partnerId } = await signPublic(path, timestamp, lojaId, appTipo);
+  const url = `${SHOPEE_BASE}${path}?partner_id=${partnerId}&timestamp=${timestamp}&sign=${sign}`;
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       refresh_token: refreshToken,
       shop_id: shopId,
-      partner_id: Number(partnerId()),
+      partner_id: Number(partnerId),
     }),
   });
   return (await res.json()) as {
@@ -117,16 +142,17 @@ export async function refreshAccessToken(refreshToken: string, shopId: number) {
   };
 }
 
-function shopUrl(
+async function shopUrl(
   path: string,
   accessToken: string,
   shopId: number,
+  lojaId: number,
   extra: Record<string, string> = {},
-): string {
+): Promise<string> {
   const timestamp = Math.floor(Date.now() / 1000);
-  const sign = signShop(path, timestamp, accessToken, shopId);
+  const { sign, partnerId } = await signShop(path, timestamp, accessToken, shopId, lojaId);
   const params = new URLSearchParams({
-    partner_id: partnerId(),
+    partner_id: partnerId,
     timestamp: String(timestamp),
     access_token: accessToken,
     shop_id: String(shopId),
@@ -139,11 +165,12 @@ function shopUrl(
 export async function getOrderList(
   accessToken: string,
   shopId: number,
+  lojaId: number,
   timeFromSec: number,
   timeToSec: number,
 ) {
   const path = "/api/v2/order/get_order_list";
-  const url = shopUrl(path, accessToken, shopId, {
+  const url = await shopUrl(path, accessToken, shopId, lojaId, {
     time_range_field: "create_time",
     time_from: String(timeFromSec),
     time_to: String(timeToSec),
@@ -153,9 +180,14 @@ export async function getOrderList(
   return await res.json();
 }
 
-export async function getOrderDetail(accessToken: string, shopId: number, orderSnList: string[]) {
+export async function getOrderDetail(
+  accessToken: string,
+  shopId: number,
+  lojaId: number,
+  orderSnList: string[],
+) {
   const path = "/api/v2/order/get_order_detail";
-  const url = shopUrl(path, accessToken, shopId, {
+  const url = await shopUrl(path, accessToken, shopId, lojaId, {
     order_sn_list: orderSnList.join(","),
     response_optional_fields: "buyer_username,total_amount,order_status,item_list,create_time",
   });
@@ -163,9 +195,9 @@ export async function getOrderDetail(accessToken: string, shopId: number, orderS
   return await res.json();
 }
 
-export async function getItemList(accessToken: string, shopId: number) {
+export async function getItemList(accessToken: string, shopId: number, lojaId: number) {
   const path = "/api/v2/product/get_item_list";
-  const url = shopUrl(path, accessToken, shopId, {
+  const url = await shopUrl(path, accessToken, shopId, lojaId, {
     offset: "0",
     page_size: "50",
     item_status: "NORMAL",
@@ -174,9 +206,14 @@ export async function getItemList(accessToken: string, shopId: number) {
   return await res.json();
 }
 
-export async function getItemBaseInfo(accessToken: string, shopId: number, itemIds: number[]) {
+export async function getItemBaseInfo(
+  accessToken: string,
+  shopId: number,
+  lojaId: number,
+  itemIds: number[],
+) {
   const path = "/api/v2/product/get_item_base_info";
-  const url = shopUrl(path, accessToken, shopId, {
+  const url = await shopUrl(path, accessToken, shopId, lojaId, {
     item_id_list: itemIds.join(","),
   });
   const res = await fetch(url);
@@ -197,10 +234,11 @@ export function originFromRequest(): string {
 export async function getConversationList(
   accessToken: string,
   shopId: number,
+  lojaId: number,
   opts: { tipo?: string; pageSize?: number; nextTimestampNano?: string } = {},
 ) {
   const path = "/api/v2/sellerchat/get_conversation_list";
-  const url = shopUrl(path, accessToken, shopId, {
+  const url = await shopUrl(path, accessToken, shopId, lojaId, {
     type: opts.tipo ?? "all",
     // "older" = da mais recente para as antigas. Com "latest" a Shopee devolve
     // as conversas mais ANTIGAS primeiro (de 2025), escondendo as de hoje.
@@ -215,11 +253,12 @@ export async function getConversationList(
 export async function getChatMessages(
   accessToken: string,
   shopId: number,
+  lojaId: number,
   conversationId: string,
   pageSize = 30,
 ) {
   const path = "/api/v2/sellerchat/get_message";
-  const url = shopUrl(path, accessToken, shopId, {
+  const url = await shopUrl(path, accessToken, shopId, lojaId, {
     conversation_id: conversationId,
     page_size: String(pageSize),
   });
@@ -227,9 +266,13 @@ export async function getChatMessages(
   return await res.json();
 }
 
-export async function getUnreadConversationCount(accessToken: string, shopId: number) {
+export async function getUnreadConversationCount(
+  accessToken: string,
+  shopId: number,
+  lojaId: number,
+) {
   const path = "/api/v2/sellerchat/get_unread_conversation_count";
-  const url = shopUrl(path, accessToken, shopId);
+  const url = await shopUrl(path, accessToken, shopId, lojaId);
   const res = await fetch(url);
   return await res.json();
 }
@@ -237,11 +280,12 @@ export async function getUnreadConversationCount(accessToken: string, shopId: nu
 export async function sendChatMessage(
   accessToken: string,
   shopId: number,
+  lojaId: number,
   toId: string,
   texto: string,
 ) {
   const path = "/api/v2/sellerchat/send_message";
-  const url = shopUrl(path, accessToken, shopId);
+  const url = await shopUrl(path, accessToken, shopId, lojaId);
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -259,10 +303,11 @@ export async function sendChatMessage(
 export async function getComments(
   accessToken: string,
   shopId: number,
+  lojaId: number,
   opts: { cursor?: string; pageSize?: number } = {},
 ) {
   const path = "/api/v2/product/get_comment";
-  const url = shopUrl(path, accessToken, shopId, {
+  const url = await shopUrl(path, accessToken, shopId, lojaId, {
     cursor: opts.cursor ?? "",
     page_size: String(opts.pageSize ?? 50),
   });
@@ -273,10 +318,11 @@ export async function getComments(
 export async function replyComment(
   accessToken: string,
   shopId: number,
+  lojaId: number,
   respostas: { comment_id: number; comment: string }[],
 ) {
   const path = "/api/v2/product/reply_comment";
-  const url = shopUrl(path, accessToken, shopId);
+  const url = await shopUrl(path, accessToken, shopId, lojaId);
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

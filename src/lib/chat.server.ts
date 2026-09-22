@@ -12,17 +12,20 @@ function ehTokenInvalido(r: any) {
   return `${r?.error ?? ""}`.toLowerCase().includes("access_token");
 }
 
-export async function comRetry<T>(fn: (c: ConexaoValida) => Promise<T>, lojaId?: number) {
+export async function comRetry<T>(
+  fn: (c: ConexaoValida, lojaId: number) => Promise<T>,
+  lojaId?: number,
+) {
   const id = await resolverLojaId(lojaId);
   if (!id) return { ok: false as const, error: "nenhuma loja cadastrada" };
 
   const base = await conexaoValida(id, "principal");
   if (!base.ok) return { ok: false as const, error: base.error };
-  let res: any = await fn(base.conn);
+  let res: any = await fn(base.conn, id);
   if (ehTokenInvalido(res)) {
     const novo = await conexaoValida(id, "principal");
     if (!novo.ok) return { ok: false as const, error: novo.error };
-    res = await fn(novo.conn);
+    res = await fn(novo.conn, id);
   }
   if (res?.error) return { ok: false as const, error: `${res.error}: ${res.message ?? ""}`.trim() };
   return { ok: true as const, data: res as T };
@@ -49,7 +52,10 @@ function nanoParaIso(v: unknown): string | null {
 }
 
 export async function listarConversas(lojaId?: number) {
-  const r = await comRetry((c) => getConversationList(c.access_token, c.shop_id, { pageSize: 25 }), lojaId);
+  const r = await comRetry(
+    (c, id) => getConversationList(c.access_token, c.shop_id, id, { pageSize: 25 }),
+    lojaId,
+  );
   if (!r.ok) return r;
   const lista = ((r.data as any)?.response?.conversations ?? []) as any[];
   const conversas: Conversa[] = lista.map((c) => {
@@ -61,19 +67,19 @@ export async function listarConversas(lojaId?: number) {
         ? String(remetente) === String(c.to_id ?? "")
         : naoLidas > 0;
     return {
-    conversation_id: String(c.conversation_id ?? ""),
-    to_id: String(c.to_id ?? ""),
-    to_name: c.to_name ?? "Comprador",
-    to_avatar: c.to_avatar ?? null,
-    ultima_mensagem:
-      typeof c.latest_message_content?.text === "string"
-        ? c.latest_message_content.text
-        : c.latest_message_type
-          ? `[${c.latest_message_type}]`
-          : "",
-    nao_lidas: naoLidas,
-    ultima_em: nanoParaIso(c.last_message_timestamp),
-    pendente,
+      conversation_id: String(c.conversation_id ?? ""),
+      to_id: String(c.to_id ?? ""),
+      to_name: c.to_name ?? "Comprador",
+      to_avatar: c.to_avatar ?? null,
+      ultima_mensagem:
+        typeof c.latest_message_content?.text === "string"
+          ? c.latest_message_content.text
+          : c.latest_message_type
+            ? `[${c.latest_message_type}]`
+            : "",
+      nao_lidas: naoLidas,
+      ultima_em: nanoParaIso(c.last_message_timestamp),
+      pendente,
     };
   });
   return { ok: true as const, conversas };
@@ -89,9 +95,9 @@ export type Mensagem = {
 
 export async function listarMensagens(conversationId: string, buyerId?: string, lojaId?: number) {
   let shopId = 0;
-  const r = await comRetry((c) => {
+  const r = await comRetry((c, id) => {
     shopId = c.shop_id;
-    return getChatMessages(c.access_token, c.shop_id, conversationId, 40);
+    return getChatMessages(c.access_token, c.shop_id, id, conversationId, 40);
   }, lojaId);
   if (!r.ok) return r;
   const brutas = ((r.data as any)?.response?.messages ?? []) as any[];
@@ -128,7 +134,7 @@ export async function enviarMensagem(input: {
 }) {
   const lojaId = await resolverLojaId(input.lojaId);
   const r = await comRetry(
-    (c) => sendChatMessage(c.access_token, c.shop_id, input.toId, input.texto),
+    (c, id) => sendChatMessage(c.access_token, c.shop_id, id, input.toId, input.texto),
     input.lojaId,
   );
   await supabaseAdmin.from("chat_envios").insert({

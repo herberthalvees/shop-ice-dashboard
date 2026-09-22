@@ -22,7 +22,7 @@ export async function renovarTokenSeNecessario(lojaId: number, appTipo: AppTipo 
   const conn = await obterConexao(lojaId, appTipo);
   if (!conn?.refresh_token || !conn.shop_id) return { ok: false as const, error: "sem conexão" };
 
-  const r = await refreshAccessToken(conn.refresh_token, Number(conn.shop_id));
+  const r = await refreshAccessToken(conn.refresh_token, Number(conn.shop_id), lojaId, appTipo);
   if (!r.access_token) {
     await db
       .from("shopee_connection")

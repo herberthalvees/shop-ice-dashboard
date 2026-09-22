@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Store, Loader2, ExternalLink, AlertTriangle, Plus, Power } from "lucide-react";
-import { getShopeeAuthUrl } from "@/lib/shopee.functions";
+import { Store, Loader2, ExternalLink, AlertTriangle, Plus, Power, KeyRound } from "lucide-react";
+import { getShopeeAuthUrl, salvarCredenciaisShopee } from "@/lib/shopee.functions";
 
 export const Route = createLazyFileRoute("/_authenticated/lojas")({
   component: LojasPage,
@@ -46,6 +46,7 @@ function LojasPage() {
   const search = useSearch({ from: "/_authenticated/lojas" });
   const qc = useQueryClient();
   const authUrlFn = useServerFn(getShopeeAuthUrl);
+  const credFn = useServerFn(salvarCredenciaisShopee);
 
   useEffect(() => {
     if (search.conectado === "1") {
@@ -124,6 +125,20 @@ function LojasPage() {
     onError: (e: any) => toast.error("Erro", { description: e.message }),
   });
 
+  const credMut = useMutation({
+    mutationFn: async (input: {
+      lojaId: number;
+      app: "principal" | "ads";
+      partnerId: string;
+      partnerKey: string;
+    }) => await credFn({ data: input }),
+    onSuccess: () => {
+      toast.success("Credenciais salvas");
+      qc.invalidateQueries({ queryKey: ["shopee-connections"] });
+    },
+    onError: (e: any) => toast.error("Erro ao salvar credenciais", { description: e.message }),
+  });
+
   function handleCriar(e: React.FormEvent) {
     e.preventDefault();
     const nome = novoNome.trim();
@@ -199,6 +214,10 @@ function LojasPage() {
               conexoes={conexoes.filter((c) => c.loja_id === loja.id)}
               conectando={authMut.isPending}
               onConectar={(app) => authMut.mutate({ app, lojaId: loja.id })}
+              salvandoCredenciais={credMut.isPending}
+              onSalvarCredenciais={(app, partnerId, partnerKey) =>
+                credMut.mutate({ lojaId: loja.id, app, partnerId, partnerKey })
+              }
               onAlternarStatus={() =>
                 statusMut.mutate({
                   id: loja.id,
@@ -228,6 +247,8 @@ function CardLoja({
   conexoes,
   conectando,
   onConectar,
+  salvandoCredenciais,
+  onSalvarCredenciais,
   onAlternarStatus,
   alternandoStatus,
 }: {
@@ -235,6 +256,8 @@ function CardLoja({
   conexoes: Conexao[];
   conectando: boolean;
   onConectar: (app: "principal" | "ads") => void;
+  salvandoCredenciais: boolean;
+  onSalvarCredenciais: (app: "principal" | "ads", partnerId: string, partnerKey: string) => void;
   onAlternarStatus: () => void;
   alternandoStatus: boolean;
 }) {
@@ -298,6 +321,14 @@ function CardLoja({
                   }
                 />
               </div>
+              <CredenciaisApp
+                app={app}
+                partnerIdAtual={conexao?.partner_id ?? null}
+                salvando={salvandoCredenciais}
+                onSalvar={(partnerId, partnerKey) =>
+                  onSalvarCredenciais(app, partnerId, partnerKey)
+                }
+              />
               <Button
                 size="sm"
                 variant="outline"
@@ -324,5 +355,78 @@ function CardLoja({
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+// Cada loja pode ter seu próprio app cadastrado na Shopee (CNPJs diferentes),
+// então antes de "Conectar" é preciso informar o partner_id/partner_key
+// daquele app específico. A key nunca volta pro cliente depois de salva.
+function CredenciaisApp({
+  app,
+  partnerIdAtual,
+  salvando,
+  onSalvar,
+}: {
+  app: "principal" | "ads";
+  partnerIdAtual: number | null;
+  salvando: boolean;
+  onSalvar: (partnerId: string, partnerKey: string) => void;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const [partnerId, setPartnerId] = useState(partnerIdAtual ? String(partnerIdAtual) : "");
+  const [partnerKey, setPartnerKey] = useState("");
+
+  if (!aberto) {
+    return (
+      <Button size="sm" variant="ghost" onClick={() => setAberto(true)}>
+        <KeyRound className="mr-2 h-4 w-4" />
+        {partnerIdAtual ? "Editar credenciais do app" : "Cadastrar credenciais do app"}
+      </Button>
+    );
+  }
+
+  return (
+    <div className="space-y-2 rounded-md border border-dashed p-3">
+      <p className="text-xs text-muted-foreground">
+        Partner ID e Partner Key do app "{NOMES_APP[app]}" cadastrado no console da Shopee para esta
+        loja. Deixe em branco para usar a credencial global do projeto.
+      </p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div className="space-y-1">
+          <Label className="text-xs">Partner ID</Label>
+          <Input
+            value={partnerId}
+            onChange={(e) => setPartnerId(e.target.value)}
+            placeholder="Ex.: 2045736"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Partner Key</Label>
+          <Input
+            type="password"
+            value={partnerKey}
+            onChange={(e) => setPartnerKey(e.target.value)}
+            placeholder="Ex.: shpk4a6b..."
+          />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          disabled={salvando || !partnerId.trim() || !partnerKey.trim()}
+          onClick={() => {
+            onSalvar(partnerId.trim(), partnerKey.trim());
+            setPartnerKey("");
+            setAberto(false);
+          }}
+        >
+          {salvando && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Salvar credenciais
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setAberto(false)}>
+          Cancelar
+        </Button>
+      </div>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { checkCronSecret } from "@/lib/cron-auth.server";
-import { credenciais } from "@/lib/shopee-credenciais.server";
+import { credenciaisLoja } from "@/lib/shopee-credenciais.server";
 import { listarLojasAtivas } from "@/lib/lojas.server";
 
 function responder(corpo: unknown, status = 200) {
@@ -29,10 +29,11 @@ async function chamarShopee(
   path: string,
   accessToken: string,
   shopId: number,
+  lojaId: number,
   parametros: Record<string, string> = {},
-  appTipo: string = "principal",
+  appTipo: "principal" | "ads" = "principal",
 ) {
-  const { partnerId, partnerKey, apiBase } = credenciais(appTipo);
+  const { partnerId, partnerKey, apiBase } = await credenciaisLoja(lojaId, appTipo);
   if (!partnerId || !partnerKey || !apiBase) throw new Error("credenciais Shopee ausentes");
 
   const timestamp = Math.floor(Date.now() / 1000);
@@ -146,10 +147,22 @@ async function sincronizarLoja(
       };
       if (cursor) parametros.cursor = cursor;
 
-      let lista = await chamarShopee("/api/v2/order/get_order_list", token, shopId, parametros);
+      let lista = await chamarShopee(
+        "/api/v2/order/get_order_list",
+        token,
+        shopId,
+        lojaId,
+        parametros,
+      );
 
       if (tokenInvalido(lista) && (await renovarERecarregarToken())) {
-        lista = await chamarShopee("/api/v2/order/get_order_list", token, shopId, parametros);
+        lista = await chamarShopee(
+          "/api/v2/order/get_order_list",
+          token,
+          shopId,
+          lojaId,
+          parametros,
+        );
       }
 
       if (lista.error && lista.error !== "") {
@@ -174,14 +187,14 @@ async function sincronizarLoja(
   for (let i = 0; i < unicos.length; i += 50) {
     const lote = unicos.slice(i, i + 50);
 
-    let detalhe = await chamarShopee("/api/v2/order/get_order_detail", token, shopId, {
+    let detalhe = await chamarShopee("/api/v2/order/get_order_detail", token, shopId, lojaId, {
       order_sn_list: lote.join(","),
       response_optional_fields:
         "buyer_username,total_amount,item_list,pay_time,actual_shipping_fee",
     });
 
     if (tokenInvalido(detalhe) && (await renovarERecarregarToken())) {
-      detalhe = await chamarShopee("/api/v2/order/get_order_detail", token, shopId, {
+      detalhe = await chamarShopee("/api/v2/order/get_order_detail", token, shopId, lojaId, {
         order_sn_list: lote.join(","),
         response_optional_fields:
           "buyer_username,total_amount,item_list,pay_time,actual_shipping_fee",

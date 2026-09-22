@@ -9,7 +9,10 @@ export const Route = createFileRoute("/api/public/shopee/refresh")({
           return new Response("Unauthorized", { status: 401 });
         }
         const { refreshTokenIfNeeded } = await import("@/lib/shopee-sync.server");
-        const result = await refreshTokenIfNeeded();
+        const { obterLojaPadraoId } = await import("@/lib/lojas.server");
+        const lojaId = await obterLojaPadraoId();
+        if (!lojaId) return Response.json({ ok: false, error: "nenhuma loja cadastrada" });
+        const result = await refreshTokenIfNeeded(lojaId);
         return Response.json(result);
       },
     },

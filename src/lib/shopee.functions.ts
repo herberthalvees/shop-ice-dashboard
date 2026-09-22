@@ -12,7 +12,41 @@ export const getShopeeAuthUrl = createServerFn({ method: "GET" })
       throw new Error("loja inválida");
     }
     const { buildAuthUrl, originFromRequest } = await import("./shopee.server");
-    return { url: buildAuthUrl(originFromRequest(), data.app, data.lojaId) };
+    return {
+      url: await buildAuthUrl(originFromRequest(), data.app as "principal" | "ads", data.lojaId),
+    };
+  });
+
+// Cada loja pode ter seu próprio app cadastrado na Shopee (CNPJs
+// diferentes). Salva só partner_id/partner_key — nunca devolve a key de
+// volta ao cliente depois.
+export const salvarCredenciaisShopee = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: { lojaId: number; app?: string; partnerId: string; partnerKey: string }) => ({
+      lojaId: Number(data.lojaId),
+      app: data.app === "ads" ? "ads" : "principal",
+      partnerId: data.partnerId.trim(),
+      partnerKey: data.partnerKey.trim(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    if (!Number.isFinite(data.lojaId)) throw new Error("loja inválida");
+    if (!data.partnerId || !data.partnerKey) throw new Error("informe partner id e partner key");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as any;
+    const { error } = await db.from("shopee_connection").upsert(
+      {
+        loja_id: data.lojaId,
+        app_tipo: data.app,
+        partner_id: Number(data.partnerId),
+        partner_key: data.partnerKey,
+      },
+      { onConflict: "loja_id,app_tipo" },
+    );
+    if (error) throw new Error(error.message);
+    return { ok: true };
   });
 
 export const runShopeeSync = createServerFn({ method: "POST" })
@@ -26,7 +60,10 @@ export const runShopeeRefresh = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     const { refreshTokenIfNeeded } = await import("./shopee-sync.server");
-    return await refreshTokenIfNeeded();
+    const { obterLojaPadraoId } = await import("./lojas.server");
+    const lojaId = await obterLojaPadraoId();
+    if (!lojaId) return { ok: false, error: "nenhuma loja cadastrada" };
+    return await refreshTokenIfNeeded(lojaId);
   });
 
 export const sendTestNotification = createServerFn({ method: "POST" })

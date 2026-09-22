@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { credenciaisLojaObrigatorias } from "@/lib/shopee-credenciais.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,18 +66,18 @@ export const Route = createFileRoute("/api/public/shopee/callback")({
             return redirecionar(url.origin, false, "loja nao encontrada");
           }
 
-          const partnerId = process.env.SHOPEE_PARTNER_ID;
-          const partnerKey = process.env.SHOPEE_PARTNER_KEY;
-          const apiBase = process.env.SHOPEE_API_BASE;
-
-          if (!partnerId || !partnerKey || !apiBase) {
-            return redirecionar(url.origin, false, "credenciais da Shopee ausentes");
+          const { partnerId, partnerKey, apiBase, faltando } = await credenciaisLojaObrigatorias(
+            lojaId,
+            "principal",
+          );
+          if (faltando.length > 0) {
+            return redirecionar(url.origin, false, `credenciais ausentes: ${faltando.join(", ")}`);
           }
 
           const path = "/api/v2/auth/token/get";
           const timestamp = Math.floor(Date.now() / 1000);
           const stringBase = `${partnerId}${path}${timestamp}`;
-          const sign = await hmacSha256Hex(partnerKey, stringBase);
+          const sign = await hmacSha256Hex(partnerKey!, stringBase);
 
           const endpoint =
             `${apiBase}${path}` +

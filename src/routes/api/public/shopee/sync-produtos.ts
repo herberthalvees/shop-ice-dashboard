@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { checkCronSecret } from "@/lib/cron-auth.server";
-import { credenciais } from "@/lib/shopee-credenciais.server";
+import { credenciaisLoja } from "@/lib/shopee-credenciais.server";
 import { listarLojasAtivas } from "@/lib/lojas.server";
 
 function responder(corpo: unknown, status = 200) {
@@ -29,14 +29,15 @@ async function chamarShopee(
   path: string,
   accessToken: string,
   shopId: number,
+  lojaId: number,
   opcoes: {
     metodo?: string;
     query?: Record<string, string>;
     corpo?: unknown;
   } = {},
-  appTipo: string = "principal",
+  appTipo: "principal" | "ads" = "principal",
 ) {
-  const { partnerId, partnerKey, apiBase } = credenciais(appTipo);
+  const { partnerId, partnerKey, apiBase } = await credenciaisLoja(lojaId, appTipo);
   if (!partnerId || !partnerKey || !apiBase) throw new Error("credenciais Shopee ausentes");
 
   const timestamp = Math.floor(Date.now() / 1000);
@@ -129,7 +130,7 @@ async function sincronizarLoja(lojaId: number, inicioExecucao: number) {
   const itemIds: number[] = [];
   let offset = 0;
   for (let pagina = 0; pagina < 50; pagina++) {
-    const resp = await chamarShopee("/api/v2/product/get_item_list", token, shopId, {
+    const resp = await chamarShopee("/api/v2/product/get_item_list", token, shopId, lojaId, {
       query: {
         offset: String(offset),
         page_size: "100",
@@ -155,7 +156,7 @@ async function sincronizarLoja(lojaId: number, inicioExecucao: number) {
 
   for (let i = 0; i < itemIds.length; i += 50) {
     const lote = itemIds.slice(i, i + 50);
-    const resp = await chamarShopee("/api/v2/product/get_item_base_info", token, shopId, {
+    const resp = await chamarShopee("/api/v2/product/get_item_base_info", token, shopId, lojaId, {
       query: { item_id_list: lote.join(",") },
     });
     if (resp?.error) {
@@ -175,7 +176,7 @@ async function sincronizarLoja(lojaId: number, inicioExecucao: number) {
       if (it.has_model) {
         // 3) get_model_list
         comVariacao++;
-        const respM = await chamarShopee("/api/v2/product/get_model_list", token, shopId, {
+        const respM = await chamarShopee("/api/v2/product/get_model_list", token, shopId, lojaId, {
           query: { item_id: String(item_id) },
         });
         if (respM?.error) {

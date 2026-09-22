@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { checkCronSecret } from "@/lib/cron-auth.server";
-import { credenciais } from "@/lib/shopee-credenciais.server";
+import { credenciaisLoja } from "@/lib/shopee-credenciais.server";
 import { listarLojasAtivas } from "@/lib/lojas.server";
 
 function responder(corpo: unknown, status = 200) {
@@ -29,14 +29,15 @@ async function chamarShopee(
   path: string,
   accessToken: string,
   shopId: number,
+  lojaId: number,
   opcoes: {
     metodo?: string;
     query?: Record<string, string>;
     corpo?: unknown;
   } = {},
-  appTipo: string = "principal",
+  appTipo: "principal" | "ads" = "principal",
 ) {
-  const { partnerId, partnerKey, apiBase } = credenciais(appTipo);
+  const { partnerId, partnerKey, apiBase } = await credenciaisLoja(lojaId, appTipo);
   if (!partnerId || !partnerKey || !apiBase) throw new Error("credenciais Shopee ausentes");
 
   const timestamp = Math.floor(Date.now() / 1000);
@@ -122,6 +123,7 @@ async function sincronizarLoja(lojaId: number, de: number, ate: number) {
         "/api/v2/payment/get_wallet_transaction_list",
         token,
         shopId,
+        lojaId,
         {
           query: {
             page_no: String(page),

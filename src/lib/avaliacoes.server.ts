@@ -47,7 +47,7 @@ export async function sincronizarAvaliacoes(paginas = 3, lojaId?: number) {
   for (let i = 0; i < paginas; i++) {
     const cur = cursor;
     const r = await comRetry(
-      (c) => getComments(c.access_token, c.shop_id, { cursor: cur, pageSize: 50 }),
+      (c, id) => getComments(c.access_token, c.shop_id, id, { cursor: cur, pageSize: 50 }),
       idLoja,
     );
     if (!r.ok) return { ok: false as const, error: r.error };
@@ -285,7 +285,8 @@ export async function enviarRespostaAvaliacao(commentId: number, texto: string, 
   }
 
   const r = await comRetry(
-    (c) => replyComment(c.access_token, c.shop_id, [{ comment_id: commentId, comment: corpo }]),
+    (c, id) =>
+      replyComment(c.access_token, c.shop_id, id, [{ comment_id: commentId, comment: corpo }]),
     idLoja,
   );
 

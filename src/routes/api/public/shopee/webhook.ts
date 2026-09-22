@@ -21,25 +21,6 @@ const TIPOS_EVENTO: Record<number, string> = {
   15: "atualizacao_rastreio",
 };
 
-async function hmacSha256Hex(chave: string, mensagem: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const cryptoKey = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(chave),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const assinatura = await crypto.subtle.sign(
-    "HMAC",
-    cryptoKey,
-    encoder.encode(mensagem),
-  );
-  return Array.from(new Uint8Array(assinatura))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 function ok() {
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
@@ -56,21 +37,11 @@ async function handlePush(request: Request) {
     const corpoBruto = await request.text();
     const assinaturaRecebida = (request.headers.get("authorization") ?? "").trim();
 
-    const partnerKey = process.env.SHOPEE_PARTNER_KEY;
     const pushUrl = process.env.SHOPEE_PUSH_URL;
-
-    if (!partnerKey || !pushUrl) {
+    if (!pushUrl) {
       console.error("secrets ausentes no webhook");
       return ok();
     }
-
-    const assinaturaEsperada = await hmacSha256Hex(
-      partnerKey,
-      `${pushUrl}|${corpoBruto}`,
-    );
-
-    const assinaturaValida =
-      assinaturaEsperada === assinaturaRecebida.toLowerCase();
 
     let payload: Record<string, unknown>;
     try {
@@ -81,6 +52,13 @@ async function handlePush(request: Request) {
 
     const code = Number(payload.code ?? 0);
     const shopId = payload.shop_id ? Number(payload.shop_id) : null;
+
+    // A Shopee assina cada push com o partner_key do app dono daquela loja
+    // (cada loja pode ter um app diferente) — resolve pelo shop_id do payload.
+    const { verifyWebhookSignatureForShop } = await import("@/lib/shopee.server");
+    const assinaturaValida = shopId
+      ? await verifyWebhookSignatureForShop(shopId, pushUrl, corpoBruto, assinaturaRecebida)
+      : false;
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 

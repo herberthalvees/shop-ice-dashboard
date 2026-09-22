@@ -3,7 +3,7 @@
 // Rota publica (sem JWT) - temporaria para testes via curl
 // ---------------------------------------------------------------
 import { createFileRoute } from "@tanstack/react-router";
-import { credenciaisObrigatorias } from "@/lib/shopee-credenciais.server";
+import { credenciaisLojaObrigatorias } from "@/lib/shopee-credenciais.server";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -57,7 +57,10 @@ async function handler({ request }: { request: Request }) {
       });
     }
 
-    const { partnerId, partnerKey, apiBase, faltando } = credenciaisObrigatorias(appTipo);
+    const { partnerId, partnerKey, apiBase, faltando } = await credenciaisLojaObrigatorias(
+      lojaId,
+      appTipo,
+    );
 
     const origem = reqUrl.origin;
     const redirectBase =

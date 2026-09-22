@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { checkCronSecret } from "@/lib/cron-auth.server";
-import { credenciais } from "@/lib/shopee-credenciais.server";
+import { credenciaisLoja } from "@/lib/shopee-credenciais.server";
 
 function responder(corpo: unknown, status = 200) {
   return new Response(JSON.stringify(corpo, null, 2), {
@@ -66,7 +66,10 @@ async function handler({ request }: { request: Request }) {
         continue;
       }
 
-      const { partnerId, partnerKey, apiBase } = credenciais(appTipo);
+      const { partnerId, partnerKey, apiBase } = await credenciaisLoja(
+        Number(conexao.loja_id),
+        appTipo as "principal" | "ads",
+      );
       if (!partnerId || !partnerKey || !apiBase) {
         resultados.push({ app_tipo: appTipo, ok: false, erro: "secrets ausentes" });
         continue;
