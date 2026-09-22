@@ -25,7 +25,6 @@ where n.nspname = 'public'
     'pedidos_detalhe_totais', 'pedidos_detalhe_totais_impl',
     'produtos_com_giro'
   )
-order by p.proname
 
 union all
 
@@ -34,4 +33,6 @@ select
   indexdef as argumentos,
   null as definicao
 from pg_indexes
-where schemaname = 'public' and tablename = 'shopee_connection';
+where schemaname = 'public' and tablename = 'shopee_connection'
+
+order by 1;
