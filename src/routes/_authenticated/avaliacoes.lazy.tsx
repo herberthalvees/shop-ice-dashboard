@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { useLojaFiltro } from "@/lib/lojas-filtro-store";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -93,9 +94,10 @@ function AvaliacoesPage() {
   const [filtro, setFiltro] = useState<"pendentes" | "todas">("pendentes");
   const [rascunhos, setRascunhos] = useState<Record<number, string>>({});
   const [ocupado, setOcupado] = useState<number | null>(null);
+  const { lojaId } = useLojaFiltro();
 
   const avaliacoes = useQuery({
-    queryKey: ["avaliacoes", filtro],
+    queryKey: ["avaliacoes", filtro, lojaId],
     queryFn: async () => {
       let q = supabase
         .from("avaliacoes")
@@ -105,6 +107,7 @@ function AvaliacoesPage() {
         .order("criado_em", { ascending: false })
         .limit(100);
       if (filtro === "pendentes") q = q.eq("respondida", false);
+      if (lojaId != null) q = (q as any).eq("loja_id", lojaId);
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as Avaliacao[];
@@ -137,9 +140,9 @@ function AvaliacoesPage() {
   });
 
   const historico = useQuery({
-    queryKey: ["avaliacoes-historico"],
+    queryKey: ["avaliacoes-historico", lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("avaliacoes")
         .select(
           "comment_id, produto, comprador, rating, comentario, resposta_shopee, resposta_gerada, enviada_em",
@@ -147,6 +150,8 @@ function AvaliacoesPage() {
         .eq("respondida", true)
         .order("enviada_em", { ascending: false, nullsFirst: false })
         .limit(100);
+      if (lojaId != null) q = (q as any).eq("loja_id", lojaId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as Historico[];
     },
@@ -291,9 +296,7 @@ function AvaliacoesPage() {
                       <Badge>Pendente</Badge>
                     )}
                   </div>
-                  {a.produto && (
-                    <CardDescription className="truncate">{a.produto}</CardDescription>
-                  )}
+                  {a.produto && <CardDescription className="truncate">{a.produto}</CardDescription>}
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <p className="whitespace-pre-wrap rounded-lg border border-border/60 bg-muted/40 p-3 text-sm">
@@ -440,7 +443,8 @@ function HistoricoRespostas({
         </Button>
       </div>
 
-      {carregando && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
+      {carregando &&
+        Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-32 w-full" />)}
 
       {!carregando && itens.length === 0 && (
         <Card>

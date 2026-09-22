@@ -9,16 +9,37 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { CalendarIcon, TrendingDown, AlertTriangle, HelpCircle, Calculator, ExternalLink } from "lucide-react";
+import {
+  CalendarIcon,
+  TrendingDown,
+  AlertTriangle,
+  HelpCircle,
+  Calculator,
+  ExternalLink,
+} from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { usePeriodo, computeRange } from "@/lib/periodo-store";
+import { useLojaFiltro } from "@/lib/lojas-filtro-store";
 
 export const Route = createLazyFileRoute("/_authenticated/precificacao")({
   component: PrecificacaoPage,
@@ -48,6 +69,7 @@ type LinhaMargem = {
 
 function PrecificacaoPage() {
   const { preset, custom, setPreset, setCustom } = usePeriodo();
+  const { lojaId } = useLojaFiltro();
   const [customOpen, setCustomOpen] = useState(false);
   const [somentePrejuizo, setSomentePrejuizo] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
@@ -56,9 +78,13 @@ function PrecificacaoPage() {
   const rangeLabel = de.getTime() === ate.getTime() ? fmtBR(de) : `${fmtBR(de)} a ${fmtBR(ate)}`;
 
   const { data: linhas, isLoading } = useQuery({
-    queryKey: ["analise-margem", p_de, p_ate],
+    queryKey: ["analise-margem", p_de, p_ate, lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("analise_margem_sku" as any, { p_de, p_ate });
+      const { data, error } = await supabase.rpc("analise_margem_sku" as any, {
+        p_de,
+        p_ate,
+        p_loja_id: lojaId,
+      });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         item_id: Number(r.item_id ?? 0),
@@ -104,180 +130,215 @@ function PrecificacaoPage() {
 
   return (
     <TooltipProvider delayDuration={200}>
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Precificação</h1>
-          <p className="text-sm text-muted-foreground">Análise de margem e preço mínimo por SKU · {rangeLabel}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Select value={preset} onValueChange={(v) => { setPreset(v as any); if (v === "custom") setCustomOpen(true); }}>
-            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="hoje">Hoje</SelectItem>
-              <SelectItem value="ontem">Ontem</SelectItem>
-              <SelectItem value="7d">Últimos 7 dias</SelectItem>
-              <SelectItem value="30d">Últimos 30 dias</SelectItem>
-              <SelectItem value="custom">Personalizado</SelectItem>
-            </SelectContent>
-          </Select>
-          {preset === "custom" && (
-            <Popover open={customOpen} onOpenChange={setCustomOpen}>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <CalendarIcon className="h-4 w-4" />
-                  {custom?.from ? rangeLabel : "Escolher datas"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="w-auto p-0 bg-popover">
-                <Calendar mode="range" numberOfMonths={2} selected={custom} onSelect={(r: DateRange | undefined) => setCustom(r)} locale={ptBR} />
-              </PopoverContent>
-            </Popover>
-          )}
-        </div>
-      </div>
-
-      {/* Calculadora avulsa */}
-      <CalculadoraAvulsa />
-
-      {/* Cards resumo */}
-      <div className="grid gap-3 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm text-muted-foreground">SKUs sem custo informado</CardTitle>
-              <HelpCircle className="h-4 w-4 text-muted-foreground" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{resumo.skusSemCusto}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm text-muted-foreground">SKUs em prejuízo</CardTitle>
-              <TrendingDown className="h-4 w-4 text-destructive" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold">{resumo.skusPrejuizo}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-sm text-muted-foreground">Prejuízo no período</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-semibold text-destructive">{brl(resumo.perdaTotal)}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Progresso de preenchimento de custos */}
-      <Card>
-        <CardContent className="py-4">
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Preenchimento de custos</span>
-            <span className="font-medium">
-              {resumo.comCusto} de {resumo.total} SKUs
-              {resumo.total > 0 && (
-                <span className="text-muted-foreground ml-1">
-                  ({Math.round((resumo.comCusto / resumo.total) * 100)}%)
-                </span>
-              )}
-            </span>
+      <div className="space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">Precificação</h1>
+            <p className="text-sm text-muted-foreground">
+              Análise de margem e preço mínimo por SKU · {rangeLabel}
+            </p>
           </div>
-          <Progress value={resumo.total > 0 ? (resumo.comCusto / resumo.total) * 100 : 0} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
-          <CardTitle className="text-base">Análise por SKU</CardTitle>
           <div className="flex items-center gap-2">
-            <Switch id="prej" checked={somentePrejuizo} onCheckedChange={setSomentePrejuizo} />
-            <Label htmlFor="prej" className="text-sm">Mostrar apenas prejuízo</Label>
+            <Select
+              value={preset}
+              onValueChange={(v) => {
+                setPreset(v as any);
+                if (v === "custom") setCustomOpen(true);
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="hoje">Hoje</SelectItem>
+                <SelectItem value="ontem">Ontem</SelectItem>
+                <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                <SelectItem value="custom">Personalizado</SelectItem>
+              </SelectContent>
+            </Select>
+            {preset === "custom" && (
+              <Popover open={customOpen} onOpenChange={setCustomOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="gap-2">
+                    <CalendarIcon className="h-4 w-4" />
+                    {custom?.from ? rangeLabel : "Escolher datas"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-auto p-0 bg-popover">
+                  <Calendar
+                    mode="range"
+                    numberOfMonths={2}
+                    selected={custom}
+                    onSelect={(r: DateRange | undefined) => setCustom(r)}
+                    locale={ptBR}
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4 space-y-2">
-              {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
+        </div>
+
+        {/* Calculadora avulsa */}
+        <CalculadoraAvulsa />
+
+        {/* Cards resumo */}
+        <div className="grid gap-3 md:grid-cols-3">
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm text-muted-foreground">
+                  SKUs sem custo informado
+                </CardTitle>
+                <HelpCircle className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold">{resumo.skusSemCusto}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm text-muted-foreground">SKUs em prejuízo</CardTitle>
+                <TrendingDown className="h-4 w-4 text-destructive" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold">{resumo.skusPrejuizo}</div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm text-muted-foreground">Prejuízo no período</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-semibold text-destructive">
+                {brl(resumo.perdaTotal)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Progresso de preenchimento de custos */}
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between text-sm mb-2">
+              <span className="text-muted-foreground">Preenchimento de custos</span>
+              <span className="font-medium">
+                {resumo.comCusto} de {resumo.total} SKUs
+                {resumo.total > 0 && (
+                  <span className="text-muted-foreground ml-1">
+                    ({Math.round((resumo.comCusto / resumo.total) * 100)}%)
+                  </span>
+                )}
+              </span>
             </div>
-          ) : filtradas.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">Sem dados no período.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Produto</TableHead>
-                    <TableHead className="w-[120px]">SKU</TableHead>
-                    <TableHead className="text-right">Unid.</TableHead>
-                    <TableHead className="text-right">Preço médio</TableHead>
-                    <TableHead className="text-right w-[160px]">Custo no período</TableHead>
-                    <TableHead className="text-right w-[150px]">Custo atual</TableHead>
-                    <TableHead className="text-right">Líquido/u</TableHead>
-                    <TableHead className="text-right">Lucro/u</TableHead>
-                    <TableHead className="text-right">Margem</TableHead>
-                    <TableHead className="text-right">Preço mín.</TableHead>
-                    <TableHead className="text-right">
-                      <Tooltip>
-                        <TooltipTrigger className="inline-flex items-center gap-1">
-                          ROAS mín. <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="max-w-xs">
-                          Faturamento mínimo por real investido em anúncios para não ter prejuízo.
-                        </TooltipContent>
-                      </Tooltip>
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtradas.map((l) => (
-                    <LinhaSKU key={`${l.item_id}-${l.model_id}`} linha={l} />
-                  ))}
-                </TableBody>
-              </Table>
+            <Progress value={resumo.total > 0 ? (resumo.comCusto / resumo.total) * 100 : 0} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
+            <CardTitle className="text-base">Análise por SKU</CardTitle>
+            <div className="flex items-center gap-2">
+              <Switch id="prej" checked={somentePrejuizo} onCheckedChange={setSomentePrejuizo} />
+              <Label htmlFor="prej" className="text-sm">
+                Mostrar apenas prejuízo
+              </Label>
             </div>
-          )}
-          <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
-            <span>{resumo.total} variações no total</span>
-            <span>
-              {resumo.comCusto} com custo preenchido
-              {resumo.total > 0 && (
-                <span className="ml-1">({Math.round((resumo.comCusto / resumo.total) * 100)}%)</span>
-              )}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            {isLoading ? (
+              <div className="p-4 space-y-2">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : filtradas.length === 0 ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                Sem dados no período.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Produto</TableHead>
+                      <TableHead className="w-[120px]">SKU</TableHead>
+                      <TableHead className="text-right">Unid.</TableHead>
+                      <TableHead className="text-right">Preço médio</TableHead>
+                      <TableHead className="text-right w-[160px]">Custo no período</TableHead>
+                      <TableHead className="text-right w-[150px]">Custo atual</TableHead>
+                      <TableHead className="text-right">Líquido/u</TableHead>
+                      <TableHead className="text-right">Lucro/u</TableHead>
+                      <TableHead className="text-right">Margem</TableHead>
+                      <TableHead className="text-right">Preço mín.</TableHead>
+                      <TableHead className="text-right">
+                        <Tooltip>
+                          <TooltipTrigger className="inline-flex items-center gap-1">
+                            ROAS mín. <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            Faturamento mínimo por real investido em anúncios para não ter prejuízo.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filtradas.map((l) => (
+                      <LinhaSKU key={`${l.item_id}-${l.model_id}`} linha={l} />
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
+              <span>{resumo.total} variações no total</span>
+              <span>
+                {resumo.comCusto} com custo preenchido
+                {resumo.total > 0 && (
+                  <span className="ml-1">
+                    ({Math.round((resumo.comCusto / resumo.total) * 100)}%)
+                  </span>
+                )}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </TooltipProvider>
   );
 }
 
 function LinhaSKU({ linha }: { linha: LinhaMargem }) {
   const rowClass =
-    linha.situacao === "prejuizo" ? "bg-destructive/10 hover:bg-destructive/15"
-    : linha.situacao === "margem baixa" ? "bg-amber-500/10 hover:bg-amber-500/15"
-    : linha.situacao === "sem custo" ? "bg-muted/40 hover:bg-muted/60"
-    : "";
+    linha.situacao === "prejuizo"
+      ? "bg-destructive/10 hover:bg-destructive/15"
+      : linha.situacao === "margem baixa"
+        ? "bg-amber-500/10 hover:bg-amber-500/15"
+        : linha.situacao === "sem custo"
+          ? "bg-muted/40 hover:bg-muted/60"
+          : "";
   const margemClass =
-    linha.situacao === "prejuizo" ? "text-destructive font-medium"
-    : linha.situacao === "margem baixa" ? "text-amber-500 font-medium"
-    : "";
+    linha.situacao === "prejuizo"
+      ? "text-destructive font-medium"
+      : linha.situacao === "margem baixa"
+        ? "text-amber-500 font-medium"
+        : "";
   const mudou =
     linha.custo_atual != null &&
     linha.custo_periodo != null &&
     Math.abs(linha.custo_atual - linha.custo_periodo) > 0.0001;
   return (
     <TableRow className={rowClass}>
-      <TableCell className="max-w-[280px] truncate" title={linha.produto ?? ""}>{linha.produto ?? "—"}</TableCell>
+      <TableCell className="max-w-[280px] truncate" title={linha.produto ?? ""}>
+        {linha.produto ?? "—"}
+      </TableCell>
       <TableCell className="font-mono text-xs">{linha.sku}</TableCell>
       <TableCell className="text-right">{linha.unidades.toLocaleString("pt-BR")}</TableCell>
       <TableCell className="text-right">{brl(linha.preco_medio)}</TableCell>
@@ -305,7 +366,8 @@ function LinhaSKU({ linha }: { linha: LinhaMargem }) {
               </span>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
-              O custo do fornecedor mudou dentro do intervalo analisado. Margem e lucro usam o custo do período; preço mínimo e ROAS usam o custo atual.
+              O custo do fornecedor mudou dentro do intervalo analisado. Margem e lucro usam o custo
+              do período; preço mínimo e ROAS usam o custo atual.
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -313,7 +375,9 @@ function LinhaSKU({ linha }: { linha: LinhaMargem }) {
         )}
       </TableCell>
       <TableCell className="text-right">{brl(linha.liquido_unitario)}</TableCell>
-      <TableCell className="text-right">{linha.lucro_unitario == null ? "—" : brl(linha.lucro_unitario)}</TableCell>
+      <TableCell className="text-right">
+        {linha.lucro_unitario == null ? "—" : brl(linha.lucro_unitario)}
+      </TableCell>
       <TableCell className={`text-right ${margemClass}`}>
         {linha.margem_pct == null ? "—" : `${linha.margem_pct.toFixed(1)}%`}
       </TableCell>
@@ -344,7 +408,11 @@ function CalculadoraAvulsa() {
         ? (custoNum + 4) / denom
         : null;
   const lucro =
-    preco == null ? null : base === "custo" ? custoNum * (margemNum / 100) : preco * (margemNum / 100);
+    preco == null
+      ? null
+      : base === "custo"
+        ? custoNum * (margemNum / 100)
+        : preco * (margemNum / 100);
   const margemSobrePreco = preco && preco > 0 && lucro != null ? (lucro / preco) * 100 : null;
 
   return (
@@ -362,7 +430,14 @@ function CalculadoraAvulsa() {
         <div className="grid gap-3 md:grid-cols-5">
           <div className="space-y-1">
             <Label className="text-xs">Custo unitário (R$)</Label>
-            <Input type="number" step="0.01" min="0" value={custo} onChange={(e) => setCusto(e.target.value)} placeholder="0,00" />
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              value={custo}
+              onChange={(e) => setCusto(e.target.value)}
+              placeholder="0,00"
+            />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Margem calculada sobre</Label>
@@ -401,7 +476,8 @@ function CalculadoraAvulsa() {
         </div>
         {valido && base === "preco" && denom <= 0 && (
           <p className="mt-2 text-xs text-destructive">
-            Com margem sobre o preço de venda, o valor precisa ser menor que 80% (a Shopee já fica com 20%).
+            Com margem sobre o preço de venda, o valor precisa ser menor que 80% (a Shopee já fica
+            com 20%).
           </p>
         )}
         {valido && preco != null && (

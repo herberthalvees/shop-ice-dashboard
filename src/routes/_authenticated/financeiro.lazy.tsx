@@ -6,16 +6,39 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { CalendarIcon, Wallet, ArrowDownCircle, ArrowUpCircle, Clock, ChevronLeft, ChevronRight, Search } from "lucide-react";
+import {
+  CalendarIcon,
+  Wallet,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  Clock,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+} from "lucide-react";
 import { usePeriodo, computeRange } from "@/lib/periodo-store";
+import { useLojaFiltro } from "@/lib/lojas-filtro-store";
 
 export const Route = createLazyFileRoute("/_authenticated/financeiro")({
   component: FinanceiroPage,
@@ -42,6 +65,7 @@ type Transacao = {
 
 function FinanceiroPage() {
   const { preset, custom, setPreset, setCustom } = usePeriodo();
+  const { lojaId } = useLojaFiltro();
   const [customOpen, setCustomOpen] = useState(false);
   const [tipoFiltro, setTipoFiltro] = useState<string>("todos");
   const [buscaOrder, setBuscaOrder] = useState("");
@@ -54,12 +78,18 @@ function FinanceiroPage() {
   const rangeLabel = de.getTime() === ate.getTime() ? fmtBR(de) : `${fmtBR(de)} a ${fmtBR(ate)}`;
 
   // Reseta paginação ao mudar filtros
-  useMemo(() => { setPagina(0); }, [p_de, p_ate, tipoFiltro, buscaOrder]);
+  useMemo(() => {
+    setPagina(0);
+  }, [p_de, p_ate, tipoFiltro, buscaOrder]);
 
   const { data: resumo, isLoading: loadingResumo } = useQuery({
-    queryKey: ["carteira-resumo", p_de, p_ate],
+    queryKey: ["carteira-resumo", p_de, p_ate, lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("carteira_resumo" as any, { p_de, p_ate });
+      const { data, error } = await supabase.rpc("carteira_resumo" as any, {
+        p_de,
+        p_ate,
+        p_loja_id: lojaId,
+      });
       if (error) throw error;
       const row = Array.isArray(data) ? data[0] : data;
       return {
@@ -76,16 +106,18 @@ function FinanceiroPage() {
 
   // Tipos disponíveis no período
   const { data: tipos } = useQuery({
-    queryKey: ["carteira-tipos", p_de, p_ate],
+    queryKey: ["carteira-tipos", p_de, p_ate, lojaId],
     queryFn: async () => {
       const dataDe = `${p_de}T00:00:00-03:00`;
       const dataAte = `${p_ate}T23:59:59-03:00`;
-      const { data, error } = await supabase
+      let qTipos = supabase
         .from("carteira_transacoes" as any)
         .select("tipo")
         .gte("data_transacao", dataDe)
         .lte("data_transacao", dataAte)
         .limit(500);
+      if (lojaId != null) qTipos = qTipos.eq("loja_id", lojaId);
+      const { data, error } = await qTipos;
       if (error) throw error;
       const set = new Set<string>();
       for (const r of (data as any[]) ?? []) if (r.tipo) set.add(r.tipo);
@@ -94,19 +126,23 @@ function FinanceiroPage() {
   });
 
   const { data: pagResult, isLoading: loadingTabela } = useQuery({
-    queryKey: ["carteira-tx", p_de, p_ate, tipoFiltro, buscaOrder, pagina],
+    queryKey: ["carteira-tx", p_de, p_ate, tipoFiltro, buscaOrder, pagina, lojaId],
     queryFn: async () => {
       const dataDe = `${p_de}T00:00:00-03:00`;
       const dataAte = `${p_ate}T23:59:59-03:00`;
       let q = supabase
         .from("carteira_transacoes" as any)
-        .select("transaction_id, tipo, fluxo, valor, saldo_apos, order_sn, descricao, data_transacao", { count: "exact" })
+        .select(
+          "transaction_id, tipo, fluxo, valor, saldo_apos, order_sn, descricao, data_transacao",
+          { count: "exact" },
+        )
         .gte("data_transacao", dataDe)
         .lte("data_transacao", dataAte)
         .order("data_transacao", { ascending: false })
         .range(pagina * PAGE_SIZE, pagina * PAGE_SIZE + PAGE_SIZE - 1);
       if (tipoFiltro !== "todos") q = q.eq("tipo", tipoFiltro);
       if (buscaOrder.trim()) q = q.ilike("order_sn", `%${buscaOrder.trim()}%`);
+      if (lojaId != null) q = q.eq("loja_id", lojaId);
       const { data, error, count } = await q;
       if (error) throw error;
       return { linhas: (data as unknown as Transacao[]) ?? [], total: count ?? 0 };
@@ -121,11 +157,21 @@ function FinanceiroPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Financeiro</h1>
-          <p className="text-sm text-muted-foreground">Movimentações da carteira Shopee · {rangeLabel}</p>
+          <p className="text-sm text-muted-foreground">
+            Movimentações da carteira Shopee · {rangeLabel}
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={preset} onValueChange={(v) => { setPreset(v as any); if (v === "custom") setCustomOpen(true); }}>
-            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+          <Select
+            value={preset}
+            onValueChange={(v) => {
+              setPreset(v as any);
+              if (v === "custom") setCustomOpen(true);
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="hoje">Hoje</SelectItem>
               <SelectItem value="ontem">Ontem</SelectItem>
@@ -145,7 +191,13 @@ function FinanceiroPage() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-auto p-0 bg-popover">
-                <Calendar mode="range" numberOfMonths={2} selected={custom} onSelect={(r: DateRange | undefined) => setCustom(r)} locale={ptBR} />
+                <Calendar
+                  mode="range"
+                  numberOfMonths={2}
+                  selected={custom}
+                  onSelect={(r: DateRange | undefined) => setCustom(r)}
+                  locale={ptBR}
+                />
               </PopoverContent>
             </Popover>
           )}
@@ -158,7 +210,11 @@ function FinanceiroPage() {
           titulo="Saldo disponível"
           icone={<Wallet className="h-4 w-4" />}
           valor={loadingResumo ? null : brl(resumo?.saldo_atual)}
-          subtitulo={resumo?.saldo_em ? `atualizado em ${fmtDataHora(resumo.saldo_em)}` : "sem transações registradas"}
+          subtitulo={
+            resumo?.saldo_em
+              ? `atualizado em ${fmtDataHora(resumo.saldo_em)}`
+              : "sem transações registradas"
+          }
           destaque
         />
         <CardResumo
@@ -188,17 +244,24 @@ function FinanceiroPage() {
       {/* Filtros da tabela */}
       <div className="flex flex-wrap items-center gap-2">
         <Select value={tipoFiltro} onValueChange={setTipoFiltro}>
-          <SelectTrigger className="w-[220px]"><SelectValue placeholder="Todos os tipos" /></SelectTrigger>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue placeholder="Todos os tipos" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="todos">Todos os tipos</SelectItem>
             {(tipos ?? []).map((t) => (
-              <SelectItem key={t} value={t}>{t}</SelectItem>
+              <SelectItem key={t} value={t}>
+                {t}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <form
           className="flex items-center gap-2"
-          onSubmit={(e) => { e.preventDefault(); setBuscaOrder(buscaOrderInput); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            setBuscaOrder(buscaOrderInput);
+          }}
         >
           <div className="relative">
             <Search className="pointer-events-none absolute left-2 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -209,9 +272,18 @@ function FinanceiroPage() {
               onChange={(e) => setBuscaOrderInput(e.target.value)}
             />
           </div>
-          <Button type="submit" variant="secondary">Buscar</Button>
+          <Button type="submit" variant="secondary">
+            Buscar
+          </Button>
           {buscaOrder && (
-            <Button type="button" variant="ghost" onClick={() => { setBuscaOrder(""); setBuscaOrderInput(""); }}>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setBuscaOrder("");
+                setBuscaOrderInput("");
+              }}
+            >
               Limpar
             </Button>
           )}
@@ -241,13 +313,18 @@ function FinanceiroPage() {
                   Array.from({ length: 8 }).map((_, i) => (
                     <TableRow key={i}>
                       {Array.from({ length: 6 }).map((__, j) => (
-                        <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
+                        <TableCell key={j}>
+                          <Skeleton className="h-4 w-full" />
+                        </TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : (pagResult?.linhas.length ?? 0) === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-8">
+                    <TableCell
+                      colSpan={6}
+                      className="text-center text-sm text-muted-foreground py-8"
+                    >
                       Nenhuma transação encontrada no período.
                     </TableCell>
                   </TableRow>
@@ -257,9 +334,18 @@ function FinanceiroPage() {
                     const negativo = t.fluxo === "MONEY_OUT";
                     return (
                       <TableRow key={t.transaction_id}>
-                        <TableCell className="whitespace-nowrap text-sm">{fmtDataHora(t.data_transacao)}</TableCell>
-                        <TableCell><Badge variant="outline">{t.tipo ?? "—"}</Badge></TableCell>
-                        <TableCell className="max-w-[420px] truncate text-sm" title={t.descricao ?? ""}>{t.descricao ?? "—"}</TableCell>
+                        <TableCell className="whitespace-nowrap text-sm">
+                          {fmtDataHora(t.data_transacao)}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{t.tipo ?? "—"}</Badge>
+                        </TableCell>
+                        <TableCell
+                          className="max-w-[420px] truncate text-sm"
+                          title={t.descricao ?? ""}
+                        >
+                          {t.descricao ?? "—"}
+                        </TableCell>
                         <TableCell className="font-mono text-xs">{t.order_sn ?? "—"}</TableCell>
                         <TableCell
                           className={
@@ -267,7 +353,10 @@ function FinanceiroPage() {
                             (positivo ? "text-emerald-500" : negativo ? "text-rose-500" : "")
                           }
                         >
-                          {t.valor == null ? "—" : (positivo ? "+ " : negativo ? "- " : "") + brl(Math.abs(Number(t.valor)))}
+                          {t.valor == null
+                            ? "—"
+                            : (positivo ? "+ " : negativo ? "- " : "") +
+                              brl(Math.abs(Number(t.valor)))}
                         </TableCell>
                         <TableCell className="text-right text-sm">{brl(t.saldo_apos)}</TableCell>
                       </TableRow>
@@ -308,7 +397,11 @@ function FinanceiroPage() {
 }
 
 function CardResumo({
-  titulo, icone, valor, subtitulo, destaque,
+  titulo,
+  icone,
+  valor,
+  subtitulo,
+  destaque,
 }: {
   titulo: string;
   icone: React.ReactNode;
@@ -319,14 +412,18 @@ function CardResumo({
   return (
     <Card className={destaque ? "border-primary/40" : undefined}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{titulo}</CardTitle>
+        <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          {titulo}
+        </CardTitle>
         {icone}
       </CardHeader>
       <CardContent>
         {valor == null ? (
           <Skeleton className="h-8 w-32" />
         ) : (
-          <div className={"text-2xl font-semibold " + (destaque ? "text-primary" : "")}>{valor}</div>
+          <div className={"text-2xl font-semibold " + (destaque ? "text-primary" : "")}>
+            {valor}
+          </div>
         )}
         {subtitulo && <p className="mt-1 text-xs text-muted-foreground">{subtitulo}</p>}
       </CardContent>

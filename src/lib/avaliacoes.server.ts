@@ -272,9 +272,21 @@ export async function enviarRespostaAvaliacao(commentId: number, texto: string, 
   const corpo = texto.trim();
   if (!corpo) return { ok: false as const, error: "texto vazio" };
 
+  // A avaliação já sabe a qual loja pertence — usa isso em vez da loja
+  // padrão pra não tentar responder pelo shop_id errado.
+  let idLoja = lojaId;
+  if (idLoja == null) {
+    const { data: av } = await supabaseAdmin
+      .from("avaliacoes")
+      .select("loja_id")
+      .eq("comment_id", commentId)
+      .maybeSingle();
+    idLoja = (av as { loja_id?: number } | null)?.loja_id ?? undefined;
+  }
+
   const r = await comRetry(
     (c) => replyComment(c.access_token, c.shop_id, [{ comment_id: commentId, comment: corpo }]),
-    lojaId,
+    idLoja,
   );
 
   if (!r.ok) {

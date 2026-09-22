@@ -11,11 +11,28 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ChevronLeft, ChevronRight, CornerDownRight, Settings2, Plus, Trash2, Pencil, X, Check } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CornerDownRight,
+  Settings2,
+  Plus,
+  Trash2,
+  Pencil,
+  X,
+  Check,
+} from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { useLojaFiltro } from "@/lib/lojas-filtro-store";
 
 export const Route = createLazyFileRoute("/_authenticated/dre")({
   component: DrePage,
@@ -81,7 +98,9 @@ function Linha({
   return (
     <div className="flex items-center justify-between gap-3 py-2">
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <span className={`text-sm ${strong ? "font-semibold" : "text-muted-foreground"}`}>{label}</span>
+        <span className={`text-sm ${strong ? "font-semibold" : "text-muted-foreground"}`}>
+          {label}
+        </span>
         {badge}
         {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
       </div>
@@ -97,11 +116,16 @@ function DrePage() {
   const [ref, setRef] = useState(new Date(hoje.getFullYear(), hoje.getMonth(), 1));
   const ano = ref.getFullYear();
   const mes = ref.getMonth() + 1;
+  const { lojaId } = useLojaFiltro();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["dre-mensal", ano, mes],
+    queryKey: ["dre-mensal", ano, mes, lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dre_mensal", { p_ano: ano, p_mes: mes });
+      const { data, error } = await supabase.rpc("dre_mensal", {
+        p_ano: ano,
+        p_mes: mes,
+        p_loja_id: lojaId,
+      });
       if (error) throw error;
       return (data as any[])?.[0] ?? null;
     },
@@ -132,11 +156,12 @@ function DrePage() {
   });
 
   const { data: variaveisDetalhe } = useQuery({
-    queryKey: ["dre-variaveis-detalhe", ano, mes],
+    queryKey: ["dre-variaveis-detalhe", ano, mes, lojaId],
     queryFn: async () => {
       const { data, error } = await (supabase as any).rpc("dre_variaveis_detalhe", {
         p_ano: ano,
         p_mes: mes,
+        p_loja_id: lojaId,
       });
       if (error) throw error;
       return (data ?? []) as VariavelDetalhe[];
@@ -160,7 +185,9 @@ function DrePage() {
           <Button variant="outline" size="icon" onClick={() => mover(-1)} aria-label="Mês anterior">
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="min-w-[10rem] text-center text-sm font-medium capitalize">{mesLabel}</span>
+          <span className="min-w-[10rem] text-center text-sm font-medium capitalize">
+            {mesLabel}
+          </span>
           <Button variant="outline" size="icon" onClick={() => mover(1)} aria-label="Próximo mês">
             <ChevronRight className="h-4 w-4" />
           </Button>
@@ -177,7 +204,9 @@ function DrePage() {
         <div className="grid gap-4">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">Receita</CardTitle>
+              <CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">
+                Receita
+              </CardTitle>
             </CardHeader>
             <CardContent className="divide-y">
               <Linha label="Receita Bruta" valor={data?.receita_bruta} />
@@ -188,7 +217,9 @@ function DrePage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">Custos</CardTitle>
+              <CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">
+                Custos
+              </CardTitle>
             </CardHeader>
             <CardContent className="divide-y">
               <Linha
@@ -245,7 +276,10 @@ function DrePage() {
                 {ativas.length > 0 && (
                   <div className="mt-1 space-y-1 pl-6">
                     {ativas.map((d) => (
-                      <div key={d.id} className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                      <div
+                        key={d.id}
+                        className="flex items-center justify-between gap-3 text-xs text-muted-foreground"
+                      >
                         <span className="flex items-center gap-1.5">
                           <CornerDownRight className="h-3 w-3" />
                           {d.descricao}
@@ -267,7 +301,10 @@ function DrePage() {
                 {(variaveisDetalhe ?? []).length > 0 && (
                   <div className="mt-1 space-y-1 pl-6">
                     {(variaveisDetalhe ?? []).map((v) => (
-                      <div key={v.id} className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                      <div
+                        key={v.id}
+                        className="flex items-center justify-between gap-3 text-xs text-muted-foreground"
+                      >
                         <span className="flex items-center gap-1.5">
                           <CornerDownRight className="h-3 w-3" />
                           {v.descricao}
@@ -309,7 +346,9 @@ function DrePage() {
 
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">Resultado Final</CardTitle>
+              <CardTitle className="text-sm uppercase tracking-wide text-muted-foreground">
+                Resultado Final
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <Linha
@@ -323,7 +362,11 @@ function DrePage() {
                 <span className="text-sm font-semibold uppercase tracking-wide">Lucro Líquido</span>
                 <div className="flex items-center gap-3">
                   <Badge
-                    className={lucro >= 0 ? "bg-emerald-500/15 text-emerald-500" : "bg-destructive/15 text-destructive"}
+                    className={
+                      lucro >= 0
+                        ? "bg-emerald-500/15 text-emerald-500"
+                        : "bg-destructive/15 text-destructive"
+                    }
                     variant="secondary"
                   >
                     {pct(data?.lucro_liquido_pct)}
@@ -387,7 +430,9 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
       dia_corte_ciclo: dc,
     };
     const tabela = (supabase as any).from("despesas_variaveis");
-    const { error } = editId ? await tabela.update(payload).eq("id", editId) : await tabela.insert(payload);
+    const { error } = editId
+      ? await tabela.update(payload).eq("id", editId)
+      : await tabela.insert(payload);
     setSaving(false);
     if (error) {
       toast.error("Erro ao salvar", { description: error.message });
@@ -399,7 +444,10 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
   }
 
   async function toggleAtiva(r: Variavel, ativa: boolean) {
-    const { error } = await (supabase as any).from("despesas_variaveis").update({ ativa }).eq("id", r.id);
+    const { error } = await (supabase as any)
+      .from("despesas_variaveis")
+      .update({ ativa })
+      .eq("id", r.id);
     if (error) return toast.error("Erro ao atualizar", { description: error.message });
     refresh();
   }
@@ -413,7 +461,13 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) limpar(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) limpar();
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Settings2 className="mr-2 h-4 w-4" />
@@ -425,27 +479,46 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
           <DialogTitle>Despesas variáveis por pedido</DialogTitle>
         </DialogHeader>
         <p className="text-xs text-muted-foreground">
-          Sem franquia, cobra o valor em todos os pedidos válidos do mês. Com franquia, cobra apenas o que exceder a
-          quantidade dentro do ciclo que começa no dia de corte.
+          Sem franquia, cobra o valor em todos os pedidos válidos do mês. Com franquia, cobra apenas
+          o que exceder a quantidade dentro do ciclo que começa no dia de corte.
         </p>
 
         <div className="grid gap-3">
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs">Descrição</Label>
-              <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Insumos por envio" />
+              <Input
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                placeholder="Insumos por envio"
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Valor por pedido (R$)</Label>
-              <Input value={valorPedido} onChange={(e) => setValorPedido(e.target.value)} placeholder="0,20" inputMode="decimal" />
+              <Input
+                value={valorPedido}
+                onChange={(e) => setValorPedido(e.target.value)}
+                placeholder="0,20"
+                inputMode="decimal"
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Franquia de pedidos (opcional)</Label>
-              <Input value={franquia} onChange={(e) => setFranquia(e.target.value)} placeholder="1800" inputMode="numeric" />
+              <Input
+                value={franquia}
+                onChange={(e) => setFranquia(e.target.value)}
+                placeholder="1800"
+                inputMode="numeric"
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Dia de corte do ciclo (1–28)</Label>
-              <Input value={diaCorte} onChange={(e) => setDiaCorte(e.target.value)} placeholder="24" inputMode="numeric" />
+              <Input
+                value={diaCorte}
+                onChange={(e) => setDiaCorte(e.target.value)}
+                placeholder="24"
+                inputMode="numeric"
+              />
             </div>
           </div>
           <div className="flex gap-2">
@@ -466,20 +539,31 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
 
         <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
           {variaveis.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma regra cadastrada.</p>
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Nenhuma regra cadastrada.
+            </p>
           )}
           {variaveis.map((r) => (
-            <div key={r.id} className="flex items-center justify-between gap-3 rounded-md border p-2">
+            <div
+              key={r.id}
+              className="flex items-center justify-between gap-3 rounded-md border p-2"
+            >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{r.descricao}</p>
                 <p className="text-xs text-muted-foreground">
                   {brl(r.valor_por_pedido)} por pedido
-                  {r.franquia_pedidos ? ` · acima de ${r.franquia_pedidos.toLocaleString("pt-BR")}` : ""}
+                  {r.franquia_pedidos
+                    ? ` · acima de ${r.franquia_pedidos.toLocaleString("pt-BR")}`
+                    : ""}
                   {r.dia_corte_ciclo ? ` · ciclo dia ${r.dia_corte_ciclo}` : ""}
                 </p>
               </div>
               <div className="flex items-center gap-1">
-                <Switch checked={r.ativa} onCheckedChange={(v) => toggleAtiva(r, v)} aria-label="Ativa" />
+                <Switch
+                  checked={r.ativa}
+                  onCheckedChange={(v) => toggleAtiva(r, v)}
+                  aria-label="Ativa"
+                />
                 <Button
                   variant="ghost"
                   size="icon"
@@ -562,7 +646,13 @@ function GerenciarDespesas({ despesas }: { despesas: Despesa[] }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) limpar(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) limpar();
+      }}
+    >
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <Settings2 className="mr-2 h-4 w-4" />
@@ -578,15 +668,28 @@ function GerenciarDespesas({ despesas }: { despesas: Despesa[] }) {
           <div className="grid gap-2 sm:grid-cols-[2fr_1fr_1fr]">
             <div className="space-y-1">
               <Label className="text-xs">Descrição</Label>
-              <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Contabilidade" />
+              <Input
+                value={descricao}
+                onChange={(e) => setDescricao(e.target.value)}
+                placeholder="Contabilidade"
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Valor (R$)</Label>
-              <Input value={valor} onChange={(e) => setValor(e.target.value)} placeholder="750,00" inputMode="decimal" />
+              <Input
+                value={valor}
+                onChange={(e) => setValor(e.target.value)}
+                placeholder="750,00"
+                inputMode="decimal"
+              />
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Categoria</Label>
-              <Input value={categoria} onChange={(e) => setCategoria(e.target.value)} placeholder="Administrativo" />
+              <Input
+                value={categoria}
+                onChange={(e) => setCategoria(e.target.value)}
+                placeholder="Administrativo"
+              />
             </div>
           </div>
           <div className="flex gap-2">
@@ -607,10 +710,15 @@ function GerenciarDespesas({ despesas }: { despesas: Despesa[] }) {
 
         <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
           {despesas.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">Nenhuma despesa cadastrada.</p>
+            <p className="py-4 text-center text-sm text-muted-foreground">
+              Nenhuma despesa cadastrada.
+            </p>
           )}
           {despesas.map((d) => (
-            <div key={d.id} className="flex items-center justify-between gap-3 rounded-md border p-2">
+            <div
+              key={d.id}
+              className="flex items-center justify-between gap-3 rounded-md border p-2"
+            >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium">{d.descricao}</p>
                 <p className="text-xs text-muted-foreground">
@@ -619,7 +727,11 @@ function GerenciarDespesas({ despesas }: { despesas: Despesa[] }) {
                 </p>
               </div>
               <div className="flex items-center gap-1">
-                <Switch checked={d.ativa} onCheckedChange={(v) => toggleAtiva(d, v)} aria-label="Ativa" />
+                <Switch
+                  checked={d.ativa}
+                  onCheckedChange={(v) => toggleAtiva(d, v)}
+                  aria-label="Ativa"
+                />
                 <Button
                   variant="ghost"
                   size="icon"

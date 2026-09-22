@@ -2,6 +2,7 @@ import { createLazyFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { usePeriodo, computeRange, computePreviousRange } from "@/lib/periodo-store";
+import { useLojaFiltro } from "@/lib/lojas-filtro-store";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -102,6 +103,7 @@ type Preset = "hoje" | "ontem" | "7d" | "30d" | "mes" | "ano" | "custom";
 
 function DashboardPage() {
   const isMobile = useIsMobile();
+  const { lojaId } = useLojaFiltro();
   const { preset, custom, setPreset, setCustom } = usePeriodo();
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
@@ -204,11 +206,15 @@ function DashboardPage() {
     isLoading: loadKpis,
     error: erroKpis,
   } = useQuery({
-    queryKey: ["kpis", p_de, p_ate],
+    queryKey: ["kpis", p_de, p_ate, lojaId],
     queryFn: async () => {
       // O período atual sempre usa a função oficial (números do painel).
       // O corte por horário fica só no comparativo "vs Ontem".
-      const { data, error } = await supabase.rpc("dashboard_kpis_periodo" as any, { p_de, p_ate });
+      const { data, error } = await supabase.rpc("dashboard_kpis_periodo" as any, {
+        p_de,
+        p_ate,
+        p_loja_id: lojaId,
+      });
       if (error) throw error;
       const r = ((data as any)?.[0] ?? {}) as any;
       return {
@@ -241,18 +247,20 @@ function DashboardPage() {
   });
 
   const { data: kpisPrev, isLoading: loadKpisPrev } = useQuery({
-    queryKey: ["kpis-anterior", p_prev_de, p_prev_ate, minutoMax],
+    queryKey: ["kpis-anterior", p_prev_de, p_prev_ate, minutoMax, lojaId],
     queryFn: async () => {
       const { data, error } =
         minutoMax == null
           ? await supabase.rpc("dashboard_kpis_periodo" as any, {
               p_de: p_prev_de,
               p_ate: p_prev_ate,
+              p_loja_id: lojaId,
             })
           : await supabase.rpc("dashboard_kpis_parcial" as any, {
               p_de: p_prev_de,
               p_ate: p_prev_ate,
               p_minuto_max: minutoMax,
+              p_loja_id: lojaId,
             });
       if (error) throw error;
       const r = ((data as any)?.[0] ?? {}) as any;
@@ -280,9 +288,13 @@ function DashboardPage() {
   });
 
   const { data: serie, isLoading: loadSerie } = useQuery({
-    queryKey: ["serie", p_de, p_ate],
+    queryKey: ["serie", p_de, p_ate, lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_serie_periodo" as any, { p_de, p_ate });
+      const { data, error } = await supabase.rpc("dashboard_serie_periodo" as any, {
+        p_de,
+        p_ate,
+        p_loja_id: lojaId,
+      });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         periodo: String(r.periodo),
@@ -298,12 +310,13 @@ function DashboardPage() {
   });
 
   const { data: topProdutos, isLoading: loadTop } = useQuery({
-    queryKey: ["topProdutos", p_de, p_ate],
+    queryKey: ["topProdutos", p_de, p_ate, lojaId],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("dashboard_top_produtos_periodo" as any, {
         p_de,
         p_ate,
         p_limite: 10,
+        p_loja_id: lojaId,
       });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
@@ -323,13 +336,15 @@ function DashboardPage() {
   });
 
   const { data: recentes, isLoading: loadRec } = useQuery({
-    queryKey: ["recentes"],
+    queryKey: ["recentes", lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("pedidos")
         .select("order_sn, status, valor_total, comprador_username, data_criacao_pedido")
         .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
         .limit(10);
+      if (lojaId != null) q = (q as any).eq("loja_id", lojaId);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
@@ -338,9 +353,13 @@ function DashboardPage() {
   });
 
   const { data: serieHora, isLoading: loadHora } = useQuery({
-    queryKey: ["serie-horaria", p_de, p_ate],
+    queryKey: ["serie-horaria", p_de, p_ate, lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_serie_horaria" as any, { p_de, p_ate });
+      const { data, error } = await supabase.rpc("dashboard_serie_horaria" as any, {
+        p_de,
+        p_ate,
+        p_loja_id: lojaId,
+      });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         rotulo: String(r.rotulo),
@@ -357,9 +376,11 @@ function DashboardPage() {
   const semDadosHora = (serieHora ?? []).every((h) => h.pedidos === 0 && h.faturamento === 0);
 
   const { data: transito, isLoading: loadTransito } = useQuery({
-    queryKey: ["pedidos-em-transito"],
+    queryKey: ["pedidos-em-transito", lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("pedidos_em_transito" as any);
+      const { data, error } = await supabase.rpc("pedidos_em_transito" as any, {
+        p_loja_id: lojaId,
+      });
       if (error) throw error;
       const r = ((data as any)?.[0] ?? {}) as any;
       return {
@@ -376,9 +397,13 @@ function DashboardPage() {
   });
 
   const { data: ads, isLoading: loadAds } = useQuery({
-    queryKey: ["ads-resumo", p_de, p_ate],
+    queryKey: ["ads-resumo", p_de, p_ate, lojaId],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("ads_resumo" as any, { p_de, p_ate });
+      const { data, error } = await supabase.rpc("ads_resumo" as any, {
+        p_de,
+        p_ate,
+        p_loja_id: lojaId,
+      });
       if (error) throw error;
       const r = ((data as any)?.[0] ?? {}) as any;
       return {
@@ -396,11 +421,11 @@ function DashboardPage() {
   });
 
   const { data: cancelados, isLoading: loadCanc } = useQuery({
-    queryKey: ["cancelados", p_de, p_ate],
+    queryKey: ["cancelados", p_de, p_ate, lojaId],
     queryFn: async () => {
       const desde = new Date(p_de + "T00:00:00-03:00").toISOString();
       const ate2 = new Date(p_ate + "T23:59:59-03:00").toISOString();
-      const { data, error } = await supabase
+      let q = supabase
         .from("pedidos")
         .select("order_sn, valor_total, comprador_username, data_criacao_pedido")
         .eq("status", "CANCELLED")
@@ -408,6 +433,8 @@ function DashboardPage() {
         .lte("data_criacao_pedido", ate2)
         .order("data_criacao_pedido", { ascending: false, nullsFirst: false })
         .limit(50);
+      if (lojaId != null) q = (q as any).eq("loja_id", lojaId);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
@@ -416,12 +443,13 @@ function DashboardPage() {
   });
 
   const { data: abc, isLoading: loadAbc } = useQuery({
-    queryKey: ["abc", p_de, p_ate],
+    queryKey: ["abc", p_de, p_ate, lojaId],
     queryFn: async () => {
       const { data, error } = await supabase.rpc("dashboard_curva_abc" as any, {
         p_de,
         p_ate,
         p_limite: 50,
+        p_loja_id: lojaId,
       });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({

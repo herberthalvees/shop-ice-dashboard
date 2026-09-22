@@ -21,6 +21,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { usePeriodo, computeRange } from "@/lib/periodo-store";
+import { useLojaFiltro } from "@/lib/lojas-filtro-store";
 import {
   Table,
   TableBody,
@@ -99,6 +100,7 @@ function ProdutosPage() {
   const [somenteVendidos, setSomenteVendidos] = useState(false);
   const [somenteNaoPrecificados, setSomenteNaoPrecificados] = useState(false);
   const { preset, custom, setPreset, setCustom } = usePeriodo();
+  const { lojaId } = useLojaFiltro();
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
   const p_de = toISO(de);
@@ -108,11 +110,11 @@ function ProdutosPage() {
   const [sortDir, setSortDir] = useState<SortDir>("asc");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["produtos-giro", p_de, p_ate],
+    queryKey: ["produtos-giro", p_de, p_ate, lojaId],
     queryFn: async () => {
       const [{ data: giro, error: e1 }, { data: dim, error: e2 }, { data: lojaPrincipal }] =
         await Promise.all([
-          supabase.rpc("produtos_com_giro" as any, { p_de, p_ate }),
+          supabase.rpc("produtos_com_giro" as any, { p_de, p_ate, p_loja_id: lojaId }),
           supabase
             .from("produto_custos" as any)
             .select("item_id, model_id, custo_unitario")
@@ -662,11 +664,16 @@ function AdsPorProduto({
   const [sortKey, setSortKey] = useState<AdsSortKey>("investimento");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [selected, setSelected] = useState<Set<number>>(new Set());
+  const { lojaId } = useLojaFiltro();
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["produtos-com-ads", p_de, p_ate],
+    queryKey: ["produtos-com-ads", p_de, p_ate, lojaId],
     queryFn: async (): Promise<LinhaAds[]> => {
-      const { data, error } = await supabase.rpc("produtos_com_ads" as any, { p_de, p_ate });
+      const { data, error } = await supabase.rpc("produtos_com_ads" as any, {
+        p_de,
+        p_ate,
+        p_loja_id: lojaId,
+      });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         item_id: Number(r.item_id ?? 0),
