@@ -35,7 +35,9 @@ function pct(valor: unknown): string {
 function dataExtenso(iso: string): string {
   const [ano, mes, dia] = iso.split("-").map(Number);
   const d = new Date(Date.UTC(ano!, mes! - 1, dia!));
-  const semana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][d.getUTCDay()];
+  const semana = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"][
+    d.getUTCDay()
+  ];
   return `${semana}, ${String(dia).padStart(2, "0")}/${String(mes).padStart(2, "0")}`;
 }
 
@@ -61,60 +63,57 @@ export function horaSaoPaulo(): string {
   }).format(new Date());
 }
 
+export type ResultadoResumoLoja = {
+  loja_id: number;
+  loja_nome: string;
+  ok: boolean;
+  enviado: boolean;
+  erro?: string;
+};
+
 export type ResultadoResumo = {
   ok: boolean;
   data_referencia: string;
   enviado: boolean;
+  lojas?: ResultadoResumoLoja[];
   mensagem?: string;
   erro?: string;
 };
 
-export async function enviarResumoDiario(opts?: {
-  dataRef?: string;
+async function enviarResumoLoja(opts: {
+  dataRef: string;
+  parcial: boolean;
   ignorarToggle?: boolean;
-  parcial?: boolean;
-}): Promise<ResultadoResumo> {
-  const parcial = !!opts?.parcial;
-  const dataRef = opts?.dataRef ?? (parcial ? hojeSaoPaulo() : ontemSaoPaulo());
+  webhook: string;
+  lojaId: number;
+  lojaNome: string;
+  sufixoTitulo: string;
+}): Promise<ResultadoResumoLoja & { mensagem?: string }> {
+  const { dataRef, parcial, webhook, lojaId, lojaNome, sufixoTitulo } = opts;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-  const { data: cfg } = await supabaseAdmin
-    .from("config")
-    .select("webhook_whatsapp_url, eventos, notificacoes_ativas")
-    .eq("id", 1)
-    .maybeSingle();
-
-  const webhook = cfg?.webhook_whatsapp_url?.trim();
-  if (!webhook) {
-    return { ok: false, data_referencia: dataRef, enviado: false, erro: "webhook nao configurado" };
-  }
-
-  if (!opts?.ignorarToggle) {
-    const eventos = (cfg?.eventos ?? {}) as Record<string, unknown>;
-    const chaveEvento = parcial ? "resumo_parcial" : "resumo_diario";
-    if (eventos[chaveEvento] === false) {
-      return { ok: false, data_referencia: dataRef, enviado: false, erro: "resumo diario desativado" };
-    }
-  }
 
   const { data: kpisRaw, error: erroKpis } = await supabaseAdmin.rpc("dashboard_kpis_periodo", {
     p_de: dataRef,
     p_ate: dataRef,
+    p_loja_id: lojaId,
   } as never);
   if (erroKpis) {
-    return { ok: false, data_referencia: dataRef, enviado: false, erro: erroKpis.message };
+    return {
+      loja_id: lojaId,
+      loja_nome: lojaNome,
+      ok: false,
+      enviado: false,
+      erro: erroKpis.message,
+    };
   }
   const k = (Array.isArray(kpisRaw) ? kpisRaw[0] : kpisRaw) as Record<string, unknown> | null;
   if (!k) {
-    return { ok: false, data_referencia: dataRef, enviado: false, erro: "sem dados para o periodo" };
-  }
-
-  if (dataRef > hojeSaoPaulo()) {
     return {
+      loja_id: lojaId,
+      loja_nome: lojaNome,
       ok: false,
-      data_referencia: dataRef,
       enviado: false,
-      erro: "data no futuro — nao existem dados para essa data",
+      erro: "sem dados para o periodo",
     };
   }
 
@@ -124,8 +123,9 @@ export async function enviarResumoDiario(opts?: {
     Number(k["faturamento"] ?? 0) === 0;
   if (semMovimento) {
     return {
+      loja_id: lojaId,
+      loja_nome: lojaNome,
       ok: false,
-      data_referencia: dataRef,
       enviado: false,
       erro: "nenhum pedido registrado nessa data — resumo nao enviado para evitar valores zerados",
     };
@@ -136,6 +136,7 @@ export async function enviarResumoDiario(opts?: {
     const { data: cRaw } = await supabaseAdmin.rpc("carteira_resumo", {
       p_de: dataRef,
       p_ate: dataRef,
+      p_loja_id: lojaId,
     } as never);
     carteira = (Array.isArray(cRaw) ? cRaw[0] : cRaw) as Record<string, unknown> | null;
   } catch {
@@ -150,8 +151,8 @@ export async function enviarResumoDiario(opts?: {
   const lucroPorPedido = pedidos > 0 ? lucroComAds / pedidos : 0;
 
   const linhas: string[] = parcial
-    ? [`⏱️ *PARCIAL DREAM ICE* — ${dataCurta(dataRef)} às ${hora}`]
-    : ["📊 *RESUMO DREAM ICE*", `📅 ${dataExtenso(dataRef)}`];
+    ? [`⏱️ *PARCIAL DREAM ICE${sufixoTitulo}* — ${dataCurta(dataRef)} às ${hora}`]
+    : [`📊 *RESUMO DREAM ICE${sufixoTitulo}*`, `📅 ${dataExtenso(dataRef)}`];
 
   linhas.push(
     "",
@@ -174,11 +175,16 @@ export async function enviarResumoDiario(opts?: {
 
   if (cancelados > 0 || devolvidos > 0) {
     linhas.push("", "*⚠️ PERDAS*");
-    if (cancelados > 0) linhas.push(linha("Cancelados", `${cancelados} (R$ ${brl(k["valor_cancelado"])})`));
-    if (devolvidos > 0) linhas.push(linha("Devolvidos", `${devolvidos} (R$ ${brl(k["valor_devolvido"])})`));
+    if (cancelados > 0)
+      linhas.push(linha("Cancelados", `${cancelados} (R$ ${brl(k["valor_cancelado"])})`));
+    if (devolvidos > 0)
+      linhas.push(linha("Devolvidos", `${devolvidos} (R$ ${brl(k["valor_devolvido"])})`));
   }
 
-  if (carteira && (Number(carteira["entradas"] ?? 0) !== 0 || Number(carteira["em_transito"] ?? 0) !== 0)) {
+  if (
+    carteira &&
+    (Number(carteira["entradas"] ?? 0) !== 0 || Number(carteira["em_transito"] ?? 0) !== 0)
+  ) {
     linhas.push(
       "",
       "*🏦 CARTEIRA*",
@@ -220,7 +226,7 @@ export async function enviarResumoDiario(opts?: {
   await (supabaseAdmin.from("alertas_enviados") as any).upsert(
     {
       tipo: parcial ? "resumo_parcial" : "resumo_diario",
-      chave: parcial ? `${dataRef} ${hora}` : dataRef,
+      chave: parcial ? `${dataRef} ${hora} loja${lojaId}` : `${dataRef} loja${lojaId}`,
       enviado,
       erro,
       detalhe: { mensagem, webhook: respostaWebhook },
@@ -229,10 +235,81 @@ export async function enviarResumoDiario(opts?: {
   );
 
   return {
+    loja_id: lojaId,
+    loja_nome: lojaNome,
     ok: enviado,
-    data_referencia: dataRef,
     enviado,
     mensagem,
     ...(erro ? { erro } : {}),
+  };
+}
+
+export async function enviarResumoDiario(opts?: {
+  dataRef?: string;
+  ignorarToggle?: boolean;
+  parcial?: boolean;
+}): Promise<ResultadoResumo> {
+  const parcial = !!opts?.parcial;
+  const dataRef = opts?.dataRef ?? (parcial ? hojeSaoPaulo() : ontemSaoPaulo());
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  if (dataRef > hojeSaoPaulo()) {
+    return {
+      ok: false,
+      data_referencia: dataRef,
+      enviado: false,
+      erro: "data no futuro — nao existem dados para essa data",
+    };
+  }
+
+  const { data: cfg } = await supabaseAdmin
+    .from("config")
+    .select("webhook_whatsapp_url, eventos, notificacoes_ativas")
+    .eq("id", 1)
+    .maybeSingle();
+
+  const webhook = cfg?.webhook_whatsapp_url?.trim();
+  if (!webhook) {
+    return { ok: false, data_referencia: dataRef, enviado: false, erro: "webhook nao configurado" };
+  }
+
+  if (!opts?.ignorarToggle) {
+    const eventos = (cfg?.eventos ?? {}) as Record<string, unknown>;
+    const chaveEvento = parcial ? "resumo_parcial" : "resumo_diario";
+    if (eventos[chaveEvento] === false) {
+      return {
+        ok: false,
+        data_referencia: dataRef,
+        enviado: false,
+        erro: "resumo diario desativado",
+      };
+    }
+  }
+
+  const { listarLojasAtivas } = await import("./lojas.server");
+  const lojas = await listarLojasAtivas();
+  if (lojas.length === 0) {
+    return { ok: false, data_referencia: dataRef, enviado: false, erro: "nenhuma loja cadastrada" };
+  }
+
+  const resultados = await Promise.all(
+    lojas.map((loja) =>
+      enviarResumoLoja({
+        dataRef,
+        parcial,
+        ignorarToggle: opts?.ignorarToggle,
+        webhook,
+        lojaId: loja.id,
+        lojaNome: loja.nome,
+        sufixoTitulo: lojas.length > 1 ? ` — ${loja.nome}` : "",
+      }),
+    ),
+  );
+
+  return {
+    ok: resultados.every((r) => r.ok),
+    data_referencia: dataRef,
+    enviado: resultados.some((r) => r.enviado),
+    lojas: resultados.map(({ mensagem: _omitida, ...resto }) => resto),
   };
 }
