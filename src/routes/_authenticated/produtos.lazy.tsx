@@ -8,22 +8,43 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
 import { usePeriodo, computeRange } from "@/lib/periodo-store";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, ImageOff, ArrowUp, ArrowDown, ArrowUpDown, Check, CalendarIcon, History } from "lucide-react";
+import {
+  Search,
+  ImageOff,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  Check,
+  CalendarIcon,
+  History,
+} from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { HistoricoCustoSheet } from "@/components/historico-custo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
 
 export const Route = createLazyFileRoute("/_authenticated/produtos")({
   component: ProdutosPage,
@@ -71,7 +92,9 @@ function ProdutosPage() {
   const search = (useSearch({ strict: false }) as { q?: string }) ?? {};
   const navigate = useNavigate();
   const [busca, setBusca] = useState(search.q ?? "");
-  useEffect(() => { if (search.q) setBusca(search.q); }, [search.q]);
+  useEffect(() => {
+    if (search.q) setBusca(search.q);
+  }, [search.q]);
   const [somenteRisco, setSomenteRisco] = useState(false);
   const [somenteVendidos, setSomenteVendidos] = useState(false);
   const [somenteNaoPrecificados, setSomenteNaoPrecificados] = useState(false);
@@ -87,44 +110,75 @@ function ProdutosPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["produtos-giro", p_de, p_ate],
     queryFn: async () => {
-      const [{ data: giro, error: e1 }, { data: dim, error: e2 }] = await Promise.all([
-        supabase.rpc("produtos_com_giro" as any, { p_de, p_ate }),
-        supabase
-          .from("produto_custos" as any)
-          .select("item_id, model_id, custo_unitario")
-          .is("vigencia_fim", null),
-      ]);
+      const [{ data: giro, error: e1 }, { data: dim, error: e2 }, { data: lojaPrincipal }] =
+        await Promise.all([
+          supabase.rpc("produtos_com_giro" as any, { p_de, p_ate }),
+          supabase
+            .from("produto_custos" as any)
+            .select("item_id, model_id, custo_unitario")
+            .is("vigencia_fim", null),
+          supabase
+            .from("lojas" as any)
+            .select("id")
+            .eq("status", "ativa")
+            .order("id")
+            .limit(1)
+            .maybeSingle(),
+        ]);
       if (e1) throw e1;
       if (e2) throw e2;
       const custoMap = new Map<string, number | null>();
       for (const d of (dim ?? []) as any[]) {
-        custoMap.set(`${d.item_id}:${d.model_id}`, d.custo_unitario == null ? null : Number(d.custo_unitario));
+        custoMap.set(
+          `${d.item_id}:${d.model_id}`,
+          d.custo_unitario == null ? null : Number(d.custo_unitario),
+        );
       }
+
+      // Custo por SKU cadastrado na loja principal, usado quando a loja
+      // do item não tem custo próprio — mesmo produto físico, SKU igual.
+      const skuCustoPrincipal = new Map<string, number>();
+      const idLojaPrincipal = (lojaPrincipal as any)?.id;
+      if (idLojaPrincipal != null) {
+        const { data: produtosPrincipal } = await supabase
+          .from("produtos" as any)
+          .select("item_id, model_id, sku")
+          .eq("loja_id", idLojaPrincipal);
+        for (const p of (produtosPrincipal ?? []) as any[]) {
+          if (!p.sku) continue;
+          const custo = custoMap.get(`${p.item_id}:${p.model_id}`);
+          if (custo != null) skuCustoPrincipal.set(p.sku, custo);
+        }
+      }
+
       return ((giro as any[]) ?? []).map((r) => {
         const item_id = Number(r.item_id ?? 0);
         const model_id = Number(r.model_id ?? 0);
-        const custo_unitario = custoMap.get(`${item_id}:${model_id}`) ?? null;
+        const custo_unitario =
+          custoMap.get(`${item_id}:${model_id}`) ??
+          (r.sku ? (skuCustoPrincipal.get(r.sku) ?? null) : null);
         const preco = r.preco_atual == null ? null : Number(r.preco_atual);
         let margem_pct: number | null = null;
         if (custo_unitario != null && preco != null && preco > 0) {
-          margem_pct = Math.round(1000 * (preco * 0.8 - 4 - custo_unitario) / preco) / 10;
+          margem_pct = Math.round((1000 * (preco * 0.8 - 4 - custo_unitario)) / preco) / 10;
         }
         return {
-        item_id: Number(r.item_id ?? 0),
-        model_id: Number(r.model_id ?? 0),
-        sku: r.sku ?? null,
-        produto: r.produto ?? null,
-        variacao: r.variacao ?? null,
-        preco_atual: preco,
-        estoque_disponivel: r.estoque_disponivel == null ? null : Number(r.estoque_disponivel),
-        vendidos_periodo: Number(r.vendidos_periodo ?? 0),
-        media_diaria: Number(r.media_diaria ?? 0),
-        dias_de_estoque: r.dias_de_estoque == null ? null : Number(r.dias_de_estoque),
-        status_item: r.status_item ?? null,
-        imagem_url: r.imagem_url ?? null,
-        custo_unitario,
-        margem_pct,
-      }; }) as Linha[];
+          item_id: Number(r.item_id ?? 0),
+          model_id: Number(r.model_id ?? 0),
+          sku: r.sku ?? null,
+          produto: r.produto ?? null,
+          variacao: r.variacao ?? null,
+          preco_atual: preco,
+          estoque_disponivel: r.estoque_disponivel == null ? null : Number(r.estoque_disponivel),
+          vendidos_periodo: Number(r.vendidos_periodo ?? 0),
+          media_diaria: Number(r.media_diaria ?? 0),
+          dias_de_estoque: r.dias_de_estoque == null ? null : Number(r.dias_de_estoque),
+          status_item: r.status_item ?? null,
+          imagem_url: r.imagem_url ?? null,
+          custo_unitario,
+          margem_pct,
+        };
+      }) as Linha[];
     },
   });
 
@@ -134,8 +188,7 @@ function ProdutosPage() {
       const b = busca.trim().toLowerCase();
       base = base.filter(
         (l) =>
-          (l.produto ?? "").toLowerCase().includes(b) ||
-          (l.sku ?? "").toLowerCase().includes(b),
+          (l.produto ?? "").toLowerCase().includes(b) || (l.sku ?? "").toLowerCase().includes(b),
       );
     }
     if (somenteRisco) {
@@ -259,8 +312,16 @@ function ProdutosPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={preset} onValueChange={(v) => { setPreset(v as any); if (v === "custom") setCustomOpen(true); }}>
-            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+          <Select
+            value={preset}
+            onValueChange={(v) => {
+              setPreset(v as any);
+              if (v === "custom") setCustomOpen(true);
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="hoje">Hoje</SelectItem>
               <SelectItem value="ontem">Ontem</SelectItem>
@@ -278,7 +339,13 @@ function ProdutosPage() {
                 </Button>
               </PopoverTrigger>
               <PopoverContent align="end" className="w-auto p-0 bg-popover">
-                <Calendar mode="range" numberOfMonths={2} selected={custom} onSelect={(r: DateRange | undefined) => setCustom(r)} locale={ptBR} />
+                <Calendar
+                  mode="range"
+                  numberOfMonths={2}
+                  selected={custom}
+                  onSelect={(r: DateRange | undefined) => setCustom(r)}
+                  locale={ptBR}
+                />
               </PopoverContent>
             </Popover>
           )}
@@ -291,167 +358,274 @@ function ProdutosPage() {
           <TabsTrigger value="ads">Ads</TabsTrigger>
         </TabsList>
         <TabsContent value="catalogo" className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-52">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar por nome ou SKU…" value={busca} onChange={(e) => { setBusca(e.target.value); navigate({ to: "/produtos", search: e.target.value ? { q: e.target.value } as any : {} as any, replace: true }); }} className="pl-9" />
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch id="risco" checked={somenteRisco} onCheckedChange={setSomenteRisco} />
-              <Label htmlFor="risco" className="cursor-pointer">Risco de ruptura (&lt; 15 dias)</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch id="vendidos" checked={somenteVendidos} onCheckedChange={setSomenteVendidos} />
-              <Label htmlFor="vendidos" className="cursor-pointer">Somente vendidos no período</Label>
-            </div>
-            <div className="flex items-center gap-2">
-              <Switch id="nao-precificados" checked={somenteNaoPrecificados} onCheckedChange={setSomenteNaoPrecificados} />
-              <Label htmlFor="nao-precificados" className="cursor-pointer">Não precificados</Label>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 pt-2">
-            <Button
-              type="button"
-              size="sm"
-              variant={sortKey === "grupo" ? "default" : "outline"}
-              onClick={() => { setSortKey("grupo"); setSortDir("asc"); }}
-            >
-              Por anúncio
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={sortKey === "grupo_vendidos" ? "default" : "outline"}
-              onClick={() => { setSortKey("grupo_vendidos"); setSortDir("desc"); }}
-            >
-              Por anúncio · mais vendidos
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={sortKey === "vendidos" && sortDir === "desc" ? "default" : "outline"}
-              onClick={() => { setSortKey("vendidos"); setSortDir("desc"); }}
-            >
-              Mais vendidos
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={sortKey === "dias" && sortDir === "asc" ? "default" : "outline"}
-              onClick={() => { setSortKey("dias"); setSortDir("asc"); }}
-            >
-              Risco de ruptura
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <TooltipProvider delayDuration={200}>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[60px]"></TableHead>
-                  <SortHead label="Produto" col="produto" className="min-w-[360px]" />
-                  <SortHead label="Variação" col="variacao" />
-                  <SortHead label="SKU" col="sku" />
-                  <SortHead label="Preço" col="preco" align="right" className="text-right" />
-                  <SortHead label="Estoque" col="estoque" align="right" className="text-right" />
-                  <SortHead label="Vendidos" col="vendidos" align="right" className="text-right" />
-                  <SortHead label="Média/dia" col="media" align="right" className="text-right" />
-                  <SortHead label="Dias de estoque" col="dias" align="right" className="text-right" />
-                  <SortHead label="Custo" col="custo" align="right" className="text-right" />
-                  <SortHead label="Margem" col="margem" align="right" className="text-right" />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  [...Array(8)].map((_, i) => (
-                    <TableRow key={i}><TableCell colSpan={11}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
-                  ))
-                ) : linhas.length === 0 ? (
-                  <TableRow><TableCell colSpan={11} className="text-center py-10 text-sm text-muted-foreground">
-                    Nenhum produto. Sincronize a loja em Configurações.
-                  </TableCell></TableRow>
-                ) : (
-                  linhas.map((p, idx) => {
-                    const diasEstoque = p.dias_de_estoque;
-                    let rowClass = "";
-                    let diasClass = "tabular-nums";
-                    if (diasEstoque != null) {
-                      if (diasEstoque < 7) { rowClass = "bg-destructive/10 hover:bg-destructive/15"; diasClass = "tabular-nums font-semibold text-destructive"; }
-                      else if (diasEstoque < 15) { rowClass = "bg-amber-500/10 hover:bg-amber-500/15"; diasClass = "tabular-nums font-semibold text-amber-500"; }
-                    }
-                    const prev = idx > 0 ? linhas[idx - 1] : null;
-                    const primeiroDoGrupo = !agrupar || !prev || (prev.produto ?? "") !== (p.produto ?? "");
-                    const mostrarNome = !agrupar || primeiroDoGrupo;
-                    const bordaGrupo = agrupar && primeiroDoGrupo && idx > 0 ? "border-t-2 border-border/70" : "";
-                    return (
-                      <TableRow key={`${p.sku ?? idx}-${idx}`} className={cn(rowClass, bordaGrupo)}>
-                        <TableCell>
-                          {p.imagem_url ? (
-                            <img src={p.imagem_url} alt="" loading="lazy" className="h-10 w-10 rounded object-cover" />
-                          ) : (
-                            <div className="h-10 w-10 rounded bg-muted flex items-center justify-center text-muted-foreground">
-                              <ImageOff className="h-4 w-4" />
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium max-w-[420px]">
-                          {mostrarNome ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="block truncate cursor-default">{p.produto ?? "—"}</span>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="max-w-md">
-                                {p.produto ?? "—"}
-                              </TooltipContent>
-                            </Tooltip>
-                          ) : (
-                            <span className="text-muted-foreground/40">↳</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-muted-foreground text-sm">{p.variacao ?? "—"}</TableCell>
-                        <TableCell className="font-mono text-xs text-muted-foreground">{p.sku ?? "—"}</TableCell>
-                        <TableCell className="text-right tabular-nums">{brl(p.preco_atual)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{p.estoque_disponivel ?? "—"}</TableCell>
-                        <TableCell className="text-right tabular-nums">{p.vendidos_periodo.toLocaleString("pt-BR")}</TableCell>
-                        <TableCell className="text-right tabular-nums">{p.media_diaria.toFixed(2)}</TableCell>
-                        <TableCell className={`text-right ${diasClass}`}>
-                          {diasEstoque == null ? "—" : diasEstoque.toFixed(1)}
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums p-1">
-                          <CustoCell
-                            item_id={p.item_id}
-                            model_id={p.model_id}
-                            initial={p.custo_unitario}
-                            titulo={[p.produto, p.variacao].filter(Boolean).join(" — ")}
-                            onSaved={() => qc.invalidateQueries({ queryKey: ["produtos-giro"] })}
-                          />
-                        </TableCell>
-                        <TableCell className="text-right tabular-nums">
-                          {p.margem_pct == null ? "—" : `${p.margem_pct.toFixed(1)}%`}
-                        </TableCell>
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="relative flex-1 min-w-52">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome ou SKU…"
+                    value={busca}
+                    onChange={(e) => {
+                      setBusca(e.target.value);
+                      navigate({
+                        to: "/produtos",
+                        search: e.target.value ? ({ q: e.target.value } as any) : ({} as any),
+                        replace: true,
+                      });
+                    }}
+                    className="pl-9"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch id="risco" checked={somenteRisco} onCheckedChange={setSomenteRisco} />
+                  <Label htmlFor="risco" className="cursor-pointer">
+                    Risco de ruptura (&lt; 15 dias)
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="vendidos"
+                    checked={somenteVendidos}
+                    onCheckedChange={setSomenteVendidos}
+                  />
+                  <Label htmlFor="vendidos" className="cursor-pointer">
+                    Somente vendidos no período
+                  </Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="nao-precificados"
+                    checked={somenteNaoPrecificados}
+                    onCheckedChange={setSomenteNaoPrecificados}
+                  />
+                  <Label htmlFor="nao-precificados" className="cursor-pointer">
+                    Não precificados
+                  </Label>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortKey === "grupo" ? "default" : "outline"}
+                  onClick={() => {
+                    setSortKey("grupo");
+                    setSortDir("asc");
+                  }}
+                >
+                  Por anúncio
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortKey === "grupo_vendidos" ? "default" : "outline"}
+                  onClick={() => {
+                    setSortKey("grupo_vendidos");
+                    setSortDir("desc");
+                  }}
+                >
+                  Por anúncio · mais vendidos
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortKey === "vendidos" && sortDir === "desc" ? "default" : "outline"}
+                  onClick={() => {
+                    setSortKey("vendidos");
+                    setSortDir("desc");
+                  }}
+                >
+                  Mais vendidos
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={sortKey === "dias" && sortDir === "asc" ? "default" : "outline"}
+                  onClick={() => {
+                    setSortKey("dias");
+                    setSortDir("asc");
+                  }}
+                >
+                  Risco de ruptura
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <TooltipProvider delayDuration={200}>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[60px]"></TableHead>
+                        <SortHead label="Produto" col="produto" className="min-w-[360px]" />
+                        <SortHead label="Variação" col="variacao" />
+                        <SortHead label="SKU" col="sku" />
+                        <SortHead label="Preço" col="preco" align="right" className="text-right" />
+                        <SortHead
+                          label="Estoque"
+                          col="estoque"
+                          align="right"
+                          className="text-right"
+                        />
+                        <SortHead
+                          label="Vendidos"
+                          col="vendidos"
+                          align="right"
+                          className="text-right"
+                        />
+                        <SortHead
+                          label="Média/dia"
+                          col="media"
+                          align="right"
+                          className="text-right"
+                        />
+                        <SortHead
+                          label="Dias de estoque"
+                          col="dias"
+                          align="right"
+                          className="text-right"
+                        />
+                        <SortHead label="Custo" col="custo" align="right" className="text-right" />
+                        <SortHead
+                          label="Margem"
+                          col="margem"
+                          align="right"
+                          className="text-right"
+                        />
                       </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-            </TooltipProvider>
-          </div>
-          <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
-            <span>{totaisRodape.total} variações no total</span>
-            <span>
-              {totaisRodape.comCusto} com custo preenchido
-              {totaisRodape.total > 0 && (
-                <span className="ml-1">({Math.round((totaisRodape.comCusto / totaisRodape.total) * 100)}%)</span>
-              )}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
+                        [...Array(8)].map((_, i) => (
+                          <TableRow key={i}>
+                            <TableCell colSpan={11}>
+                              <Skeleton className="h-10 w-full" />
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : linhas.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={11}
+                            className="text-center py-10 text-sm text-muted-foreground"
+                          >
+                            Nenhum produto. Sincronize a loja em Configurações.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        linhas.map((p, idx) => {
+                          const diasEstoque = p.dias_de_estoque;
+                          let rowClass = "";
+                          let diasClass = "tabular-nums";
+                          if (diasEstoque != null) {
+                            if (diasEstoque < 7) {
+                              rowClass = "bg-destructive/10 hover:bg-destructive/15";
+                              diasClass = "tabular-nums font-semibold text-destructive";
+                            } else if (diasEstoque < 15) {
+                              rowClass = "bg-amber-500/10 hover:bg-amber-500/15";
+                              diasClass = "tabular-nums font-semibold text-amber-500";
+                            }
+                          }
+                          const prev = idx > 0 ? linhas[idx - 1] : null;
+                          const primeiroDoGrupo =
+                            !agrupar || !prev || (prev.produto ?? "") !== (p.produto ?? "");
+                          const mostrarNome = !agrupar || primeiroDoGrupo;
+                          const bordaGrupo =
+                            agrupar && primeiroDoGrupo && idx > 0
+                              ? "border-t-2 border-border/70"
+                              : "";
+                          return (
+                            <TableRow
+                              key={`${p.sku ?? idx}-${idx}`}
+                              className={cn(rowClass, bordaGrupo)}
+                            >
+                              <TableCell>
+                                {p.imagem_url ? (
+                                  <img
+                                    src={p.imagem_url}
+                                    alt=""
+                                    loading="lazy"
+                                    className="h-10 w-10 rounded object-cover"
+                                  />
+                                ) : (
+                                  <div className="h-10 w-10 rounded bg-muted flex items-center justify-center text-muted-foreground">
+                                    <ImageOff className="h-4 w-4" />
+                                  </div>
+                                )}
+                              </TableCell>
+                              <TableCell className="font-medium max-w-[420px]">
+                                {mostrarNome ? (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="block truncate cursor-default">
+                                        {p.produto ?? "—"}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="max-w-md">
+                                      {p.produto ?? "—"}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                ) : (
+                                  <span className="text-muted-foreground/40">↳</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground text-sm">
+                                {p.variacao ?? "—"}
+                              </TableCell>
+                              <TableCell className="font-mono text-xs text-muted-foreground">
+                                {p.sku ?? "—"}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {brl(p.preco_atual)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {p.estoque_disponivel ?? "—"}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {p.vendidos_periodo.toLocaleString("pt-BR")}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {p.media_diaria.toFixed(2)}
+                              </TableCell>
+                              <TableCell className={`text-right ${diasClass}`}>
+                                {diasEstoque == null ? "—" : diasEstoque.toFixed(1)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums p-1">
+                                <CustoCell
+                                  item_id={p.item_id}
+                                  model_id={p.model_id}
+                                  initial={p.custo_unitario}
+                                  titulo={[p.produto, p.variacao].filter(Boolean).join(" — ")}
+                                  onSaved={() =>
+                                    qc.invalidateQueries({ queryKey: ["produtos-giro"] })
+                                  }
+                                />
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {p.margem_pct == null ? "—" : `${p.margem_pct.toFixed(1)}%`}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </TooltipProvider>
+              </div>
+              <div className="flex items-center justify-between px-4 py-3 border-t text-sm text-muted-foreground">
+                <span>{totaisRodape.total} variações no total</span>
+                <span>
+                  {totaisRodape.comCusto} com custo preenchido
+                  {totaisRodape.total > 0 && (
+                    <span className="ml-1">
+                      ({Math.round((totaisRodape.comCusto / totaisRodape.total) * 100)}%)
+                    </span>
+                  )}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
         <TabsContent value="ads">
           <AdsPorProduto p_de={p_de} p_ate={p_ate} rangeLabel={rangeLabel} />
@@ -472,9 +646,18 @@ type LinhaAds = {
   roas: number;
 };
 
-type AdsSortKey = "produto" | "investimento" | "receita_ads" | "cliques" | "impressoes" | "ctr" | "roas";
+type AdsSortKey =
+  "produto" | "investimento" | "receita_ads" | "cliques" | "impressoes" | "ctr" | "roas";
 
-function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: string; rangeLabel: string }) {
+function AdsPorProduto({
+  p_de,
+  p_ate,
+  rangeLabel,
+}: {
+  p_de: string;
+  p_ate: string;
+  rangeLabel: string;
+}) {
   const [somenteAtivos, setSomenteAtivos] = useState(false);
   const [sortKey, setSortKey] = useState<AdsSortKey>("investimento");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -642,7 +825,10 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
     );
   };
 
-  const selecionadas = useMemo(() => linhas.filter((l) => selected.has(l.item_id)), [linhas, selected]);
+  const selecionadas = useMemo(
+    () => linhas.filter((l) => selected.has(l.item_id)),
+    [linhas, selected],
+  );
 
   const kpi = useMemo(() => {
     const base = selecionadas.length > 0 ? selecionadas : linhas;
@@ -713,7 +899,15 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
           label="ROAS"
           value={kpi.roas.toFixed(2).replace(".", ",")}
           sub={kpi.roas >= 4 ? "Excelente" : kpi.roas >= 2 ? "Bom" : kpi.roas > 0 ? "Atenção" : "—"}
-          tone={kpi.roas >= 4 ? "success" : kpi.roas >= 2 ? "default" : kpi.roas > 0 ? "warning" : "default"}
+          tone={
+            kpi.roas >= 4
+              ? "success"
+              : kpi.roas >= 2
+                ? "default"
+                : kpi.roas > 0
+                  ? "warning"
+                  : "default"
+          }
         />
         <KpiCard
           label="CTR"
@@ -743,11 +937,15 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold">Desempenho de Ads por produto</h2>
-              <p className="text-sm text-muted-foreground">{rangeLabel} · selecione os itens para filtrar os cards</p>
+              <p className="text-sm text-muted-foreground">
+                {rangeLabel} · selecione os itens para filtrar os cards
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <Switch id="ads-ativos" checked={somenteAtivos} onCheckedChange={setSomenteAtivos} />
-              <Label htmlFor="ads-ativos" className="text-sm">Só com Ads ativos</Label>
+              <Label htmlFor="ads-ativos" className="text-sm">
+                Só com Ads ativos
+              </Label>
             </div>
           </div>
         </CardHeader>
@@ -766,10 +964,25 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
                   </TableHead>
                   <TableHead className="w-[64px]"></TableHead>
                   <SortHeadAds label="Produto" col="produto" className="min-w-[300px]" />
-                  <SortHeadAds label="Investimento" col="investimento" align="right" className="text-right" />
-                  <SortHeadAds label="Receita gerada" col="receita_ads" align="right" className="text-right" />
+                  <SortHeadAds
+                    label="Investimento"
+                    col="investimento"
+                    align="right"
+                    className="text-right"
+                  />
+                  <SortHeadAds
+                    label="Receita gerada"
+                    col="receita_ads"
+                    align="right"
+                    className="text-right"
+                  />
                   <SortHeadAds label="Cliques" col="cliques" align="right" className="text-right" />
-                  <SortHeadAds label="Impressões" col="impressoes" align="right" className="text-right" />
+                  <SortHeadAds
+                    label="Impressões"
+                    col="impressoes"
+                    align="right"
+                    className="text-right"
+                  />
                   <SortHeadAds label="CTR" col="ctr" align="right" className="text-right" />
                   <SortHeadAds label="ROAS" col="roas" align="right" className="text-right" />
                 </TableRow>
@@ -777,7 +990,11 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
               <TableBody>
                 {isLoading ? (
                   Array.from({ length: 6 }).map((_, i) => (
-                    <TableRow key={i}><TableCell colSpan={9}><Skeleton className="h-10 w-full" /></TableCell></TableRow>
+                    <TableRow key={i}>
+                      <TableCell colSpan={9}>
+                        <Skeleton className="h-10 w-full" />
+                      </TableCell>
+                    </TableRow>
                   ))
                 ) : error ? (
                   <TableRow>
@@ -787,7 +1004,10 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
                   </TableRow>
                 ) : linhas.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-10 text-sm text-muted-foreground">
+                    <TableCell
+                      colSpan={9}
+                      className="text-center py-10 text-sm text-muted-foreground"
+                    >
                       {somenteAtivos
                         ? "Nenhum produto com Ads ativos no momento."
                         : "Sem dados de Ads por produto no período selecionado."}
@@ -834,12 +1054,24 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
                         <TableCell className="font-medium max-w-[420px]">
                           <span className="line-clamp-2">{l.produto ?? `Item ${l.item_id}`}</span>
                         </TableCell>
-                        <TableCell className="text-right tabular-nums">{brl(l.investimento)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{brl(l.receita_ads)}</TableCell>
-                        <TableCell className="text-right tabular-nums">{l.cliques.toLocaleString("pt-BR")}</TableCell>
-                        <TableCell className="text-right tabular-nums">{l.impressoes.toLocaleString("pt-BR")}</TableCell>
-                        <TableCell className="text-right tabular-nums">{l.ctr.toFixed(2).replace(".", ",")}%</TableCell>
-                        <TableCell className={cn("text-right tabular-nums font-semibold", roasClass)}>
+                        <TableCell className="text-right tabular-nums">
+                          {brl(l.investimento)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {brl(l.receita_ads)}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {l.cliques.toLocaleString("pt-BR")}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {l.impressoes.toLocaleString("pt-BR")}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {l.ctr.toFixed(2).replace(".", ",")}%
+                        </TableCell>
+                        <TableCell
+                          className={cn("text-right tabular-nums font-semibold", roasClass)}
+                        >
                           {l.roas.toFixed(2).replace(".", ",")}
                         </TableCell>
                       </TableRow>
@@ -854,7 +1086,6 @@ function AdsPorProduto({ p_de, p_ate, rangeLabel }: { p_de: string; p_ate: strin
     </div>
   );
 }
-
 
 function CustoCell({
   item_id,
@@ -874,7 +1105,9 @@ function CustoCell({
   const [saving, setSaving] = useState(false);
   const [ok, setOk] = useState(false);
   const [histOpen, setHistOpen] = useState(false);
-  useEffect(() => { setValor(initStr); }, [initStr]);
+  useEffect(() => {
+    setValor(initStr);
+  }, [initStr]);
   useEffect(() => {
     if (!ok) return;
     const t = setTimeout(() => setOk(false), 2000);
@@ -883,7 +1116,10 @@ function CustoCell({
 
   const salvar = async () => {
     if (valor === initStr) return;
-    if (valor.trim() === "") { setValor(initStr); return; }
+    if (valor.trim() === "") {
+      setValor(initStr);
+      return;
+    }
     const parsed = Number(valor.replace(",", "."));
     if (!Number.isFinite(parsed) || parsed < 0) {
       toast.error("Custo inválido");
@@ -918,8 +1154,14 @@ function CustoCell({
         onChange={(e) => setValor(e.target.value)}
         onBlur={salvar}
         onKeyDown={(e) => {
-          if (e.key === "Enter") { e.preventDefault(); (e.target as HTMLInputElement).blur(); }
-          if (e.key === "Escape") { setValor(initStr); (e.target as HTMLInputElement).blur(); }
+          if (e.key === "Enter") {
+            e.preventDefault();
+            (e.target as HTMLInputElement).blur();
+          }
+          if (e.key === "Escape") {
+            setValor(initStr);
+            (e.target as HTMLInputElement).blur();
+          }
         }}
         placeholder="—"
         className="h-8 w-24 text-right tabular-nums"
