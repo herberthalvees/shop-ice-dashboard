@@ -116,9 +116,11 @@ contagens as (
   select jsonb_build_object(
     'pedidos', (select count(*) from public.pedidos),
     'produtos', (select count(*) from public.produtos),
-    'shopee_connection', (select count(*) from public.shopee_connection),
-    'lojas', (select case when exists(select 1 from information_schema.tables where table_schema='public' and table_name='lojas')
-                          then (select count(*) from public.lojas) else -1 end)
+    'shopee_connection', (select count(*) from public.shopee_connection)
+    -- contagem de "lojas" fica de fora daqui de propósito: referenciar a
+    -- tabela direto quebra a query inteira se ela ainda não existir (é
+    -- exatamente esse o caso hoje). A seção "tabelas_multiloja" já informa
+    -- se a tabela existe ou não.
   ) as v
 )
 
