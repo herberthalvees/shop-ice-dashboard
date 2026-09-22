@@ -8,6 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
@@ -44,6 +51,7 @@ const pct = (v: number | null | undefined) => `${Number(v ?? 0).toFixed(1)}%`;
 
 type Despesa = {
   id: number;
+  loja_id: number;
   descricao: string;
   valor: number;
   categoria: string | null;
@@ -52,6 +60,7 @@ type Despesa = {
 
 type Variavel = {
   id: number;
+  loja_id: number;
   descricao: string;
   valor_por_pedido: number;
   franquia_pedidos: number | null;
@@ -61,6 +70,7 @@ type Variavel = {
 
 type VariavelDetalhe = {
   id: number;
+  loja_id: number;
   descricao: string;
   valor_por_pedido: number;
   franquia_pedidos: number | null;
@@ -71,6 +81,8 @@ type VariavelDetalhe = {
   ciclo_fim: string;
   valor: number;
 };
+
+type Loja = { id: number; nome: string };
 
 function Linha({
   label,
@@ -131,25 +143,42 @@ function DrePage() {
     },
   });
 
-  const { data: despesas } = useQuery({
-    queryKey: ["despesas-fixas"],
+  const { data: lojas } = useQuery({
+    queryKey: ["lojas-nomes"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any).from("lojas").select("id, nome").order("id");
+      if (error) throw error;
+      return (data ?? []) as Loja[];
+    },
+    staleTime: 60_000,
+  });
+  const nomeLoja = (id: number) => lojas?.find((l) => l.id === id)?.nome ?? `Loja ${id}`;
+
+  const { data: despesas } = useQuery({
+    queryKey: ["despesas-fixas", lojaId],
+    queryFn: async () => {
+      let q = (supabase as any)
         .from("despesas_fixas")
-        .select("id, descricao, valor, categoria, ativa")
+        .select("id, loja_id, descricao, valor, categoria, ativa")
         .order("descricao");
+      if (lojaId != null) q = q.eq("loja_id", lojaId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as Despesa[];
     },
   });
 
   const { data: variaveis } = useQuery({
-    queryKey: ["despesas-variaveis"],
+    queryKey: ["despesas-variaveis", lojaId],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      let q = (supabase as any)
         .from("despesas_variaveis")
-        .select("id, descricao, valor_por_pedido, franquia_pedidos, dia_corte_ciclo, ativa")
+        .select(
+          "id, loja_id, descricao, valor_por_pedido, franquia_pedidos, dia_corte_ciclo, ativa",
+        )
         .order("descricao");
+      if (lojaId != null) q = q.eq("loja_id", lojaId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as Variavel[];
     },
@@ -249,8 +278,16 @@ function DrePage() {
                 Despesas Operacionais
               </CardTitle>
               <div className="flex items-center gap-2">
-                <GerenciarVariaveis variaveis={variaveis ?? []} />
-                <GerenciarDespesas despesas={despesas ?? []} />
+                <GerenciarVariaveis
+                  variaveis={variaveis ?? []}
+                  lojas={lojas ?? []}
+                  lojaIdFiltro={lojaId}
+                />
+                <GerenciarDespesas
+                  despesas={despesas ?? []}
+                  lojas={lojas ?? []}
+                  lojaIdFiltro={lojaId}
+                />
               </div>
             </CardHeader>
             <CardContent className="divide-y">
@@ -284,6 +321,11 @@ function DrePage() {
                           <CornerDownRight className="h-3 w-3" />
                           {d.descricao}
                           {d.categoria && <span className="opacity-60">· {d.categoria}</span>}
+                          {lojaId == null && (
+                            <Badge variant="outline" className="h-4 px-1 text-[10px]">
+                              {nomeLoja(d.loja_id)}
+                            </Badge>
+                          )}
                         </span>
                         <span className="tabular-nums">{brl(d.valor)}</span>
                       </div>
@@ -308,6 +350,11 @@ function DrePage() {
                         <span className="flex items-center gap-1.5">
                           <CornerDownRight className="h-3 w-3" />
                           {v.descricao}
+                          {lojaId == null && (
+                            <Badge variant="outline" className="h-4 px-1 text-[10px]">
+                              {nomeLoja(v.loja_id)}
+                            </Badge>
+                          )}
                           <span className="opacity-60">
                             · {v.pedidos_cobrados.toLocaleString("pt-BR")} de{" "}
                             {v.pedidos_base.toLocaleString("pt-BR")} pedidos ×{" "}
@@ -386,7 +433,15 @@ function DrePage() {
   );
 }
 
-function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
+function GerenciarVariaveis({
+  variaveis,
+  lojas,
+  lojaIdFiltro,
+}: {
+  variaveis: Variavel[];
+  lojas: Loja[];
+  lojaIdFiltro: number | null;
+}) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -394,6 +449,7 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
   const [valorPedido, setValorPedido] = useState("");
   const [franquia, setFranquia] = useState("");
   const [diaCorte, setDiaCorte] = useState("");
+  const [lojaId, setLojaId] = useState<string>(lojaIdFiltro != null ? String(lojaIdFiltro) : "");
   const [saving, setSaving] = useState(false);
 
   const refresh = () => {
@@ -408,12 +464,13 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
     setValorPedido("");
     setFranquia("");
     setDiaCorte("");
+    setLojaId(lojaIdFiltro != null ? String(lojaIdFiltro) : "");
   };
 
   async function salvar() {
     const v = Number(valorPedido.replace(",", "."));
-    if (!descricao.trim() || !Number.isFinite(v)) {
-      toast.error("Informe descrição e valor por pedido válidos");
+    if (!descricao.trim() || !Number.isFinite(v) || !lojaId) {
+      toast.error("Informe loja, descrição e valor por pedido válidos");
       return;
     }
     const f = franquia.trim() ? Number(franquia.replace(/\D/g, "")) : null;
@@ -428,6 +485,7 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
       valor_por_pedido: v,
       franquia_pedidos: f,
       dia_corte_ciclo: dc,
+      loja_id: Number(lojaId),
     };
     const tabela = (supabase as any).from("despesas_variaveis");
     const { error } = editId
@@ -465,7 +523,8 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
       open={open}
       onOpenChange={(o) => {
         setOpen(o);
-        if (!o) limpar();
+        if (o) setLojaId(lojaIdFiltro != null ? String(lojaIdFiltro) : "");
+        else limpar();
       }}
     >
       <DialogTrigger asChild>
@@ -484,6 +543,21 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
         </p>
 
         <div className="grid gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Loja</Label>
+            <Select value={lojaId} onValueChange={setLojaId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a loja" />
+              </SelectTrigger>
+              <SelectContent>
+                {lojas.map((l) => (
+                  <SelectItem key={l.id} value={String(l.id)}>
+                    {l.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs">Descrição</Label>
@@ -549,7 +623,14 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
               className="flex items-center justify-between gap-3 rounded-md border p-2"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{r.descricao}</p>
+                <p className="truncate text-sm font-medium">
+                  {r.descricao}
+                  {lojaIdFiltro == null && (
+                    <Badge variant="outline" className="ml-2 h-4 px-1 text-[10px] font-normal">
+                      {lojas.find((l) => l.id === r.loja_id)?.nome ?? `Loja ${r.loja_id}`}
+                    </Badge>
+                  )}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {brl(r.valor_por_pedido)} por pedido
                   {r.franquia_pedidos
@@ -573,6 +654,7 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
                     setValorPedido(String(r.valor_por_pedido).replace(".", ","));
                     setFranquia(r.franquia_pedidos ? String(r.franquia_pedidos) : "");
                     setDiaCorte(r.dia_corte_ciclo ? String(r.dia_corte_ciclo) : "");
+                    setLojaId(String(r.loja_id));
                   }}
                 >
                   <Pencil className="h-4 w-4" />
@@ -589,12 +671,21 @@ function GerenciarVariaveis({ variaveis }: { variaveis: Variavel[] }) {
   );
 }
 
-function GerenciarDespesas({ despesas }: { despesas: Despesa[] }) {
+function GerenciarDespesas({
+  despesas,
+  lojas,
+  lojaIdFiltro,
+}: {
+  despesas: Despesa[];
+  lojas: Loja[];
+  lojaIdFiltro: number | null;
+}) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [descricao, setDescricao] = useState("");
   const [valor, setValor] = useState("");
   const [categoria, setCategoria] = useState("");
+  const [lojaId, setLojaId] = useState<string>(lojaIdFiltro != null ? String(lojaIdFiltro) : "");
   const [editId, setEditId] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -608,19 +699,25 @@ function GerenciarDespesas({ despesas }: { despesas: Despesa[] }) {
     setDescricao("");
     setValor("");
     setCategoria("");
+    setLojaId(lojaIdFiltro != null ? String(lojaIdFiltro) : "");
   };
 
   async function salvar() {
     const v = Number(valor.replace(",", "."));
-    if (!descricao.trim() || !Number.isFinite(v)) {
-      toast.error("Informe descrição e valor válidos");
+    if (!descricao.trim() || !Number.isFinite(v) || !lojaId) {
+      toast.error("Informe loja, descrição e valor válidos");
       return;
     }
     setSaving(true);
-    const payload = { descricao: descricao.trim(), valor: v, categoria: categoria.trim() || null };
+    const payload = {
+      descricao: descricao.trim(),
+      valor: v,
+      categoria: categoria.trim() || null,
+      loja_id: Number(lojaId),
+    };
     const { error } = editId
-      ? await supabase.from("despesas_fixas").update(payload).eq("id", editId)
-      : await supabase.from("despesas_fixas").insert(payload);
+      ? await (supabase as any).from("despesas_fixas").update(payload).eq("id", editId)
+      : await (supabase as any).from("despesas_fixas").insert(payload);
     setSaving(false);
     if (error) {
       toast.error("Erro ao salvar", { description: error.message });
@@ -650,7 +747,8 @@ function GerenciarDespesas({ despesas }: { despesas: Despesa[] }) {
       open={open}
       onOpenChange={(o) => {
         setOpen(o);
-        if (!o) limpar();
+        if (o) setLojaId(lojaIdFiltro != null ? String(lojaIdFiltro) : "");
+        else limpar();
       }}
     >
       <DialogTrigger asChild>
@@ -665,6 +763,21 @@ function GerenciarDespesas({ despesas }: { despesas: Despesa[] }) {
         </DialogHeader>
 
         <div className="grid gap-3">
+          <div className="space-y-1">
+            <Label className="text-xs">Loja</Label>
+            <Select value={lojaId} onValueChange={setLojaId}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a loja" />
+              </SelectTrigger>
+              <SelectContent>
+                {lojas.map((l) => (
+                  <SelectItem key={l.id} value={String(l.id)}>
+                    {l.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="grid gap-2 sm:grid-cols-[2fr_1fr_1fr]">
             <div className="space-y-1">
               <Label className="text-xs">Descrição</Label>
@@ -720,7 +833,14 @@ function GerenciarDespesas({ despesas }: { despesas: Despesa[] }) {
               className="flex items-center justify-between gap-3 rounded-md border p-2"
             >
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{d.descricao}</p>
+                <p className="truncate text-sm font-medium">
+                  {d.descricao}
+                  {lojaIdFiltro == null && (
+                    <Badge variant="outline" className="ml-2 h-4 px-1 text-[10px] font-normal">
+                      {lojas.find((l) => l.id === d.loja_id)?.nome ?? `Loja ${d.loja_id}`}
+                    </Badge>
+                  )}
+                </p>
                 <p className="text-xs text-muted-foreground">
                   {brl(d.valor)}
                   {d.categoria ? ` · ${d.categoria}` : ""}
@@ -740,6 +860,7 @@ function GerenciarDespesas({ despesas }: { despesas: Despesa[] }) {
                     setDescricao(d.descricao);
                     setValor(String(d.valor).replace(".", ","));
                     setCategoria(d.categoria ?? "");
+                    setLojaId(String(d.loja_id));
                   }}
                 >
                   <Pencil className="h-4 w-4" />
