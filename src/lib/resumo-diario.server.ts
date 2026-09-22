@@ -89,32 +89,57 @@ async function enviarResumoLoja(opts: {
   lojaNome: string;
   sufixoTitulo: string;
 }): Promise<ResultadoResumoLoja & { mensagem?: string }> {
-  const { dataRef, parcial, webhook, lojaId, lojaNome, sufixoTitulo } = opts;
+  const { dataRef, parcial, ignorarToggle, webhook, lojaId, lojaNome, sufixoTitulo } = opts;
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const hora = horaSaoPaulo();
+  const tipoAlerta = parcial ? "resumo_parcial" : "resumo_diario";
+  const chaveAlerta = parcial ? `${dataRef} ${hora} loja${lojaId}` : `${dataRef} loja${lojaId}`;
+
+  // Reivindica a chave antes de gastar tempo montando a mensagem: se essa
+  // janela (mesma data+loja, ou mesma data+hora+loja no caso parcial) já foi
+  // reivindicada por outra execução — reentrega da plataforma, corrida entre
+  // duas invocações etc. — não manda de novo. `insert` (não upsert) porque a
+  // unicidade de (tipo, chave) é o que garante o envio único. `ignorarToggle`
+  // (envio manual/teste) pode sobrescrever uma janela já reivindicada.
+  const { error: erroReivindicar } = await (supabaseAdmin.from("alertas_enviados") as any)[
+    ignorarToggle ? "upsert" : "insert"
+  ](
+    { tipo: tipoAlerta, chave: chaveAlerta, loja_id: lojaId, enviado: false },
+    ignorarToggle ? { onConflict: "tipo,chave" } : undefined,
+  );
+  if (erroReivindicar) {
+    if (erroReivindicar.code === "23505") {
+      return {
+        loja_id: lojaId,
+        loja_nome: lojaNome,
+        ok: true,
+        enviado: false,
+        erro: "ja enviado para esta janela (idempotente)",
+      };
+    }
+    console.error("falha ao reivindicar alerta de resumo", erroReivindicar.message);
+  }
 
   const { data: kpisRaw, error: erroKpis } = await supabaseAdmin.rpc("dashboard_kpis_periodo", {
     p_de: dataRef,
     p_ate: dataRef,
     p_loja_id: lojaId,
   } as never);
+  async function abortar(motivo: string) {
+    await (supabaseAdmin.from("alertas_enviados") as any)
+      .update({ erro: motivo })
+      .eq("tipo", tipoAlerta)
+      .eq("chave", chaveAlerta);
+    return { loja_id: lojaId, loja_nome: lojaNome, ok: false, enviado: false, erro: motivo };
+  }
+
   if (erroKpis) {
-    return {
-      loja_id: lojaId,
-      loja_nome: lojaNome,
-      ok: false,
-      enviado: false,
-      erro: erroKpis.message,
-    };
+    return await abortar(erroKpis.message);
   }
   const k = (Array.isArray(kpisRaw) ? kpisRaw[0] : kpisRaw) as Record<string, unknown> | null;
   if (!k) {
-    return {
-      loja_id: lojaId,
-      loja_nome: lojaNome,
-      ok: false,
-      enviado: false,
-      erro: "sem dados para o periodo",
-    };
+    return await abortar("sem dados para o periodo");
   }
 
   const semMovimento =
@@ -122,13 +147,9 @@ async function enviarResumoLoja(opts: {
     Number(k["pedidos_cancelados"] ?? 0) === 0 &&
     Number(k["faturamento"] ?? 0) === 0;
   if (semMovimento) {
-    return {
-      loja_id: lojaId,
-      loja_nome: lojaNome,
-      ok: false,
-      enviado: false,
-      erro: "nenhum pedido registrado nessa data — resumo nao enviado para evitar valores zerados",
-    };
+    return await abortar(
+      "nenhum pedido registrado nessa data — resumo nao enviado para evitar valores zerados",
+    );
   }
 
   let carteira: Record<string, unknown> | null = null;
@@ -143,7 +164,6 @@ async function enviarResumoLoja(opts: {
     carteira = null;
   }
 
-  const hora = horaSaoPaulo();
   const pedidos = Number(k["pedidos_validos"] ?? 0);
   const cancelados = Number(k["pedidos_cancelados"] ?? 0);
   const devolvidos = Number(k["pedidos_devolvidos"] ?? 0);
@@ -223,16 +243,10 @@ async function enviarResumoLoja(opts: {
     erro = (e as Error).message;
   }
 
-  await (supabaseAdmin.from("alertas_enviados") as any).upsert(
-    {
-      tipo: parcial ? "resumo_parcial" : "resumo_diario",
-      chave: parcial ? `${dataRef} ${hora} loja${lojaId}` : `${dataRef} loja${lojaId}`,
-      enviado,
-      erro,
-      detalhe: { mensagem, webhook: respostaWebhook },
-    },
-    { onConflict: "tipo,chave" },
-  );
+  await (supabaseAdmin.from("alertas_enviados") as any)
+    .update({ enviado, erro, detalhe: { mensagem, webhook: respostaWebhook } })
+    .eq("tipo", tipoAlerta)
+    .eq("chave", chaveAlerta);
 
   return {
     loja_id: lojaId,
