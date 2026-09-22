@@ -7,7 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -25,7 +31,14 @@ import {
   Legend,
   Cell,
 } from "recharts";
-import { Snowflake, ArrowRight, Sparkles, CalendarIcon, TrendingUp, AlertTriangle } from "lucide-react";
+import {
+  Snowflake,
+  ArrowRight,
+  Sparkles,
+  CalendarIcon,
+  TrendingUp,
+  AlertTriangle,
+} from "lucide-react";
 import { CheckCircle2, AlertCircle, XCircle } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -34,8 +47,7 @@ export const Route = createLazyFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
 });
 
-const brl = (v: number) =>
-  v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 const brlAbrev = (v: number) => {
   const abs = Math.abs(v);
@@ -52,18 +64,35 @@ function fmtVs(value: number, isCurrency: boolean) {
   return value.toLocaleString("pt-BR");
 }
 
-function VsPill({ current, previous, label, isCurrency = false }: {
-  current: number; previous: number; label: string; isCurrency?: boolean;
+function VsPill({
+  current,
+  previous,
+  label,
+  isCurrency = false,
+}: {
+  current: number;
+  previous: number;
+  label: string;
+  isCurrency?: boolean;
 }) {
   if (previous === 0 && current === 0) {
     return <span className="text-[10px] text-muted-foreground">vs {label}: —</span>;
   }
   const change = previous === 0 ? 1 : (current - previous) / previous;
   const sign = change > 0 ? "+" : "";
-  const color = change > 0 ? "text-[color:var(--success)]" : change < 0 ? "text-destructive" : "text-muted-foreground";
+  const color =
+    change > 0
+      ? "text-[color:var(--success)]"
+      : change < 0
+        ? "text-destructive"
+        : "text-muted-foreground";
   return (
     <span className="text-[10px] tabular-nums text-muted-foreground">
-      vs {label}: <span className={color}>{sign}{(change * 100).toFixed(0).replace(".", ",")}%</span>
+      vs {label}:{" "}
+      <span className={color}>
+        {sign}
+        {(change * 100).toFixed(0).replace(".", ",")}%
+      </span>
       <span className="hidden sm:inline"> · {fmtVs(previous, isCurrency)}</span>
     </span>
   );
@@ -76,7 +105,11 @@ function DashboardPage() {
   const { preset, custom, setPreset, setCustom } = usePeriodo();
   const [customOpen, setCustomOpen] = useState(false);
   const { de, ate } = useMemo(() => computeRange(preset, custom), [preset, custom]);
-  const { de: prevDe, ate: prevAte, label: prevLabel } = useMemo(() => computePreviousRange(preset, custom), [preset, custom]);
+  const {
+    de: prevDe,
+    ate: prevAte,
+    label: prevLabel,
+  } = useMemo(() => computePreviousRange(preset, custom), [preset, custom]);
   const p_de = toISO(de);
   const p_ate = toISO(ate);
   const p_prev_de = toISO(prevDe);
@@ -85,14 +118,17 @@ function DashboardPage() {
   // mesmo horário atual (ex.: 12:05 → ontem até 12:05), em bucket de 5 min.
   const minutoMax = useMemo(() => {
     if (preset !== "hoje") return null;
-    const agoraBRT = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+    const agoraBRT = new Date(
+      new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }),
+    );
     const min = agoraBRT.getHours() * 60 + agoraBRT.getMinutes();
     return Math.floor(min / 5) * 5;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preset, p_de]);
-  const horaLabel = minutoMax == null
-    ? null
-    : `${String(Math.floor(minutoMax / 60)).padStart(2, "0")}:${String(minutoMax % 60).padStart(2, "0")}`;
+  const horaLabel =
+    minutoMax == null
+      ? null
+      : `${String(Math.floor(minutoMax / 60)).padStart(2, "0")}:${String(minutoMax % 60).padStart(2, "0")}`;
   const vsLabel = horaLabel ? `${prevLabel} até ${horaLabel}` : prevLabel;
   const diasDiff = Math.round((ate.getTime() - de.getTime()) / 86_400_000);
   const granLabel = diasDiff > 90 ? "mês" : diasDiff > 31 ? "semana" : "dia";
@@ -105,44 +141,69 @@ function DashboardPage() {
         .select("id, campo, de, ate, encontrados, gravados, duracao_ms, ok, erros, created_at")
         .order("created_at", { ascending: false })
         .limit(20);
-      return ((data ?? []) as unknown) as Array<{
-        id: string; campo: string | null; de: string | null; ate: string | null;
-        encontrados: number | null; gravados: number | null; duracao_ms: number | null;
-        ok: boolean; erros: any; created_at: string;
+      return (data ?? []) as unknown as Array<{
+        id: string;
+        campo: string | null;
+        de: string | null;
+        ate: string | null;
+        encontrados: number | null;
+        gravados: number | null;
+        duracao_ms: number | null;
+        ok: boolean;
+        erros: any;
+        created_at: string;
       }>;
     },
     refetchInterval: 60_000,
   });
   const ultimoOk = syncRecent?.find((s) => s.ok);
-  const minutosDesde = ultimoOk ? Math.floor((Date.now() - new Date(ultimoOk.created_at).getTime()) / 60000) : null;
+  const minutosDesde = ultimoOk
+    ? Math.floor((Date.now() - new Date(ultimoOk.created_at).getTime()) / 60000)
+    : null;
   let syncTone: "ok" | "warn" | "err" = "ok";
   let syncLabel = "Sem sincronizações";
   if (minutosDesde !== null) {
-    if (minutosDesde >= 120) { syncTone = "err"; syncLabel = "Sincronização parada, verifique o cron"; }
-    else if (minutosDesde >= 30) { syncTone = "warn"; syncLabel = `Atualizado há ${minutosDesde} min`; }
-    else { syncTone = "ok"; syncLabel = `Atualizado há ${minutosDesde} min`; }
+    if (minutosDesde >= 120) {
+      syncTone = "err";
+      syncLabel = "Sincronização parada, verifique o cron";
+    } else if (minutosDesde >= 30) {
+      syncTone = "warn";
+      syncLabel = `Atualizado há ${minutosDesde} min`;
+    } else {
+      syncTone = "ok";
+      syncLabel = `Atualizado há ${minutosDesde} min`;
+    }
   }
   const toneClass =
-    syncTone === "err" ? "text-destructive border-destructive/40 bg-destructive/10"
-    : syncTone === "warn" ? "text-[color:var(--warning)] border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10"
-    : "text-muted-foreground border-border bg-muted/30";
+    syncTone === "err"
+      ? "text-destructive border-destructive/40 bg-destructive/10"
+      : syncTone === "warn"
+        ? "text-[color:var(--warning)] border-[color:var(--warning)]/40 bg-[color:var(--warning)]/10"
+        : "text-muted-foreground border-border bg-muted/30";
   const ToneIcon = syncTone === "err" ? XCircle : syncTone === "warn" ? AlertCircle : CheckCircle2;
 
-  const { data: conn, isLoading: loadConn } = useQuery({
-    queryKey: ["shopee-connection-status", "principal"],
+  const { data: conexoes, isLoading: loadConn } = useQuery({
+    queryKey: ["shopee-connection-status", "principal", "all"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("shopee_connection_status" as any)
         .select("shop_id, shop_name, status")
-        .eq("app_tipo", "principal")
-        .maybeSingle();
+        .eq("app_tipo", "principal");
       if (error) throw error;
-      return data as { shop_id: number | null; shop_name: string | null; status: string } | null;
+      return (data ?? []) as unknown as Array<{
+        shop_id: number | null;
+        shop_name: string | null;
+        status: string;
+      }>;
     },
   });
-  const notConnected = !loadConn && (!conn || !conn.shop_id);
+  const notConnected = !loadConn && !(conexoes ?? []).some((c) => c.shop_id);
 
-  const { data: kpis, isLoading: loadKpis, error: erroKpis } = useQuery({
+  const {
+    data: kpis,
+    isLoading: loadKpis,
+    error: erroKpis,
+  } = useQuery({
     queryKey: ["kpis", p_de, p_ate],
     queryFn: async () => {
       // O período atual sempre usa a função oficial (números do painel).
@@ -182,9 +243,17 @@ function DashboardPage() {
   const { data: kpisPrev, isLoading: loadKpisPrev } = useQuery({
     queryKey: ["kpis-anterior", p_prev_de, p_prev_ate, minutoMax],
     queryFn: async () => {
-      const { data, error } = minutoMax == null
-        ? await supabase.rpc("dashboard_kpis_periodo" as any, { p_de: p_prev_de, p_ate: p_prev_ate })
-        : await supabase.rpc("dashboard_kpis_parcial" as any, { p_de: p_prev_de, p_ate: p_prev_ate, p_minuto_max: minutoMax });
+      const { data, error } =
+        minutoMax == null
+          ? await supabase.rpc("dashboard_kpis_periodo" as any, {
+              p_de: p_prev_de,
+              p_ate: p_prev_ate,
+            })
+          : await supabase.rpc("dashboard_kpis_parcial" as any, {
+              p_de: p_prev_de,
+              p_ate: p_prev_ate,
+              p_minuto_max: minutoMax,
+            });
       if (error) throw error;
       const r = ((data as any)?.[0] ?? {}) as any;
       return {
@@ -231,13 +300,18 @@ function DashboardPage() {
   const { data: topProdutos, isLoading: loadTop } = useQuery({
     queryKey: ["topProdutos", p_de, p_ate],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_top_produtos_periodo" as any, { p_de, p_ate, p_limite: 10 });
+      const { data, error } = await supabase.rpc("dashboard_top_produtos_periodo" as any, {
+        p_de,
+        p_ate,
+        p_limite: 10,
+      });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         nomeCompleto: String(r.produto ?? r.sku ?? ""),
-        nome: String(r.produto ?? r.sku ?? "").length > 40
-          ? String(r.produto ?? r.sku ?? "").slice(0, 40) + "…"
-          : String(r.produto ?? r.sku ?? ""),
+        nome:
+          String(r.produto ?? r.sku ?? "").length > 40
+            ? String(r.produto ?? r.sku ?? "").slice(0, 40) + "…"
+            : String(r.produto ?? r.sku ?? ""),
         sku: String(r.sku ?? ""),
         qtd: Number(r.quantidade ?? 0),
         receita: Number(r.receita ?? 0),
@@ -344,7 +418,11 @@ function DashboardPage() {
   const { data: abc, isLoading: loadAbc } = useQuery({
     queryKey: ["abc", p_de, p_ate],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_curva_abc" as any, { p_de, p_ate, p_limite: 50 });
+      const { data, error } = await supabase.rpc("dashboard_curva_abc" as any, {
+        p_de,
+        p_ate,
+        p_limite: 50,
+      });
       if (error) throw error;
       return ((data as any[]) ?? []).map((r) => ({
         produto: String(r.produto ?? r.sku ?? ""),
@@ -361,9 +439,7 @@ function DashboardPage() {
     retry: 2,
   });
 
-  const rangeLabel = de.getTime() === ate.getTime()
-    ? fmtBR(de)
-    : `${fmtBR(de)} a ${fmtBR(ate)}`;
+  const rangeLabel = de.getTime() === ate.getTime() ? fmtBR(de) : `${fmtBR(de)} a ${fmtBR(ate)}`;
 
   return (
     <div className="min-w-0 space-y-5 sm:space-y-6">
@@ -403,13 +479,16 @@ function DashboardPage() {
                         </Badge>
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
-                        {s.campo ?? "—"} · encontrados {s.encontrados ?? 0} · gravados {s.gravados ?? 0}
+                        {s.campo ?? "—"} · encontrados {s.encontrados ?? 0} · gravados{" "}
+                        {s.gravados ?? 0}
                         {s.duracao_ms != null && <> · {s.duracao_ms} ms</>}
                       </div>
                       {s.erros && Array.isArray(s.erros) && s.erros.length > 0 && (
                         <ul className="mt-2 list-disc pl-4 text-xs text-destructive space-y-0.5">
                           {s.erros.slice(0, 5).map((e: any, i: number) => (
-                            <li key={i} className="break-words">{String(e)}</li>
+                            <li key={i} className="break-words">
+                              {String(e)}
+                            </li>
                           ))}
                         </ul>
                       )}
@@ -454,7 +533,10 @@ function DashboardPage() {
                 {custom?.from ? rangeLabel : "Escolher datas"}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto max-w-[calc(100vw-2rem)] overflow-auto p-0 pointer-events-auto" align="end">
+            <PopoverContent
+              className="w-auto max-w-[calc(100vw-2rem)] overflow-auto p-0 pointer-events-auto"
+              align="end"
+            >
               <Calendar
                 mode="range"
                 numberOfMonths={isMobile ? 1 : 2}
@@ -481,8 +563,11 @@ function DashboardPage() {
       </div>
 
       {notConnected && (
-      <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background">
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl" aria-hidden />
+        <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background">
+          <div
+            className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-primary/20 blur-3xl"
+            aria-hidden
+          />
           <CardContent className="relative flex flex-col gap-4 p-5 sm:p-6 md:flex-row md:items-center md:justify-between">
             <div className="flex min-w-0 items-start gap-3 sm:gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
@@ -514,7 +599,8 @@ function DashboardPage() {
             <AlertTriangle className="h-4 w-4 text-destructive" />
             <span>
               Não foi possível carregar os indicadores deste período:{" "}
-              {(erroKpis as any)?.message ?? "erro desconhecido"}. Os valores exibidos podem estar desatualizados.
+              {(erroKpis as any)?.message ?? "erro desconhecido"}. Os valores exibidos podem estar
+              desatualizados.
             </span>
           </CardContent>
         </Card>
@@ -522,24 +608,44 @@ function DashboardPage() {
 
       {/* BLOCO 1: Faixa de destaque */}
       <Card className="relative overflow-hidden border-primary/30 bg-gradient-to-br from-primary/15 via-primary/5 to-background">
-        <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/20 blur-3xl" aria-hidden />
+        <div
+          className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/20 blur-3xl"
+          aria-hidden
+        />
         <CardContent className="relative flex flex-col gap-4 p-5 sm:p-6 md:flex-row md:items-end md:justify-between">
           <div className="min-w-0 space-y-2">
-            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Faturamento</span>
+            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+              Faturamento
+            </span>
             <div className="text-[clamp(1.75rem,8vw,2.25rem)] font-semibold tabular-nums leading-none break-words md:text-5xl">
-              {loadKpis ? <Skeleton className="h-10 w-48 sm:h-12 sm:w-64" /> : brl(kpis?.faturamento ?? 0)}
+              {loadKpis ? (
+                <Skeleton className="h-10 w-48 sm:h-12 sm:w-64" />
+              ) : (
+                brl(kpis?.faturamento ?? 0)
+              )}
             </div>
             {!loadKpis && !loadKpisPrev && (
               <div className="pt-0.5">
-                <VsPill current={kpis?.faturamento ?? 0} previous={kpisPrev?.faturamento ?? 0} label={vsLabel} isCurrency />
+                <VsPill
+                  current={kpis?.faturamento ?? 0}
+                  previous={kpisPrev?.faturamento ?? 0}
+                  label={vsLabel}
+                  isCurrency
+                />
               </div>
             )}
             <div className="flex min-w-0 flex-wrap items-center gap-3 pt-1">
-              {loadKpis ? <Skeleton className="h-6 w-40" /> : (kpis?.coberturaCusto ?? 0) === 0 ? (
+              {loadKpis ? (
+                <Skeleton className="h-6 w-40" />
+              ) : (kpis?.coberturaCusto ?? 0) === 0 ? (
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground">Lucro</span>
                   <span className="font-semibold text-lg">—</span>
-                  <Link to="/produtos" search={{ q: "" }} className="text-xs text-primary underline underline-offset-2">
+                  <Link
+                    to="/produtos"
+                    search={{ q: "" }}
+                    className="text-xs text-primary underline underline-offset-2"
+                  >
                     informe os custos em Produtos
                   </Link>
                 </div>
@@ -548,19 +654,27 @@ function DashboardPage() {
                   <div className="flex min-w-0 flex-col gap-1.5">
                     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                       <span className="text-sm text-muted-foreground">Lucro (sem Ads)</span>
-                      <span className={`text-xl font-semibold tabular-nums sm:text-2xl ${((kpis?.lucroSemAds ?? 0) >= 0) ? "text-[color:var(--warning)]" : "text-destructive"}`}>
+                      <span
+                        className={`text-xl font-semibold tabular-nums sm:text-2xl ${(kpis?.lucroSemAds ?? 0) >= 0 ? "text-[color:var(--warning)]" : "text-destructive"}`}
+                      >
                         {brl(kpis?.lucroSemAds ?? 0)}
                       </span>
-                      <span className={`text-sm tabular-nums ${((kpis?.lucroSemAdsPct ?? 0) >= 0) ? "text-[color:var(--warning)]" : "text-destructive"}`}>
+                      <span
+                        className={`text-sm tabular-nums ${(kpis?.lucroSemAdsPct ?? 0) >= 0 ? "text-[color:var(--warning)]" : "text-destructive"}`}
+                      >
                         ({(kpis?.lucroSemAdsPct ?? 0).toFixed(1).replace(".", ",")}%)
                       </span>
                     </div>
                     <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                       <span className="text-xs text-muted-foreground">Lucro (com Ads)</span>
-                      <span className={`text-lg font-semibold tabular-nums ${((kpis?.lucroComAds ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                      <span
+                        className={`text-lg font-semibold tabular-nums ${(kpis?.lucroComAds ?? 0) >= 0 ? "text-[color:var(--success)]" : "text-destructive"}`}
+                      >
                         {brl(kpis?.lucroComAds ?? 0)}
                       </span>
-                      <span className={`text-xs tabular-nums ${((kpis?.lucroComAdsPct ?? 0) >= 0) ? "text-[color:var(--success)]" : "text-destructive"}`}>
+                      <span
+                        className={`text-xs tabular-nums ${(kpis?.lucroComAdsPct ?? 0) >= 0 ? "text-[color:var(--success)]" : "text-destructive"}`}
+                      >
                         ({(kpis?.lucroComAdsPct ?? 0).toFixed(1).replace(".", ",")}%)
                       </span>
                     </div>
@@ -577,8 +691,10 @@ function DashboardPage() {
               </span>
             )}
             <div>
-            <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">Período</span>
-            <div className="text-sm tabular-nums">{rangeLabel}</div>
+              <span className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground">
+                Período
+              </span>
+              <div className="text-sm tabular-nums">{rangeLabel}</div>
             </div>
           </div>
         </CardContent>
@@ -590,12 +706,29 @@ function DashboardPage() {
           label="Vendas"
           value={loadKpis ? null : String(kpis?.pedidosValidos ?? 0)}
           hint={loadKpis ? undefined : `${kpis?.unidades ?? 0} unidades`}
-          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.pedidosValidos ?? 0, previous: kpisPrev?.pedidosValidos ?? 0, label: vsLabel }}
+          vs={
+            loadKpis || loadKpisPrev
+              ? undefined
+              : {
+                  current: kpis?.pedidosValidos ?? 0,
+                  previous: kpisPrev?.pedidosValidos ?? 0,
+                  label: vsLabel,
+                }
+          }
         />
         <ResultCard
           label="Ticket médio"
           value={loadKpis ? null : brl(kpis?.ticketMedio ?? 0)}
-          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.ticketMedio ?? 0, previous: kpisPrev?.ticketMedio ?? 0, label: vsLabel, isCurrency: true }}
+          vs={
+            loadKpis || loadKpisPrev
+              ? undefined
+              : {
+                  current: kpis?.ticketMedio ?? 0,
+                  previous: kpisPrev?.ticketMedio ?? 0,
+                  label: vsLabel,
+                  isCurrency: true,
+                }
+          }
         />
         <ResultCard
           label="Lucro médio (sem Ads)"
@@ -608,28 +741,70 @@ function DashboardPage() {
           }
           hint={loadKpis ? undefined : "por pedido, antes de Ads"}
           tone="warning"
-          vs={loadKpis || loadKpisPrev ? undefined : { current: (kpis?.pedidosValidos ?? 0) === 0 ? 0 : (kpis?.lucroSemAds ?? 0) / (kpis?.pedidosValidos || 1), previous: (kpisPrev?.pedidosValidos ?? 0) === 0 ? 0 : (kpisPrev?.lucroSemAds ?? 0) / (kpisPrev?.pedidosValidos || 1), label: vsLabel, isCurrency: true }}
+          vs={
+            loadKpis || loadKpisPrev
+              ? undefined
+              : {
+                  current:
+                    (kpis?.pedidosValidos ?? 0) === 0
+                      ? 0
+                      : (kpis?.lucroSemAds ?? 0) / (kpis?.pedidosValidos || 1),
+                  previous:
+                    (kpisPrev?.pedidosValidos ?? 0) === 0
+                      ? 0
+                      : (kpisPrev?.lucroSemAds ?? 0) / (kpisPrev?.pedidosValidos || 1),
+                  label: vsLabel,
+                  isCurrency: true,
+                }
+          }
         />
         <ResultCard
           label="Lucro médio (com Ads)"
-          value={loadKpis ? null : ((kpis?.coberturaCusto ?? 0) === 0 ? "—" : brl(kpis?.lucroMedio ?? 0))}
+          value={
+            loadKpis ? null : (kpis?.coberturaCusto ?? 0) === 0 ? "—" : brl(kpis?.lucroMedio ?? 0)
+          }
           hint={loadKpis ? undefined : "por pedido, já com Ads"}
-          tone={((kpis?.lucroMedio ?? 0) < 0) ? "danger" : "success"}
-          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.lucroMedio ?? 0, previous: kpisPrev?.lucroMedio ?? 0, label: vsLabel, isCurrency: true }}
+          tone={(kpis?.lucroMedio ?? 0) < 0 ? "danger" : "success"}
+          vs={
+            loadKpis || loadKpisPrev
+              ? undefined
+              : {
+                  current: kpis?.lucroMedio ?? 0,
+                  previous: kpisPrev?.lucroMedio ?? 0,
+                  label: vsLabel,
+                  isCurrency: true,
+                }
+          }
         />
         <ResultCard
           label="Canceladas"
           value={loadKpis ? null : String(kpis?.cancelados ?? 0)}
           hint={loadKpis ? undefined : brl(kpis?.valorCancelado ?? 0)}
           tone="danger"
-          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.cancelados ?? 0, previous: kpisPrev?.cancelados ?? 0, label: vsLabel }}
+          vs={
+            loadKpis || loadKpisPrev
+              ? undefined
+              : {
+                  current: kpis?.cancelados ?? 0,
+                  previous: kpisPrev?.cancelados ?? 0,
+                  label: vsLabel,
+                }
+          }
         />
         <ResultCard
           label="Devoluções"
           value={loadKpis ? null : String(kpis?.devolvidos ?? 0)}
           hint={loadKpis ? undefined : brl(kpis?.valorDevolvido ?? 0)}
           tone="warning"
-          vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.devolvidos ?? 0, previous: kpisPrev?.devolvidos ?? 0, label: vsLabel }}
+          vs={
+            loadKpis || loadKpisPrev
+              ? undefined
+              : {
+                  current: kpis?.devolvidos ?? 0,
+                  previous: kpisPrev?.devolvidos ?? 0,
+                  label: vsLabel,
+                }
+          }
         />
       </div>
 
@@ -638,7 +813,11 @@ function DashboardPage() {
         <CompCard
           label="Pedidos em trânsito"
           valor={loadTransito ? null : String(transito?.pedidos ?? 0)}
-          pct={loadTransito ? null : `${transito?.unidades ?? 0} unidades · ${brl(transito?.valor ?? 0)} em vendas`}
+          pct={
+            loadTransito
+              ? null
+              : `${transito?.unidades ?? 0} unidades · ${brl(transito?.valor ?? 0)} em vendas`
+          }
           tone="primary"
         />
         <CompCard
@@ -656,10 +835,84 @@ function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <CompCard label="Custos" valor={loadKpis ? null : brl(kpis?.custoTotal ?? 0)} pct={loadKpis ? null : `${(kpis?.custoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="danger" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.custoTotal ?? 0, previous: kpisPrev?.custoTotal ?? 0, label: vsLabel, isCurrency: true }} />
-        <CompCard label="Tarifas" valor={loadKpis ? null : brl(kpis?.taxas ?? 0)} pct={loadKpis ? null : `${(kpis?.taxasPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`} tone="warning" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.taxas ?? 0, previous: kpisPrev?.taxas ?? 0, label: vsLabel, isCurrency: true }} />
-        <CompCard label="Impostos" valor={loadKpis ? null : brl(kpis?.imposto ?? 0)} pct={loadKpis ? null : ((kpis?.impostoPct ?? 0) === 0 ? "defina em Configurações" : `${(kpis?.impostoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`)} tone="muted" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.imposto ?? 0, previous: kpisPrev?.imposto ?? 0, label: vsLabel, isCurrency: true }} />
-        <CompCard label="Líquido Shopee" valor={loadKpis ? null : brl(kpis?.valorLiquido ?? 0)} pct={null} tone="primary" vs={loadKpis || loadKpisPrev ? undefined : { current: kpis?.valorLiquido ?? 0, previous: kpisPrev?.valorLiquido ?? 0, label: vsLabel, isCurrency: true }} />
+        <CompCard
+          label="Custos"
+          valor={loadKpis ? null : brl(kpis?.custoTotal ?? 0)}
+          pct={
+            loadKpis
+              ? null
+              : `${(kpis?.custoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`
+          }
+          tone="danger"
+          vs={
+            loadKpis || loadKpisPrev
+              ? undefined
+              : {
+                  current: kpis?.custoTotal ?? 0,
+                  previous: kpisPrev?.custoTotal ?? 0,
+                  label: vsLabel,
+                  isCurrency: true,
+                }
+          }
+        />
+        <CompCard
+          label="Tarifas"
+          valor={loadKpis ? null : brl(kpis?.taxas ?? 0)}
+          pct={
+            loadKpis
+              ? null
+              : `${(kpis?.taxasPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`
+          }
+          tone="warning"
+          vs={
+            loadKpis || loadKpisPrev
+              ? undefined
+              : {
+                  current: kpis?.taxas ?? 0,
+                  previous: kpisPrev?.taxas ?? 0,
+                  label: vsLabel,
+                  isCurrency: true,
+                }
+          }
+        />
+        <CompCard
+          label="Impostos"
+          valor={loadKpis ? null : brl(kpis?.imposto ?? 0)}
+          pct={
+            loadKpis
+              ? null
+              : (kpis?.impostoPct ?? 0) === 0
+                ? "defina em Configurações"
+                : `${(kpis?.impostoPct ?? 0).toFixed(1).replace(".", ",")}% do faturamento`
+          }
+          tone="muted"
+          vs={
+            loadKpis || loadKpisPrev
+              ? undefined
+              : {
+                  current: kpis?.imposto ?? 0,
+                  previous: kpisPrev?.imposto ?? 0,
+                  label: vsLabel,
+                  isCurrency: true,
+                }
+          }
+        />
+        <CompCard
+          label="Líquido Shopee"
+          valor={loadKpis ? null : brl(kpis?.valorLiquido ?? 0)}
+          pct={null}
+          tone="primary"
+          vs={
+            loadKpis || loadKpisPrev
+              ? undefined
+              : {
+                  current: kpis?.valorLiquido ?? 0,
+                  previous: kpisPrev?.valorLiquido ?? 0,
+                  label: vsLabel,
+                  isCurrency: true,
+                }
+          }
+        />
       </div>
 
       {/* BLOCO 4: Ads */}
@@ -672,7 +925,9 @@ function DashboardPage() {
         </CardHeader>
         <CardContent>
           {!loadAds && (ads?.investimento ?? 0) === 0 && (ads?.receita ?? 0) === 0 ? (
-            <p className="text-sm text-muted-foreground">Sem dados de Ads no período selecionado.</p>
+            <p className="text-sm text-muted-foreground">
+              Sem dados de Ads no período selecionado.
+            </p>
           ) : (
             <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-5">
               {[
@@ -683,11 +938,15 @@ function DashboardPage() {
                 { r: "TACOS", v: `${(ads?.tacos ?? 0).toFixed(1).replace(".", ",")}%` },
               ].map((item) => (
                 <div key={item.r} className="min-w-0 rounded-md border p-3">
-                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{item.r}</div>
+                  <div className="text-[11px] uppercase tracking-wide text-muted-foreground">
+                    {item.r}
+                  </div>
                   {loadAds ? (
                     <Skeleton className="mt-1 h-6 w-24" />
                   ) : (
-                    <div className="mt-1 break-words text-base font-semibold tabular-nums sm:text-lg">{item.v}</div>
+                    <div className="mt-1 break-words text-base font-semibold tabular-nums sm:text-lg">
+                      {item.v}
+                    </div>
                   )}
                 </div>
               ))}
@@ -717,31 +976,87 @@ function DashboardPage() {
                     <EmptyMini msg="Sem dados no período." />
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={serie ?? []} margin={{ top: 12, right: isMobile ? 0 : 16, left: isMobile ? -12 : 4, bottom: 5 }}>
+                      <ComposedChart
+                        data={serie ?? []}
+                        margin={{
+                          top: 12,
+                          right: isMobile ? 0 : 16,
+                          left: isMobile ? -12 : 4,
+                          bottom: 5,
+                        }}
+                      >
                         <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
-                        <XAxis dataKey="rotulo" minTickGap={isMobile ? 24 : 5} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                        <YAxis yAxisId="left" width={isMobile ? 46 : 60} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
-                        <YAxis yAxisId="right" orientation="right" width={isMobile ? 32 : 60} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                        <Tooltip content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null;
-                          const p = payload[0].payload as any;
-                          const d = new Date(p.periodo);
-                          return (
-                            <div className="rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
-                              <div className="font-medium">{format(d, "PPP", { locale: ptBR })}</div>
-                              <div className="mt-1">Faturamento: <span className="tabular-nums font-medium">{brl(p.faturamento)}</span></div>
-                              <div>Pedidos: <span className="tabular-nums font-medium">{p.pedidos}</span></div>
-                              {p.parcial && <div className="mt-1 text-[10px] uppercase text-[color:var(--warning)]">parcial</div>}
-                            </div>
-                          );
-                        }} />
+                        <XAxis
+                          dataKey="rotulo"
+                          minTickGap={isMobile ? 24 : 5}
+                          tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }}
+                          stroke="var(--border)"
+                        />
+                        <YAxis
+                          yAxisId="left"
+                          width={isMobile ? 46 : 60}
+                          tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }}
+                          stroke="var(--border)"
+                          tickFormatter={(v) => brlAbrev(Number(v))}
+                        />
+                        <YAxis
+                          yAxisId="right"
+                          orientation="right"
+                          width={isMobile ? 32 : 60}
+                          tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }}
+                          stroke="var(--border)"
+                        />
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (!active || !payload?.length) return null;
+                            const p = payload[0].payload as any;
+                            const d = new Date(p.periodo);
+                            return (
+                              <div className="rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
+                                <div className="font-medium">
+                                  {format(d, "PPP", { locale: ptBR })}
+                                </div>
+                                <div className="mt-1">
+                                  Faturamento:{" "}
+                                  <span className="tabular-nums font-medium">
+                                    {brl(p.faturamento)}
+                                  </span>
+                                </div>
+                                <div>
+                                  Pedidos:{" "}
+                                  <span className="tabular-nums font-medium">{p.pedidos}</span>
+                                </div>
+                                {p.parcial && (
+                                  <div className="mt-1 text-[10px] uppercase text-[color:var(--warning)]">
+                                    parcial
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }}
+                        />
                         <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Bar yAxisId="left" dataKey="faturamento" name="Faturamento" fill="var(--color-chart-1)" radius={[4,4,0,0]}>
+                        <Bar
+                          yAxisId="left"
+                          dataKey="faturamento"
+                          name="Faturamento"
+                          fill="var(--color-chart-1)"
+                          radius={[4, 4, 0, 0]}
+                        >
                           {(serie ?? []).map((entry, i) => (
                             <Cell key={i} fillOpacity={entry.parcial ? 0.4 : 1} />
                           ))}
                         </Bar>
-                        <Line yAxisId="right" type="monotone" dataKey="pedidos" name="Pedidos" stroke="var(--color-chart-2)" strokeWidth={1.5} dot={{ r: 2.5, fill: "var(--color-chart-2)" }} activeDot={{ r: 4 }} />
+                        <Line
+                          yAxisId="right"
+                          type="monotone"
+                          dataKey="pedidos"
+                          name="Pedidos"
+                          stroke="var(--color-chart-2)"
+                          strokeWidth={1.5}
+                          dot={{ r: 2.5, fill: "var(--color-chart-2)" }}
+                          activeDot={{ r: 4 }}
+                        />
                       </ComposedChart>
                     </ResponsiveContainer>
                   )}
@@ -766,7 +1081,9 @@ function DashboardPage() {
             {loadTop ? (
               <Skeleton className="h-72 w-full" />
             ) : (topProdutos ?? []).length === 0 ? (
-              <div className="h-72"><EmptyMini msg="Sem vendas no período." /></div>
+              <div className="h-72">
+                <EmptyMini msg="Sem vendas no período." />
+              </div>
             ) : (
               <ul className="divide-y divide-border">
                 {(topProdutos ?? []).map((p, i) => {
@@ -783,7 +1100,9 @@ function DashboardPage() {
                         </div>
                         <div className="shrink-0 text-right text-sm">
                           <div className="font-semibold tabular-nums">{p.qtd}</div>
-                          <div className="text-xs text-muted-foreground tabular-nums">{brl(p.receita)}</div>
+                          <div className="text-xs text-muted-foreground tabular-nums">
+                            {brl(p.receita)}
+                          </div>
                         </div>
                       </div>
                       <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
@@ -806,7 +1125,11 @@ function DashboardPage() {
           <CardTitle className="text-base">Vendas por faixa de hora</CardTitle>
           <p className="text-xs text-muted-foreground">
             {rangeLabel} · horário de Brasília
-            <span className="hidden sm:inline"> · Ads medido pela variação do gasto entre as sincronizações (rateado por hora só se ainda não houver histórico)</span>
+            <span className="hidden sm:inline">
+              {" "}
+              · Ads medido pela variação do gasto entre as sincronizações (rateado por hora só se
+              ainda não houver histórico)
+            </span>
           </p>
         </CardHeader>
         <CardContent className="min-w-0 px-2 sm:px-6">
@@ -817,27 +1140,89 @@ function DashboardPage() {
               <EmptyMini msg="Sem vendas no período." />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={serieHora ?? []} margin={{ top: 12, right: isMobile ? 0 : 16, left: isMobile ? -12 : 4, bottom: 5 }}>
+                <ComposedChart
+                  data={serieHora ?? []}
+                  margin={{
+                    top: 12,
+                    right: isMobile ? 0 : 16,
+                    left: isMobile ? -12 : 4,
+                    bottom: 5,
+                  }}
+                >
                   <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" opacity={0.4} />
-                  <XAxis dataKey="rotulo" interval={isMobile ? 3 : 1} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                  <YAxis yAxisId="left" width={isMobile ? 46 : 60} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" tickFormatter={(v) => brlAbrev(Number(v))} />
-                  <YAxis yAxisId="right" orientation="right" width={isMobile ? 32 : 60} allowDecimals={false} tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }} stroke="var(--border)" />
-                  <Tooltip content={({ active, payload, label }) => {
-                    if (!active || !payload?.length) return null;
-                    const p = payload[0].payload as any;
-                    return (
-                      <div className="rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
-                        <div className="font-medium">{String(label)}</div>
-                        <div className="mt-1">Vendido: <span className="tabular-nums font-medium">{brl(p.faturamento)}</span></div>
-                        <div>Pedidos: <span className="tabular-nums font-medium">{p.pedidos}</span></div>
-                        <div>Ads: <span className="tabular-nums font-medium">{brl(p.ads)}</span></div>
-                      </div>
-                    );
-                  }} />
+                  <XAxis
+                    dataKey="rotulo"
+                    interval={isMobile ? 3 : 1}
+                    tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }}
+                    stroke="var(--border)"
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    width={isMobile ? 46 : 60}
+                    tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }}
+                    stroke="var(--border)"
+                    tickFormatter={(v) => brlAbrev(Number(v))}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    width={isMobile ? 32 : 60}
+                    allowDecimals={false}
+                    tick={{ fontSize: isMobile ? 10 : 11, fill: "var(--muted-foreground)" }}
+                    stroke="var(--border)"
+                  />
+                  <Tooltip
+                    content={({ active, payload, label }) => {
+                      if (!active || !payload?.length) return null;
+                      const p = payload[0].payload as any;
+                      return (
+                        <div className="rounded-md border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-md">
+                          <div className="font-medium">{String(label)}</div>
+                          <div className="mt-1">
+                            Vendido:{" "}
+                            <span className="tabular-nums font-medium">{brl(p.faturamento)}</span>
+                          </div>
+                          <div>
+                            Pedidos: <span className="tabular-nums font-medium">{p.pedidos}</span>
+                          </div>
+                          <div>
+                            Ads: <span className="tabular-nums font-medium">{brl(p.ads)}</span>
+                          </div>
+                        </div>
+                      );
+                    }}
+                  />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line yAxisId="left" type="monotone" dataKey="faturamento" name="Vendido" stroke="var(--color-chart-1)" strokeWidth={2} dot={{ r: 2 }} activeDot={{ r: 4 }} />
-                  <Line yAxisId="right" type="monotone" dataKey="pedidos" name="Pedidos" stroke="var(--color-chart-2)" strokeWidth={1.5} dot={{ r: 2 }} activeDot={{ r: 4 }} />
-                  <Line yAxisId="left" type="monotone" dataKey="ads" name="Ads" stroke="var(--color-chart-3)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="faturamento"
+                    name="Vendido"
+                    stroke="var(--color-chart-1)"
+                    strokeWidth={2}
+                    dot={{ r: 2 }}
+                    activeDot={{ r: 4 }}
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="pedidos"
+                    name="Pedidos"
+                    stroke="var(--color-chart-2)"
+                    strokeWidth={1.5}
+                    dot={{ r: 2 }}
+                    activeDot={{ r: 4 }}
+                  />
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="ads"
+                    name="Ads"
+                    stroke="var(--color-chart-3)"
+                    strokeWidth={1.5}
+                    strokeDasharray="4 4"
+                    dot={false}
+                  />
                 </ComposedChart>
               </ResponsiveContainer>
             )}
@@ -851,13 +1236,20 @@ function DashboardPage() {
         </CardHeader>
         <CardContent>
           {loadRec ? (
-            <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+            <div className="space-y-2">
+              {[...Array(5)].map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
           ) : (recentes ?? []).length === 0 ? (
             <EmptyMini msg="Nenhum pedido ainda. Conecte a loja em Configurações." />
           ) : (
             <div className="divide-y divide-border">
               {(recentes ?? []).map((p) => (
-                <div key={p.order_sn} className="flex items-center justify-between gap-3 py-3 text-sm">
+                <div
+                  key={p.order_sn}
+                  className="flex items-center justify-between gap-3 py-3 text-sm"
+                >
                   <div className="min-w-0 flex-1">
                     <div className="font-medium truncate">#{p.order_sn}</div>
                     <div className="text-xs text-muted-foreground truncate">
@@ -868,8 +1260,15 @@ function DashboardPage() {
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
-                    <Badge variant="secondary" className="max-w-[9rem] truncate text-[10px] sm:text-xs">{p.status ?? "—"}</Badge>
-                    <span className="tabular-nums font-medium">{brl(Number(p.valor_total ?? 0))}</span>
+                    <Badge
+                      variant="secondary"
+                      className="max-w-[9rem] truncate text-[10px] sm:text-xs"
+                    >
+                      {p.status ?? "—"}
+                    </Badge>
+                    <span className="tabular-nums font-medium">
+                      {brl(Number(p.valor_total ?? 0))}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -881,65 +1280,135 @@ function DashboardPage() {
   );
 }
 
-function ResultCard({ label, value, hint, tone, vs }: {
-  label: string; value: string | null; hint?: string;
+function ResultCard({
+  label,
+  value,
+  hint,
+  tone,
+  vs,
+}: {
+  label: string;
+  value: string | null;
+  hint?: string;
   tone?: "warning" | "success" | "danger";
   vs?: { current: number; previous: number; label: string; isCurrency?: boolean };
 }) {
   const valColor =
-    tone === "danger" ? "text-destructive" :
-    tone === "success" ? "text-[color:var(--success)]" :
-    tone === "warning" ? "text-[color:var(--warning)]" : "";
+    tone === "danger"
+      ? "text-destructive"
+      : tone === "success"
+        ? "text-[color:var(--success)]"
+        : tone === "warning"
+          ? "text-[color:var(--warning)]"
+          : "";
   return (
     <Card className="min-w-0">
       <CardContent className="min-w-0 space-y-1.5 p-4 sm:p-5">
-        <span className="block text-[10px] font-medium uppercase leading-tight tracking-[0.08em] text-muted-foreground sm:text-[11px]">{label}</span>
-        <div className={`break-words text-xl font-semibold tabular-nums leading-tight sm:text-2xl ${valColor}`}>
+        <span className="block text-[10px] font-medium uppercase leading-tight tracking-[0.08em] text-muted-foreground sm:text-[11px]">
+          {label}
+        </span>
+        <div
+          className={`break-words text-xl font-semibold tabular-nums leading-tight sm:text-2xl ${valColor}`}
+        >
           {value === null ? <Skeleton className="h-7 w-24" /> : value}
         </div>
-        {vs && <VsPill current={vs.current} previous={vs.previous} label={vs.label} isCurrency={vs.isCurrency} />}
-        {hint && <div className="break-words text-[11px] text-muted-foreground tabular-nums">{hint}</div>}
+        {vs && (
+          <VsPill
+            current={vs.current}
+            previous={vs.previous}
+            label={vs.label}
+            isCurrency={vs.isCurrency}
+          />
+        )}
+        {hint && (
+          <div className="break-words text-[11px] text-muted-foreground tabular-nums">{hint}</div>
+        )}
       </CardContent>
     </Card>
   );
 }
 
-function CompCard({ label, valor, pct: pctText, tone, vs }: {
-  label: string; valor: string | null; pct: string | null;
+function CompCard({
+  label,
+  valor,
+  pct: pctText,
+  tone,
+  vs,
+}: {
+  label: string;
+  valor: string | null;
+  pct: string | null;
   tone: "danger" | "warning" | "muted" | "primary";
   vs?: { current: number; previous: number; label: string; isCurrency?: boolean };
 }) {
   const pctColor =
-    tone === "danger" ? "text-destructive" :
-    tone === "warning" ? "text-[color:var(--warning)]" :
-    tone === "primary" ? "text-primary" : "text-muted-foreground";
+    tone === "danger"
+      ? "text-destructive"
+      : tone === "warning"
+        ? "text-[color:var(--warning)]"
+        : tone === "primary"
+          ? "text-primary"
+          : "text-muted-foreground";
   return (
     <Card className="min-w-0">
       <CardContent className="min-w-0 space-y-1.5 p-4 sm:p-5">
-        <span className="block text-[10px] font-medium uppercase leading-tight tracking-[0.08em] text-muted-foreground sm:text-[11px]">{label}</span>
+        <span className="block text-[10px] font-medium uppercase leading-tight tracking-[0.08em] text-muted-foreground sm:text-[11px]">
+          {label}
+        </span>
         <div className="break-words text-xl font-semibold tabular-nums leading-tight sm:text-2xl">
           {valor === null ? <Skeleton className="h-7 w-24" /> : valor}
         </div>
-        {vs && <VsPill current={vs.current} previous={vs.previous} label={vs.label} isCurrency={vs.isCurrency} />}
-        {pctText !== null && <div className={`break-words text-[11px] tabular-nums ${pctColor}`}>{pctText}</div>}
+        {vs && (
+          <VsPill
+            current={vs.current}
+            previous={vs.previous}
+            label={vs.label}
+            isCurrency={vs.isCurrency}
+          />
+        )}
+        {pctText !== null && (
+          <div className={`break-words text-[11px] tabular-nums ${pctColor}`}>{pctText}</div>
+        )}
       </CardContent>
     </Card>
   );
 }
 
-function CurvaAbcTable({ data, loading }: { data: Array<{ produto: string; sku: string; unidades: number; receita: number; participacao: number; acumulado: number; classe: string }>; loading: boolean }) {
+function CurvaAbcTable({
+  data,
+  loading,
+}: {
+  data: Array<{
+    produto: string;
+    sku: string;
+    unidades: number;
+    receita: number;
+    participacao: number;
+    acumulado: number;
+    classe: string;
+  }>;
+  loading: boolean;
+}) {
   if (loading) return <Skeleton className="h-72 w-full" />;
-  if (!data.length) return <div className="h-72"><EmptyMini msg="Sem vendas no período." /></div>;
+  if (!data.length)
+    return (
+      <div className="h-72">
+        <EmptyMini msg="Sem vendas no período." />
+      </div>
+    );
   const classA = data.filter((r) => r.classe === "A");
   const somaA = classA.reduce((s, r) => s + r.participacao, 0);
   const classeColor = (c: string) =>
-    c === "A" ? "bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30" :
-    c === "B" ? "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30" :
-    "bg-muted text-muted-foreground border-border";
+    c === "A"
+      ? "bg-[color:var(--success)]/15 text-[color:var(--success)] border-[color:var(--success)]/30"
+      : c === "B"
+        ? "bg-[color:var(--warning)]/15 text-[color:var(--warning)] border-[color:var(--warning)]/30"
+        : "bg-muted text-muted-foreground border-border";
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">{classA.length} produtos classe A</span> representam {somaA.toFixed(1).replace(".", ",")}% da receita
+        <span className="font-medium text-foreground">{classA.length} produtos classe A</span>{" "}
+        representam {somaA.toFixed(1).replace(".", ",")}% da receita
       </p>
       <div className="max-h-96 overflow-auto rounded-md border">
         <table className="w-full min-w-[600px] text-sm">
@@ -957,14 +1426,24 @@ function CurvaAbcTable({ data, loading }: { data: Array<{ produto: string; sku: 
           <tbody>
             {data.map((r, i) => (
               <tr key={r.sku + i} className="border-t hover:bg-muted/30">
-                <td className="max-w-[200px] truncate px-3 py-2 sm:max-w-[240px]" title={r.produto}>{r.produto}</td>
+                <td className="max-w-[200px] truncate px-3 py-2 sm:max-w-[240px]" title={r.produto}>
+                  {r.produto}
+                </td>
                 <td className="px-3 py-2 text-muted-foreground">{r.sku}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{r.unidades}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{brl(r.receita)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{r.participacao.toFixed(1).replace(".", ",")}%</td>
-                <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">{r.acumulado.toFixed(1).replace(".", ",")}%</td>
+                <td className="px-3 py-2 text-right tabular-nums">
+                  {r.participacao.toFixed(1).replace(".", ",")}%
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                  {r.acumulado.toFixed(1).replace(".", ",")}%
+                </td>
                 <td className="px-3 py-2 text-center">
-                  <span className={`inline-flex h-5 w-5 items-center justify-center rounded border text-[11px] font-semibold ${classeColor(r.classe)}`}>{r.classe}</span>
+                  <span
+                    className={`inline-flex h-5 w-5 items-center justify-center rounded border text-[11px] font-semibold ${classeColor(r.classe)}`}
+                  >
+                    {r.classe}
+                  </span>
                 </td>
               </tr>
             ))}
@@ -975,9 +1454,32 @@ function CurvaAbcTable({ data, loading }: { data: Array<{ produto: string; sku: 
   );
 }
 
-function CanceladosList({ data, loading }: { data: Array<{ order_sn: string; valor_total: number | null; comprador_username: string | null; data_criacao_pedido: string | null }>; loading: boolean }) {
-  if (loading) return <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>;
-  if (!data.length) return <div className="h-40"><EmptyMini msg="Nenhum cancelamento no período." /></div>;
+function CanceladosList({
+  data,
+  loading,
+}: {
+  data: Array<{
+    order_sn: string;
+    valor_total: number | null;
+    comprador_username: string | null;
+    data_criacao_pedido: string | null;
+  }>;
+  loading: boolean;
+}) {
+  if (loading)
+    return (
+      <div className="space-y-2">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </div>
+    );
+  if (!data.length)
+    return (
+      <div className="h-40">
+        <EmptyMini msg="Nenhum cancelamento no período." />
+      </div>
+    );
   return (
     <div className="max-h-96 overflow-auto divide-y divide-border">
       {data.map((p) => (
@@ -985,10 +1487,15 @@ function CanceladosList({ data, loading }: { data: Array<{ order_sn: string; val
           <div className="min-w-0">
             <div className="font-medium truncate">#{p.order_sn}</div>
             <div className="text-xs text-muted-foreground truncate">
-              {p.comprador_username ?? "—"} · {p.data_criacao_pedido ? new Date(p.data_criacao_pedido).toLocaleString("pt-BR") : "—"}
+              {p.comprador_username ?? "—"} ·{" "}
+              {p.data_criacao_pedido
+                ? new Date(p.data_criacao_pedido).toLocaleString("pt-BR")
+                : "—"}
             </div>
           </div>
-          <span className="tabular-nums font-medium text-destructive">{brl(Number(p.valor_total ?? 0))}</span>
+          <span className="tabular-nums font-medium text-destructive">
+            {brl(Number(p.valor_total ?? 0))}
+          </span>
         </div>
       ))}
     </div>

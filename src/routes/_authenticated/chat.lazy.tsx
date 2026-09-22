@@ -10,6 +10,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -39,6 +46,7 @@ import {
   listarConversasShopee,
   listarMensagensShopee,
 } from "@/lib/chat.functions";
+import { useLojaAtual } from "@/lib/loja-store";
 
 export const Route = createLazyFileRoute("/_authenticated/chat")({
   component: ChatPage,
@@ -123,6 +131,8 @@ function rotuloAnexo(tipo: string, texto: string) {
   return limpo ? `Anexo: ${limpo}` : "Anexo";
 }
 
+type Loja = { id: number; nome: string };
+
 function ChatPage() {
   const qc = useQueryClient();
   const conversasFn = useServerFn(listarConversasShopee);
@@ -133,10 +143,37 @@ function ChatPage() {
   const [texto, setTexto] = useState("");
   const [soPendentes, setSoPendentes] = useState(false);
   const fimRef = useRef<HTMLDivElement | null>(null);
+  const { lojaId, setLojaId } = useLojaAtual();
+
+  const lojas = useQuery<Loja[]>({
+    queryKey: ["lojas-ativas"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("lojas" as any)
+        .select("id, nome")
+        .eq("status", "ativa")
+        .order("id");
+      if (error) throw error;
+      return (data ?? []) as unknown as Loja[];
+    },
+  });
+
+  // Sem loja escolhida (ou loja escolhida foi desativada): cai pra primeira ativa.
+  useEffect(() => {
+    if (!lojas.data || lojas.data.length === 0) return;
+    if (lojaId != null && lojas.data.some((l) => l.id === lojaId)) return;
+    setLojaId(lojas.data[0]!.id);
+  }, [lojas.data, lojaId, setLojaId]);
+
+  const trocarLoja = (id: number) => {
+    setLojaId(id);
+    setSelecionada(null);
+  };
 
   const conversas = useQuery({
-    queryKey: ["chat-conversas"],
-    queryFn: () => conversasFn(),
+    queryKey: ["chat-conversas", lojaId],
+    enabled: lojaId != null,
+    queryFn: () => conversasFn({ data: { lojaId: lojaId! } }),
     refetchInterval: 60_000,
   });
 
@@ -154,10 +191,12 @@ function ChatPage() {
   );
 
   const mensagens = useQuery({
-    queryKey: ["chat-mensagens", selecionada, atual?.to_id ?? null],
-    enabled: !!selecionada,
+    queryKey: ["chat-mensagens", selecionada, atual?.to_id ?? null, lojaId],
+    enabled: !!selecionada && lojaId != null,
     queryFn: () =>
-      mensagensFn({ data: { conversationId: selecionada!, buyerId: atual?.to_id } }),
+      mensagensFn({
+        data: { conversationId: selecionada!, buyerId: atual?.to_id, lojaId: lojaId! },
+      }),
     refetchInterval: 30_000,
   });
 
@@ -189,6 +228,7 @@ function ChatPage() {
           texto,
           conversationId: atual.conversation_id,
           comprador: atual.to_name,
+          lojaId: lojaId ?? undefined,
         },
       });
       if (!r.ok) throw new Error((r as any).error ?? "falha ao enviar");
@@ -198,7 +238,7 @@ function ChatPage() {
       setTexto("");
       toast.success("Mensagem enviada");
       qc.invalidateQueries({ queryKey: ["chat-mensagens", selecionada] });
-      qc.invalidateQueries({ queryKey: ["chat-conversas"] });
+      qc.invalidateQueries({ queryKey: ["chat-conversas", lojaId] });
     },
     onError: (e: Error) => toast.error("Não foi possível enviar", { description: e.message }),
   });
@@ -214,16 +254,35 @@ function ChatPage() {
             Responda compradores usando textos prontos.
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            qc.invalidateQueries({ queryKey: ["chat-conversas"] });
-            if (selecionada) qc.invalidateQueries({ queryKey: ["chat-mensagens", selecionada] });
-          }}
-        >
-          <RefreshCw className="size-4" /> Atualizar
-        </Button>
+        <div className="flex items-center gap-2">
+          {lojas.data && lojas.data.length > 1 && (
+            <Select
+              value={lojaId != null ? String(lojaId) : undefined}
+              onValueChange={(v) => trocarLoja(Number(v))}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Loja" />
+              </SelectTrigger>
+              <SelectContent>
+                {lojas.data.map((l) => (
+                  <SelectItem key={l.id} value={String(l.id)}>
+                    {l.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              qc.invalidateQueries({ queryKey: ["chat-conversas", lojaId] });
+              if (selecionada) qc.invalidateQueries({ queryKey: ["chat-mensagens", selecionada] });
+            }}
+          >
+            <RefreshCw className="size-4" /> Atualizar
+          </Button>
+        </div>
       </header>
 
       <Tabs defaultValue="conversas">
@@ -245,9 +304,7 @@ function ChatPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Conversas</CardTitle>
                 <CardDescription>
-                  {pendentes > 0
-                    ? `${pendentes} sem resposta`
-                    : "Todas as conversas respondidas"}
+                  {pendentes > 0 ? `${pendentes} sem resposta` : "Todas as conversas respondidas"}
                 </CardDescription>
                 <Button
                   variant={soPendentes ? "default" : "outline"}
@@ -269,7 +326,9 @@ function ChatPage() {
                         </div>
                       ))}
                     {!conversas.isLoading && lista.length === 0 && (
-                      <p className="p-4 text-sm text-muted-foreground">Nenhuma conversa encontrada.</p>
+                      <p className="p-4 text-sm text-muted-foreground">
+                        Nenhuma conversa encontrada.
+                      </p>
                     )}
                     {lista.map((c) => (
                       <button
@@ -308,7 +367,9 @@ function ChatPage() {
                           {c.pendente ? "" : "Você: "}
                           {c.ultima_mensagem}
                         </p>
-                        <p className="mt-0.5 text-[10px] text-muted-foreground/70">{horaCurta(c.ultima_em)}</p>
+                        <p className="mt-0.5 text-[10px] text-muted-foreground/70">
+                          {horaCurta(c.ultima_em)}
+                        </p>
                       </button>
                     ))}
                   </div>
@@ -366,7 +427,9 @@ function ChatPage() {
                   {selecionada && !mensagens.isLoading && (
                     <div className="flex flex-col gap-2">
                       {itensMensagens.length === 0 && (
-                        <p className="text-sm text-muted-foreground">Sem mensagens nesta conversa.</p>
+                        <p className="text-sm text-muted-foreground">
+                          Sem mensagens nesta conversa.
+                        </p>
                       )}
                       {itensMensagens.map((m) => (
                         <div
@@ -539,7 +602,9 @@ function TextosProntos({ respostas, carregando }: { respostas: Resposta[]; carre
         {respostas.map((r) => (
           <Card key={r.id}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm uppercase tracking-wide text-primary">{r.titulo}</CardTitle>
+              <CardTitle className="text-sm uppercase tracking-wide text-primary">
+                {r.titulo}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="whitespace-pre-wrap text-sm text-muted-foreground">{r.corpo}</p>
