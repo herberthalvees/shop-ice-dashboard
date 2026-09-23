@@ -434,6 +434,7 @@ async function sincronizarLoja(
     endpoint_usado: endpointUsado,
     campanhas_encontradas: registros.length,
     gravadas,
+    horas_gravadas: horasGravadas,
     tentativas,
     erros: erros.slice(0, 20),
     primeiro_erro_cru: primeiroErroCru,
