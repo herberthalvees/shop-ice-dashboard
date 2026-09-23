@@ -163,6 +163,17 @@ async function sincronizarLoja(
   const mapa = new Map<string, Registro>();
   let endpointUsado: string | null = null;
 
+  // Gasto por hora de cada dia, por loja — alimenta o gráfico horário do Dashboard.
+  const porHora = new Map<string, { data: string; hora: number; investimento: number }>();
+
+  function horaDoRegistro(h: Record<string, unknown>): number | null {
+    const bruto = h.hour ?? h.hour_index ?? h.performance_hour ?? h.time ?? null;
+    if (bruto == null) return null;
+    const texto = String(bruto);
+    const n = Number(texto.includes(":") ? texto.split(":")[0] : texto);
+    return Number.isFinite(n) && n >= 0 && n <= 23 ? Math.trunc(n) : null;
+  }
+
   // ---- Tentativa 1: performance horaria de todos os anuncios CPC (nivel loja) ----
   let itensT1 = 0;
   let erroT1: string | null = null;
@@ -187,12 +198,13 @@ async function sincronizarLoja(
     itensT1 += lista.length;
     for (const h of lista) {
       const [dd, mm, yyyy] = String(h.date ?? dataDia).split("-");
+      const dataIso = `${yyyy}-${mm}-${dd}`;
       acumular(mapa, {
         campaign_id: 0,
         nome: "Shopee Ads (total da loja)",
         item_id: null,
         status: null,
-        data: `${yyyy}-${mm}-${dd}T00:00:00Z`,
+        data: `${dataIso}T00:00:00Z`,
         investimento: num(h.expense),
         impressoes: num(h.impression),
         cliques: num(h.clicks ?? h.click),
@@ -200,12 +212,38 @@ async function sincronizarLoja(
         receita: num(h.broad_gmv ?? h.direct_gmv),
         bruto: { fonte: "hourly_performance", dia: dataDia },
       });
+
+      const hora = horaDoRegistro(h);
+      if (hora != null) {
+        const chave = `${dataIso}|${hora}`;
+        const atual = porHora.get(chave);
+        if (atual) atual.investimento += num(h.expense);
+        else porHora.set(chave, { data: dataIso, hora, investimento: num(h.expense) });
+      }
     }
   }
   if (!erroT1) {
     tentativas.push({ endpoint: "get_all_cpc_ads_hourly_performance", erro: null, itens: itensT1 });
     if (mapa.size > 0) endpointUsado = "get_all_cpc_ads_hourly_performance";
   }
+
+  // Grava o gasto por hora desta loja (substitui o valor da hora, nunca soma).
+  let horasGravadas = 0;
+  if (porHora.size > 0) {
+    const linhas = Array.from(porHora.values()).map((r) => ({
+      loja_id: lojaId,
+      data: r.data,
+      hora: r.hora,
+      investimento: Number(r.investimento.toFixed(2)),
+      atualizado_em: new Date().toISOString(),
+    }));
+    const { error: erroHora } = await supabaseAdmin
+      .from("ads_gasto_horario")
+      .upsert(linhas, { onConflict: "loja_id,data,hora" });
+    if (erroHora) registrarErro("ads_gasto_horario", erroHora.message);
+    else horasGravadas = linhas.length;
+  }
+
 
   // ---- Performance por campanha de produto ----
   const campanhas: Array<{ campaign_id: number; ad_type: string | null }> = [];
