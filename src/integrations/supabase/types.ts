@@ -25,6 +25,7 @@ export type Database = {
           impressoes: number | null
           investimento: number | null
           item_id: number | null
+          loja_id: number
           nome: string | null
           payload: Json | null
           pedidos: number | null
@@ -42,6 +43,7 @@ export type Database = {
           impressoes?: number | null
           investimento?: number | null
           item_id?: number | null
+          loja_id: number
           nome?: string | null
           payload?: Json | null
           pedidos?: number | null
@@ -59,6 +61,7 @@ export type Database = {
           impressoes?: number | null
           investimento?: number | null
           item_id?: number | null
+          loja_id?: number
           nome?: string | null
           payload?: Json | null
           pedidos?: number | null
@@ -66,7 +69,15 @@ export type Database = {
           roas?: number | null
           status?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ads_campanhas_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ads_gasto_horario: {
         Row: {
@@ -74,20 +85,31 @@ export type Database = {
           data: string
           hora: number
           investimento: number
+          loja_id: number
         }
         Insert: {
           atualizado_em?: string
           data: string
           hora: number
           investimento?: number
+          loja_id: number
         }
         Update: {
           atualizado_em?: string
           data?: string
           hora?: number
           investimento?: number
+          loja_id?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ads_gasto_horario_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       alertas_enviados: {
         Row: {
@@ -97,6 +119,7 @@ export type Database = {
           enviado: boolean
           erro: string | null
           id: string
+          loja_id: number
           tipo: string
         }
         Insert: {
@@ -106,6 +129,7 @@ export type Database = {
           enviado?: boolean
           erro?: string | null
           id?: string
+          loja_id: number
           tipo: string
         }
         Update: {
@@ -115,9 +139,18 @@ export type Database = {
           enviado?: boolean
           erro?: string | null
           id?: string
+          loja_id?: number
           tipo?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "alertas_enviados_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       avaliacoes: {
         Row: {
@@ -129,6 +162,7 @@ export type Database = {
           enviada_em: string | null
           erro: string | null
           item_id: number | null
+          loja_id: number
           model_id: number | null
           order_sn: string | null
           payload: Json | null
@@ -149,6 +183,7 @@ export type Database = {
           enviada_em?: string | null
           erro?: string | null
           item_id?: number | null
+          loja_id: number
           model_id?: number | null
           order_sn?: string | null
           payload?: Json | null
@@ -169,6 +204,7 @@ export type Database = {
           enviada_em?: string | null
           erro?: string | null
           item_id?: number | null
+          loja_id?: number
           model_id?: number | null
           order_sn?: string | null
           payload?: Json | null
@@ -180,7 +216,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       avaliacoes_exemplos: {
         Row: {
@@ -216,6 +260,7 @@ export type Database = {
           data_transacao: string | null
           descricao: string | null
           fluxo: string | null
+          loja_id: number
           order_sn: string | null
           payload: Json | null
           refund_sn: string | null
@@ -236,6 +281,7 @@ export type Database = {
           data_transacao?: string | null
           descricao?: string | null
           fluxo?: string | null
+          loja_id: number
           order_sn?: string | null
           payload?: Json | null
           refund_sn?: string | null
@@ -256,6 +302,7 @@ export type Database = {
           data_transacao?: string | null
           descricao?: string | null
           fluxo?: string | null
+          loja_id?: number
           order_sn?: string | null
           payload?: Json | null
           refund_sn?: string | null
@@ -270,7 +317,15 @@ export type Database = {
           withdrawal_id?: number | null
           withdrawal_type?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "carteira_transacoes_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_envios: {
         Row: {
@@ -279,6 +334,7 @@ export type Database = {
           created_at: string
           erro: string | null
           id: string
+          loja_id: number
           ok: boolean
           texto: string
           to_id: string | null
@@ -289,6 +345,7 @@ export type Database = {
           created_at?: string
           erro?: string | null
           id?: string
+          loja_id: number
           ok?: boolean
           texto: string
           to_id?: string | null
@@ -299,11 +356,20 @@ export type Database = {
           created_at?: string
           erro?: string | null
           id?: string
+          loja_id?: number
           ok?: boolean
           texto?: string
           to_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chat_envios_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chat_respostas_rapidas: {
         Row: {
@@ -399,6 +465,7 @@ export type Database = {
           created_at: string
           descricao: string
           id: number
+          loja_id: number
           valor: number
         }
         Insert: {
@@ -407,6 +474,7 @@ export type Database = {
           created_at?: string
           descricao: string
           id?: number
+          loja_id: number
           valor: number
         }
         Update: {
@@ -415,9 +483,18 @@ export type Database = {
           created_at?: string
           descricao?: string
           id?: number
+          loja_id?: number
           valor?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "despesas_fixas_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       despesas_variaveis: {
         Row: {
@@ -427,6 +504,7 @@ export type Database = {
           dia_corte_ciclo: number | null
           franquia_pedidos: number | null
           id: number
+          loja_id: number
           updated_at: string
           valor_por_pedido: number
         }
@@ -437,6 +515,7 @@ export type Database = {
           dia_corte_ciclo?: number | null
           franquia_pedidos?: number | null
           id?: number
+          loja_id: number
           updated_at?: string
           valor_por_pedido?: number
         }
@@ -447,10 +526,19 @@ export type Database = {
           dia_corte_ciclo?: number | null
           franquia_pedidos?: number | null
           id?: number
+          loja_id?: number
           updated_at?: string
           valor_por_pedido?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "despesas_variaveis_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dim_produto: {
         Row: {
@@ -622,6 +710,7 @@ export type Database = {
           created_at: string
           erro: string | null
           id: string
+          loja_id: number | null
           notificado: boolean
           payload: Json
           processado: boolean
@@ -634,6 +723,7 @@ export type Database = {
           created_at?: string
           erro?: string | null
           id?: string
+          loja_id?: number | null
           notificado?: boolean
           payload: Json
           processado?: boolean
@@ -646,13 +736,22 @@ export type Database = {
           created_at?: string
           erro?: string | null
           id?: string
+          loja_id?: number | null
           notificado?: boolean
           payload?: Json
           processado?: boolean
           shop_id?: number | null
           tipo_evento?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "eventos_log_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ia_conversas: {
         Row: {
@@ -787,12 +886,37 @@ export type Database = {
           },
         ]
       }
+      lojas: {
+        Row: {
+          created_at: string
+          id: number
+          marketplace: string
+          nome: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          marketplace?: string
+          nome: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          marketplace?: string
+          nome?: string
+          status?: string
+        }
+        Relationships: []
+      }
       pedido_itens: {
         Row: {
           created_at: string
           data_criacao_pedido: string | null
           id: number
           item_id: number
+          loja_id: number
           marketplace: string
           model_id: number
           order_sn: string
@@ -808,6 +932,7 @@ export type Database = {
           data_criacao_pedido?: string | null
           id?: number
           item_id?: number
+          loja_id: number
           marketplace?: string
           model_id?: number
           order_sn: string
@@ -823,6 +948,7 @@ export type Database = {
           data_criacao_pedido?: string | null
           id?: number
           item_id?: number
+          loja_id?: number
           marketplace?: string
           model_id?: number
           order_sn?: string
@@ -835,11 +961,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pedido_itens_order_sn_fkey"
-            columns: ["order_sn"]
+            foreignKeyName: "pedido_itens_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_itens_loja_order_sn_fkey"
+            columns: ["loja_id", "order_sn"]
             isOneToOne: false
             referencedRelation: "pedidos"
-            referencedColumns: ["order_sn"]
+            referencedColumns: ["loja_id", "order_sn"]
           },
         ]
       }
@@ -855,6 +988,7 @@ export type Database = {
           frete_real: number | null
           id: string
           itens: Json | null
+          loja_id: number
           marketplace: string
           moeda: string | null
           order_sn: string
@@ -879,6 +1013,7 @@ export type Database = {
           frete_real?: number | null
           id?: string
           itens?: Json | null
+          loja_id: number
           marketplace?: string
           moeda?: string | null
           order_sn: string
@@ -903,6 +1038,7 @@ export type Database = {
           frete_real?: number | null
           id?: string
           itens?: Json | null
+          loja_id?: number
           marketplace?: string
           moeda?: string | null
           order_sn?: string
@@ -916,7 +1052,15 @@ export type Database = {
           valor_liquido?: number | null
           valor_total?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       produto_custos: {
         Row: {
@@ -924,6 +1068,7 @@ export type Database = {
           custo_unitario: number
           id: number
           item_id: number
+          loja_id: number
           model_id: number
           observacao: string | null
           vigencia_fim: string | null
@@ -934,6 +1079,7 @@ export type Database = {
           custo_unitario: number
           id?: number
           item_id: number
+          loja_id: number
           model_id?: number
           observacao?: string | null
           vigencia_fim?: string | null
@@ -944,12 +1090,21 @@ export type Database = {
           custo_unitario?: number
           id?: number
           item_id?: number
+          loja_id?: number
           model_id?: number
           observacao?: string | null
           vigencia_fim?: string | null
           vigencia_inicio?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "produto_custos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       produtos: {
         Row: {
@@ -959,6 +1114,7 @@ export type Database = {
           id: number
           imagem_url: string | null
           item_id: number
+          loja_id: number
           marketplace: string
           model_id: number
           preco_atual: number | null
@@ -975,6 +1131,7 @@ export type Database = {
           id?: number
           imagem_url?: string | null
           item_id: number
+          loja_id: number
           marketplace?: string
           model_id?: number
           preco_atual?: number | null
@@ -991,6 +1148,7 @@ export type Database = {
           id?: number
           imagem_url?: string | null
           item_id?: number
+          loja_id?: number
           marketplace?: string
           model_id?: number
           preco_atual?: number | null
@@ -1000,7 +1158,15 @@ export type Database = {
           status_item?: string | null
           variacao?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "produtos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       push_dispositivos: {
         Row: {
@@ -1136,6 +1302,7 @@ export type Database = {
           comprador_username: string | null
           conversation_id: string | null
           created_at: string
+          loja_id: number
           nome: string | null
           to_id: string
           ultima_em: string | null
@@ -1145,6 +1312,7 @@ export type Database = {
           comprador_username?: string | null
           conversation_id?: string | null
           created_at?: string
+          loja_id: number
           nome?: string | null
           to_id: string
           ultima_em?: string | null
@@ -1154,11 +1322,20 @@ export type Database = {
           comprador_username?: string | null
           conversation_id?: string | null
           created_at?: string
+          loja_id?: number
           nome?: string | null
           to_id?: string
           ultima_em?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pv_contatos_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pv_cupons: {
         Row: {
@@ -1250,6 +1427,7 @@ export type Database = {
           created_at: string
           erro: string | null
           id: string
+          loja_id: number
           ok: boolean
           texto: string
           to_id: string
@@ -1260,6 +1438,7 @@ export type Database = {
           created_at?: string
           erro?: string | null
           id?: string
+          loja_id: number
           ok?: boolean
           texto: string
           to_id: string
@@ -1270,11 +1449,20 @@ export type Database = {
           created_at?: string
           erro?: string | null
           id?: string
+          loja_id?: number
           ok?: boolean
           texto?: string
           to_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "pv_envios_manuais_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pv_optout: {
         Row: {
@@ -1350,7 +1538,9 @@ export type Database = {
           access_token: string | null
           app_tipo: string
           id: number
+          loja_id: number
           partner_id: number | null
+          partner_key: string | null
           refresh_token: string | null
           shop_id: number | null
           shop_name: string | null
@@ -1362,7 +1552,9 @@ export type Database = {
           access_token?: string | null
           app_tipo?: string
           id?: number
+          loja_id: number
           partner_id?: number | null
+          partner_key?: string | null
           refresh_token?: string | null
           shop_id?: number | null
           shop_name?: string | null
@@ -1374,7 +1566,9 @@ export type Database = {
           access_token?: string | null
           app_tipo?: string
           id?: number
+          loja_id?: number
           partner_id?: number | null
+          partner_key?: string | null
           refresh_token?: string | null
           shop_id?: number | null
           shop_name?: string | null
@@ -1382,7 +1576,15 @@ export type Database = {
           token_expires_at?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shopee_connection_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sync_log: {
         Row: {
@@ -1395,6 +1597,7 @@ export type Database = {
           erros: Json | null
           gravados: number | null
           id: string
+          loja_id: number
           ok: boolean
         }
         Insert: {
@@ -1407,6 +1610,7 @@ export type Database = {
           erros?: Json | null
           gravados?: number | null
           id?: string
+          loja_id: number
           ok?: boolean
         }
         Update: {
@@ -1419,9 +1623,18 @@ export type Database = {
           erros?: Json | null
           gravados?: number | null
           id?: string
+          loja_id?: number
           ok?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sync_log_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -1475,6 +1688,7 @@ export type Database = {
           data_criacao_pedido: string | null
           id: number | null
           item_id: number | null
+          loja_id: number | null
           marketplace: string | null
           model_id: number | null
           order_sn: string | null
@@ -1487,11 +1701,18 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "pedido_itens_order_sn_fkey"
-            columns: ["order_sn"]
+            foreignKeyName: "pedido_itens_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedido_itens_loja_order_sn_fkey"
+            columns: ["loja_id", "order_sn"]
             isOneToOne: false
             referencedRelation: "pedidos"
-            referencedColumns: ["order_sn"]
+            referencedColumns: ["loja_id", "order_sn"]
           },
         ]
       }
@@ -1499,6 +1720,7 @@ export type Database = {
         Row: {
           app_tipo: string | null
           id: number | null
+          loja_id: number | null
           partner_id: number | null
           shop_id: number | null
           shop_name: string | null
@@ -1509,6 +1731,7 @@ export type Database = {
         Insert: {
           app_tipo?: string | null
           id?: number | null
+          loja_id?: number | null
           partner_id?: number | null
           shop_id?: number | null
           shop_name?: string | null
@@ -1519,6 +1742,7 @@ export type Database = {
         Update: {
           app_tipo?: string | null
           id?: number | null
+          loja_id?: number | null
           partner_id?: number | null
           shop_id?: number | null
           shop_name?: string | null
@@ -1526,12 +1750,20 @@ export type Database = {
           token_expires_at?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shopee_connection_loja_id_fkey"
+            columns: ["loja_id"]
+            isOneToOne: false
+            referencedRelation: "lojas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
       ads_resumo: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_loja_id?: number }
         Returns: {
           acos: number
           investimento: number
@@ -1542,7 +1774,7 @@ export type Database = {
         }[]
       }
       ads_totais_periodo: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_loja_id?: number }
         Returns: {
           cliques: number
           impressoes: number
@@ -1552,7 +1784,7 @@ export type Database = {
         }[]
       }
       analise_margem_sku: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_loja_id?: number }
         Returns: {
           custo_atual: number
           custo_periodo: number
@@ -1571,7 +1803,7 @@ export type Database = {
         }[]
       }
       analise_margem_sku_impl: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_loja_id?: number }
         Returns: {
           custo_atual: number
           custo_periodo: number
@@ -1589,12 +1821,24 @@ export type Database = {
           unidades: number
         }[]
       }
-      aplicar_ads: { Args: { p_dados: Json }; Returns: number }
-      aplicar_carteira: { Args: { p_dados: Json }; Returns: number }
-      aplicar_escrow: { Args: { p_dados: Json }; Returns: number }
-      aplicar_produtos: { Args: { p_dados: Json }; Returns: number }
+      aplicar_ads: {
+        Args: { p_dados: Json; p_loja_id: number }
+        Returns: number
+      }
+      aplicar_carteira: {
+        Args: { p_dados: Json; p_loja_id: number }
+        Returns: number
+      }
+      aplicar_escrow: {
+        Args: { p_dados: Json; p_loja_id: number }
+        Returns: number
+      }
+      aplicar_produtos: {
+        Args: { p_dados: Json; p_loja_id: number }
+        Returns: number
+      }
       carteira_resumo: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_loja_id?: number }
         Returns: {
           em_transito: number
           entradas: number
@@ -1606,7 +1850,7 @@ export type Database = {
         }[]
       }
       carteira_resumo_impl: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_loja_id?: number }
         Returns: {
           em_transito: number
           entradas: number
@@ -1618,7 +1862,7 @@ export type Database = {
         }[]
       }
       contar_pedidos_periodo: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_loja_id?: number }
         Returns: number
       }
       dashboard_curva_abc: {
@@ -1626,6 +1870,7 @@ export type Database = {
           p_ate: string
           p_de: string
           p_limite: number
+          p_loja_id?: number
           p_marketplace?: string
         }
         Returns: {
@@ -1643,6 +1888,7 @@ export type Database = {
           p_ate: string
           p_de: string
           p_limite?: number
+          p_loja_id?: number
           p_marketplace?: string
         }
         Returns: {
@@ -1679,6 +1925,7 @@ export type Database = {
         Args: {
           p_ate: string
           p_de: string
+          p_loja_id?: number
           p_marketplace?: string
           p_minuto_max: number
         }
@@ -1712,6 +1959,7 @@ export type Database = {
         Args: {
           p_ate: string
           p_de: string
+          p_loja_id?: number
           p_marketplace?: string
           p_minuto_max: number
         }
@@ -1742,7 +1990,12 @@ export type Database = {
         }[]
       }
       dashboard_kpis_periodo: {
-        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_loja_id?: number
+          p_marketplace?: string
+        }
         Returns: {
           ads_investimento: number
           ads_pct: number
@@ -1770,7 +2023,12 @@ export type Database = {
         }[]
       }
       dashboard_kpis_periodo_impl: {
-        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_loja_id?: number
+          p_marketplace?: string
+        }
         Returns: {
           ads_investimento: number
           ads_pct: number
@@ -1814,7 +2072,12 @@ export type Database = {
         }[]
       }
       dashboard_serie_horaria: {
-        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_loja_id?: number
+          p_marketplace?: string
+        }
         Returns: {
           ads_investimento: number
           faturamento: number
@@ -1824,7 +2087,12 @@ export type Database = {
         }[]
       }
       dashboard_serie_horaria_impl: {
-        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_loja_id?: number
+          p_marketplace?: string
+        }
         Returns: {
           ads_investimento: number
           faturamento: number
@@ -1834,16 +2102,27 @@ export type Database = {
         }[]
       }
       dashboard_serie_periodo: {
-        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_loja_id?: number
+          p_marketplace?: string
+        }
         Returns: {
           faturamento: number
+          parcial: boolean
           pedidos: number
           periodo: string
           rotulo: string
         }[]
       }
       dashboard_serie_periodo_impl: {
-        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_loja_id?: number
+          p_marketplace?: string
+        }
         Returns: {
           faturamento: number
           parcial: boolean
@@ -1875,6 +2154,7 @@ export type Database = {
           p_ate: string
           p_de: string
           p_limite: number
+          p_loja_id?: number
           p_marketplace?: string
         }
         Returns: {
@@ -1889,6 +2169,7 @@ export type Database = {
           p_ate: string
           p_de: string
           p_limite?: number
+          p_loja_id?: number
           p_marketplace?: string
         }
         Returns: {
@@ -1899,7 +2180,7 @@ export type Database = {
         }[]
       }
       dre_mensal: {
-        Args: { p_ano: number; p_mes: number }
+        Args: { p_ano: number; p_loja_id?: number; p_mes: number }
         Returns: {
           ads: number
           ads_pct: number
@@ -1951,7 +2232,7 @@ export type Database = {
         }[]
       }
       dre_variaveis_detalhe: {
-        Args: { p_ano: number; p_mes: number }
+        Args: { p_ano: number; p_loja_id?: number; p_mes: number }
         Returns: {
           ciclo_fim: string
           ciclo_inicio: string
@@ -1959,6 +2240,7 @@ export type Database = {
           dia_corte_ciclo: number
           franquia_pedidos: number
           id: number
+          loja_id: number
           pedidos_base: number
           pedidos_cobrados: number
           valor: number
@@ -2006,6 +2288,7 @@ export type Database = {
           p_busca: string
           p_de: string
           p_limite: number
+          p_loja_id?: number
           p_marketplace?: string
           p_offset: number
           p_status: string
@@ -2036,6 +2319,7 @@ export type Database = {
           p_busca?: string
           p_de: string
           p_limite?: number
+          p_loja_id?: number
           p_marketplace?: string
           p_offset?: number
           p_status?: string
@@ -2065,6 +2349,7 @@ export type Database = {
           p_ate: string
           p_busca: string
           p_de: string
+          p_loja_id?: number
           p_marketplace?: string
           p_status: string
         }
@@ -2084,6 +2369,7 @@ export type Database = {
           p_ate: string
           p_busca?: string
           p_de: string
+          p_loja_id?: number
           p_marketplace?: string
           p_status?: string
         }
@@ -2099,7 +2385,7 @@ export type Database = {
         }[]
       }
       pedidos_em_transito: {
-        Args: { p_marketplace?: string }
+        Args: { p_loja_id?: number; p_marketplace?: string }
         Returns: {
           cobertura_custo: number
           custo: number
@@ -2109,7 +2395,7 @@ export type Database = {
         }[]
       }
       pedidos_em_transito_impl: {
-        Args: { p_marketplace?: string }
+        Args: { p_loja_id?: number; p_marketplace?: string }
         Returns: {
           cobertura_custo: number
           custo: number
@@ -2119,13 +2405,13 @@ export type Database = {
         }[]
       }
       pedidos_escrow_pendentes: {
-        Args: { p_limite?: number }
+        Args: { p_limite?: number; p_loja_id?: number }
         Returns: {
           order_sn: string
         }[]
       }
       produtos_com_ads: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_loja_id?: number }
         Returns: {
           cliques: number
           ctr: number
@@ -2138,7 +2424,12 @@ export type Database = {
         }[]
       }
       produtos_com_giro: {
-        Args: { p_ate: string; p_de: string; p_marketplace?: string }
+        Args: {
+          p_ate: string
+          p_de: string
+          p_loja_id?: number
+          p_marketplace?: string
+        }
         Returns: {
           dias_de_estoque: number
           estoque_disponivel: number
@@ -2155,7 +2446,7 @@ export type Database = {
         }[]
       }
       produtos_com_giro_impl: {
-        Args: { p_ate: string; p_de: string }
+        Args: { p_ate: string; p_de: string; p_loja_id?: number }
         Returns: {
           dias_de_estoque: number
           estoque_disponivel: number
