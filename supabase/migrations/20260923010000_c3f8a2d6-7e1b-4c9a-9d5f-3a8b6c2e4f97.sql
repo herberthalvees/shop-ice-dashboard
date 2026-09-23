@@ -13,6 +13,7 @@
 -- loja_id como o resto da função.
 -- ============================================================
 
+drop function if exists public.dre_mensal(integer, integer, bigint);
 create or replace function public.dre_mensal(p_ano integer, p_mes integer, p_loja_id bigint default null)
 returns table(receita_bruta numeric, cancelamentos numeric, receita_liquida numeric, cmv numeric, cmv_pct numeric, lucro_bruto numeric, lucro_bruto_pct numeric, taxas_marketplace numeric, taxas_pct numeric, ads numeric, ads_pct numeric, despesas_fixas numeric, despesas_fixas_pct numeric, despesas_variaveis numeric, despesas_variaveis_pct numeric, devolucoes numeric, devolucoes_pct numeric, resultado_operacional numeric, resultado_operacional_pct numeric, impostos numeric, impostos_pct numeric, lucro_liquido numeric, lucro_liquido_pct numeric)
 language plpgsql
