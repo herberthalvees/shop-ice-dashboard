@@ -136,7 +136,7 @@ function DrePage() {
       const { data, error } = await supabase.rpc("dre_mensal", {
         p_ano: ano,
         p_mes: mes,
-        p_loja_id: lojaId,
+        p_loja_id: lojaId ?? undefined,
       });
       if (error) throw error;
       return (data as any[])?.[0] ?? null;
